@@ -1,0 +1,26 @@
+[tool]
+[tool.pdm]
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "faker>=19.2.0",
+]
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "moxiaoying", email = "768091671@qq.com"},
+]
+dependencies = [
+    "fastapi-tortoise-crud>=0.1.8",
+    "loguru>=0.7.0",
+    "httpx>=0.24.1",
+    "BeautifulSoup4>=4.12.2",
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}

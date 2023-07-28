@@ -1,0 +1,112 @@
+export interface MenuType {
+  id: number;
+  title: string;
+  icon: string;
+  nav?: ItemType[];
+  children?: MenuType[];
+}
+
+export interface ItemType {
+  title: string;
+  href: string;
+  icon?: string;
+  isSelf?: boolean;
+  desc?: string;
+}
+
+export const itemList: ItemType[] = [
+  {
+    title: "首页",
+    href: "https://codegeex.cn",
+    icon: "fas fa-fw fa-tachometer-alt",
+    isSelf: true,
+  },
+  {
+    title: "GitHub",
+    href: "https://github.com/",
+    icon: "fab fa-fw fa-github",
+  },
+  {
+    title: "CodeGeeX",
+    href: "https://codegeex.cn",
+    icon: "fas fa-fw fa-code",
+  },
+  {
+    title: "Code Review",
+    href: "https://codegeex.cn",
+    icon: "far fa-fw fa-comments",
+  },
+  {
+    title: "Code Review",
+    href: "https://codegeex.cn",
+    icon: "far fa-fw fa-comments",
+  },
+  {
+    title: "Code Review",
+    href: "https://codegeex.cn",
+    icon: "far fa-fw fa-comments",
+  },
+  {
+    title: "Code Review",
+    href: "https://codegeex.cn",
+    icon: "far fa-fw fa-comments",
+  },
+];
+export const menuList: MenuType[] = [
+  {
+    id: 4,
+    title: "docker",
+    icon: "bxl:docker",
+    nav: itemList,
+  },
+  {
+    id: 1,
+    title: "常用工具",
+    icon: "bxl:500px",
+    nav: itemList,
+    children: [
+      {
+        id: 11,
+        title: "文档管理",
+        icon: "bxl:99designs",
+        nav: itemList,
+      },
+      {
+        id: 12,
+        title: "图书列表",
+        icon: "bxl:adobe",
+        nav: itemList,
+      },
+    ],
+  },
+  {
+    id: 2,
+    title: "系统管理",
+    icon: "bxl:airbnb",
+    nav: itemList,
+
+    children: [
+      {
+        id: 11,
+        title: "测试管理",
+        icon: "bxl:behance",
+        nav: itemList,
+      },
+    ],
+  },
+  {
+    id: 3,
+    title: "家具中心",
+    icon: "bxl:discord-alt",
+    nav: itemList,
+
+    children: [
+      {
+        id: 11,
+        title: "列表人员",
+        icon: "bxl:discourse",
+        nav: itemList,
+      },
+    ],
+  },
+];

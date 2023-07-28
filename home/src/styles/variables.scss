@@ -1,0 +1,12 @@
+// sidebar
+$sideBarWidth: 210px;
+$navHeaderHeight: 60px;
+$hideSideBarWidth: 0px;
+$bg:#f0f2f5;
+
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+// JS 与 scss 共享变量，在 scss 中通过 :export 进行导出，在 js 中可通过 ESM 进行导入
+:export {
+  sideBarWidth: $sideBarWidth;
+}
+
