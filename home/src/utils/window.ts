@@ -18,3 +18,9 @@ export const scrollTop = (selector: string) => {
     behavior: "smooth",
   });
 };
+
+export const isUrl = (text: string) => {
+  // 判断props.icon是否为url
+  const regex = new RegExp(`^(https?:)?//.+`);
+  return regex.test(text);
+};

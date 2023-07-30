@@ -11,6 +11,13 @@ class Nav extends Crud {
       },
     });
   }
+  async createWithMenu(data: any): Promise<any> {
+    return await request({
+      url: `${this.baseUrl}/create_menu`,
+      method: "post",
+      data,
+    });
+  }
 }
 
 export default new Nav("/nav");

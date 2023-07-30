@@ -1,0 +1,20 @@
+@import "./mixin.scss";
+@import "./transition.scss";
+@import "./element-plus.scss";
+@import "./sidebar.scss";
+@import "./dark.scss";
+
+/* 自定义全局 CssVar */
+:root {
+  --pure-transition-duration: 0.016s;
+}
+
+/* 灰色模式 */
+.html-grey {
+  filter: grayscale(100%);
+}
+
+/* 色弱模式 */
+.html-weakness {
+  filter: invert(80%);
+}

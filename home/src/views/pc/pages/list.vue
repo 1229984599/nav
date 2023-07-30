@@ -24,13 +24,10 @@ watch(
 </script>
 
 <template>
-  <div v-for="category in menuStore.menuList">
-    <item-category :category="category" />
-    <div
-      class="gap-y-6"
-      v-if="category?.children && category.children.length > 0"
-    >
-      <item-category :category="subCat" v-for="subCat in category.children" />
+  <div v-for="menu in menuStore.menuTree">
+    <item-category :menu="menu" />
+    <div class="gap-y-6" v-if="menu?.children && menu.children.length > 0">
+      <item-category :menu="subCat" v-for="subCat in menu.children" />
     </div>
   </div>
 </template>

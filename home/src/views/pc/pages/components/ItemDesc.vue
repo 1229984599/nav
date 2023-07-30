@@ -1,36 +1,50 @@
 <script setup lang="ts">
-import { PropType } from "vue";
-import { ItemType } from "@/api/menu";
-
 defineProps({
-  item: Object as PropType<ItemType>,
+  item: {
+    type: Object,
+    required: true,
+  },
 });
 </script>
 
 <template>
-  <a
-    :href="item?.href"
-    :target="item?.isSelf ? '_self' : '_blank'"
-    class="cursor-pointer bg-white box rounded-lg p-4 flex space-x-2 items-center"
+  <el-tooltip
+    effect="light"
+    :content="item?.desc ?? '暂无描述信息'"
+    placement="bottom"
   >
-    <div class="shrink-0">
-      <img
-        class="w-16 h-16 rounded-full"
-        src="https://liutongxu.github.io/ico/gitee.png"
-        :alt="item?.title"
-      />
-    </div>
+    <a
+      :href="item?.href"
+      :target="item?.isSelf ? '_self' : '_blank'"
+      class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
+    >
+      <div class="shrink-0">
+        <img
+          class="w-14 h-auto rounded-full"
+          :src="item.icon"
+          :alt="item?.title"
+        />
+      </div>
 
-    <div class="truncate">
-      <div class="text-lg font-bold">{{ item.title }}</div>
-      <span class="text-sm text-gray-600 w-full">
-        {{ item?.desc ?? "暂无描述信息" }}
-      </span>
-    </div>
-  </a>
+      <div class="truncate">
+        <div class="text-lg font-bold">{{ item.title }}</div>
+        <span class="desc">
+          {{ item?.desc || "暂无描述信息" }}
+        </span>
+      </div>
+    </a>
+  </el-tooltip>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+.desc {
+  @apply text-sm block h-[40px] mt-1 whitespace-normal text-gray-400 w-full duration-300 hover:text-gray-600;
+  text-indent: 10px;
+}
+img {
+  @apply shadow;
+}
+
 a {
   text-decoration: none;
   color: inherit;

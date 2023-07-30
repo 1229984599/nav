@@ -28,7 +28,7 @@ class APISettings(BaseSettings):
     ALGORITHM: str = os.environ.get('ALGORITHM', 'ALGORITHM')
 
     # 生产环境保管好 SECRET_KEY
-    SECRET_KEY: str = os.environ.get('SECRET_KEY')
+    SECRET_KEY: str = os.environ.get('SECRET_KEY', 'dsklfjsladjflsadj')
 
     # 项目根路径
     BASE_PATH: Path = Path(__file__).resolve().parent.parent
