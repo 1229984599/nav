@@ -5,7 +5,7 @@ services:
         build:
             context: ./
             dockerfile: ./Dockerfile
-            labels: nav:latest
+        labels: nav:latest
         environment:
         # 时区
         - TZ=Asia/Shanghai

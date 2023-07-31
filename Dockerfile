@@ -16,8 +16,8 @@ RUN npm install -g pnpm && pnpm install && pnpm build
 # 阶段三：构建Nginx服务器
 FROM moxiaoying/python-nginx:1.0.0
 WORKDIR /app
-COPY --from=home-frontend-builder /app/home/dist /usr/share/nginx/html/home
-COPY --from=admin-frontend-builder /app/admin/dist /usr/share/nginx/html/admin
+COPY --from=home-frontend-builder /app/home/dist /var/www/html/home
+COPY --from=admin-frontend-builder /app/admin/dist /var/www/html/admin
 COPY api /app
 RUN pip install -r /app/requirements.txt
 
