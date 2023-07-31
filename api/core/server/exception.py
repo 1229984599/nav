@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from fastapi import FastAPI, Request, HTTPException
 from loguru import logger
 from starlette.responses import JSONResponse
-from fastapi_tortoise_crud import BaseApiOut
+from core.crud import BaseApiOut
 
 
 def register_exception(app: FastAPI) -> None:

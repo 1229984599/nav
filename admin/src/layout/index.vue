@@ -12,7 +12,7 @@ import { h, reactive, computed, onMounted, defineComponent } from "vue";
 
 import navbar from "./components/navbar.vue";
 import tag from "./components/tag/index.vue";
-import appMain from "./components/appMain.vue";
+import appMain from "./components/AppMain.vue";
 import setting from "./components/setting/index.vue";
 import Vertical from "./components/sidebar/vertical.vue";
 import Horizontal from "./components/sidebar/horizontal.vue";

@@ -1,35 +1,33 @@
-# 阶段一：构建前端页面 - Home
-FROM node:current-slim AS home-frontend-builder
-WORKDIR /app/home
-COPY home/package.json home/pnpm-lock.yaml /app/home/
-RUN npm install -g pnpm
-RUN pnpm install
-COPY home /app/home
-RUN pnpm build
-
 # 阶段二：构建前端页面 - Admin
-FROM node:current-slim AS admin-frontend-builder
+FROM node:slim AS admin-frontend-builder
 WORKDIR /app/admin
-COPY admin/package.json admin/pnpm-lock.yaml /app/admin/
-RUN npm install -g pnpm
-RUN pnpm install
 COPY admin /app/admin
-RUN pnpm build
+RUN npm install -g pnpm && pnpm install && pnpm build
+
+
+# 阶段一：构建前端页面 - Home
+FROM node:slim AS home-frontend-builder
+WORKDIR /app/home
+COPY home /app/home
+RUN npm install -g pnpm && pnpm install && pnpm build
+
+
 
 # 阶段三：构建Nginx服务器
-FROM moxiaoying/python-nginx:latest
+FROM moxiaoying/python-nginx:1.0.0
 WORKDIR /app
-COPY api /app/api
-RUN pip install -r /app/api/requirements.txt
 COPY --from=home-frontend-builder /app/home/dist /usr/share/nginx/html/home
 COPY --from=admin-frontend-builder /app/admin/dist /usr/share/nginx/html/admin
+COPY api /app
+RUN pip install -r /app/requirements.txt
+
 # 添加Nginx配置文件
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
 # 启动Nginx服务器和API
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx -g 'daemon off;' & uvicorn api.run:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "nginx -g 'daemon off;' & uvicorn main:app --host 0.0.0.0 --port 8000"]
 #FROM moxiaoying/python-nginx:1.0.0
 ##WORKDIR /app
 #COPY /admin /usr/share/nginx/html/admin

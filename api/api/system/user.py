@@ -1,6 +1,6 @@
 from tortoise.queryset import QuerySet
 
-from fastapi_tortoise_crud import ModelCrud
+from core.crud import ModelCrud
 
 from models import User
 from .utils import get_password_hash
