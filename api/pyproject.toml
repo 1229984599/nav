@@ -1,3 +1,23 @@
+[project]
+name = "api-server"
+version = "0.0.1"
+description = "导航网站后台api"
+authors = [
+    { name = "moxiaoying", email = "768091671@qq.com" },
+]
+dependencies = [
+    "tortoise-orm==0.19.3",
+    "fastapi<=0.99.1",
+    "fastapi-pagination>=0.12.6",
+    "loguru>=0.7.0",
+    "httpx>=0.24.1",
+    "BeautifulSoup4>=4.12.2",
+    "fastapi-jwt>=0.1.12",
+    "passlib>=1.7.4",
+    "bcrypt>=4.0.1",
+]
+requires-python = ">=3.10"
+license = { text = "MIT" }
 [tool]
 [tool.pdm]
 [[tool.pdm.source]]
@@ -9,21 +29,3 @@ verify_ssl = true
 dev = [
     "faker>=19.2.0",
 ]
-[project]
-name = ""
-version = ""
-description = ""
-authors = [
-    {name = "moxiaoying", email = "768091671@qq.com"},
-]
-dependencies = [
-    "fastapi-tortoise-crud>=0.1.8",
-    "loguru>=0.7.0",
-    "httpx>=0.24.1",
-    "BeautifulSoup4>=4.12.2",
-    "fastapi-jwt>=0.1.12",
-    "passlib>=1.7.4",
-    "bcrypt>=4.0.1",
-]
-requires-python = ">=3.10"
-license = {text = "MIT"}

@@ -8,39 +8,34 @@ defineProps({
 </script>
 
 <template>
-  <el-tooltip
-    effect="light"
-    :content="item?.desc ?? '暂无描述信息'"
-    placement="bottom"
+  <a
+    :href="item?.href"
+    :target="item?.is_self ? '_self' : '_blank'"
+    class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
   >
-    <a
-      :href="item?.href"
-      :target="item?.isSelf ? '_self' : '_blank'"
-      class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
-    >
-      <div class="shrink-0">
-        <img
-          class="w-14 h-auto rounded-full"
-          :src="item.icon"
-          :alt="item?.title"
-        />
-      </div>
+    <div class="shrink-0">
+      <img
+        class="w-10 h-auto rounded-full"
+        :src="item.icon"
+        :alt="item?.title"
+      />
+    </div>
 
-      <div class="truncate">
-        <div class="text-lg font-bold">{{ item.title }}</div>
-        <span class="desc">
-          {{ item?.desc || "暂无描述信息" }}
-        </span>
-      </div>
-    </a>
-  </el-tooltip>
+    <div class="truncate pl-1.5">
+      <div class="text-lg font-bold">{{ item.title }}</div>
+      <span class="desc">
+        {{ item?.desc || "暂无描述信息" }}
+      </span>
+    </div>
+  </a>
 </template>
 
 <style lang="scss" scoped>
 .desc {
   @apply text-sm block h-[40px] mt-1 whitespace-normal text-gray-400 w-full duration-300 hover:text-gray-600;
-  text-indent: 10px;
+  //text-indent: 10px;
 }
+
 img {
   @apply shadow;
 }

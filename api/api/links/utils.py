@@ -31,7 +31,7 @@ async def get_site_info(url: str) -> dict:
     # 获取描述信息
     description = soup.find('meta', attrs={'name': 'description'})
     if description:
-        description = description.get('content')
+        description = description.get('content') or description.get('value')
     else:
         description = ''
     return {

@@ -42,7 +42,7 @@ async def handle_update(item_id: str, item: UpdateMenuSchema):
         return BaseApiOut(code=400, message='导航不存在')
     updated_item = await Links.filter(id=item_id).update(**item.dict(exclude_unset=True, exclude={'menus'}))
     pass
-    if item.menus:
+    if isinstance(item.menus, list):
         await link.menus.clear()
         # 删除关联
         menus = await Menu.filter(id__in=item.menus)

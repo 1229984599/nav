@@ -60,7 +60,7 @@ class BaseSchemaMixin:
 
     @classmethod
     def schema_list(cls, name='List', include=(), exclude=(), **kwargs):
-        return cls.base_schema(name=name, include=include, exclude=exclude,  **kwargs)
+        return cls.base_schema(name=name, include=include, exclude=exclude, **kwargs)
 
     @classmethod
     def schema_create(cls, name='Create', include=(), exclude=(), **kwargs):

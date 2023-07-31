@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { MenuType } from "@/api/menu";
 import MIcon from "@/components/MIcon.vue";
 import { PropType } from "vue";
 import { useRouter } from "vue-router";
 
 defineProps({
-  item: Object as PropType<MenuType>,
+  item: Object,
 });
 const router = useRouter();
 
-function gotoList(item: MenuType) {
+function gotoList(item: any) {
   router.push({
     path: "/list",
     query: {
@@ -26,7 +25,7 @@ function gotoList(item: MenuType) {
     v-if="item?.children && item.children.length > 0"
   >
     <template #title>
-      <div @click="gotoList(<MenuType>item)" class="flex">
+      <div @click="gotoList(item)" class="flex">
         <m-icon size="20" class="pr-1" :icon="item.icon" />
         <span>{{ item.title }}</span>
       </div>

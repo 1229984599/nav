@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import MIcon from "@/components/MIcon.vue";
-import nav from "@/api/nav";
+import linksModel from "@/api/links";
 import { isMobile, isUrl } from "@/utils/window";
 import { ElMessage, type FormInstance, FormRules } from "element-plus";
 import { useMenuStore } from "@/store/menu";
@@ -32,7 +32,7 @@ const rules: FormRules = reactive<FormRules>({
  * 根据url采集站点信息
  */
 async function handleSiteInfo() {
-  const data = await nav.getSiteInfo(form.href);
+  const data = await linksModel.getSiteInfo(form.href);
   form.title = data?.title;
   form.icon = data?.icon;
   form.desc = data?.desc;
@@ -48,7 +48,7 @@ function handleCancel() {
 async function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
-    nav
+    linksModel
       .createWithMenu(form)
       .then((res) => {
         dialogFormVisible.value = false;

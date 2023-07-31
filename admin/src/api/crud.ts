@@ -1,10 +1,10 @@
-import { request } from "@/utils/service"
+import { http } from "@/utils/http";
 
 class Crud {
-  protected readonly baseUrl: string
+  protected readonly baseUrl: string;
 
   constructor(baseUrl: string = "") {
-    this.baseUrl = baseUrl || this.constructor.name.toLowerCase()
+    this.baseUrl = baseUrl || this.constructor.name.toLowerCase();
   }
 
   /**
@@ -13,16 +13,18 @@ class Crud {
    * @param pageSize
    * @param filters
    */
-  async list(page: number = 1, pageSize: number = 10, filters = {}): Promise<any> {
-    return await request({
-      url: `${this.baseUrl}/list`,
-      method: "post",
+  async list(
+    page: number = 1,
+    pageSize: number = 10,
+    filters = {}
+  ): Promise<any> {
+    return await http.post(`${this.baseUrl}/list`, {
       params: {
         page: page,
         size: pageSize
       },
       data: filters
-    })
+    });
   }
 
   /**
@@ -30,11 +32,7 @@ class Crud {
    * @param data
    */
   async create(data: any): Promise<any> {
-    return await request({
-      method: "post",
-      url: `${this.baseUrl}/create`,
-      data
-    })
+    return await http.post(`${this.baseUrl}/create`, { data });
   }
 
   /**
@@ -42,11 +40,7 @@ class Crud {
    * @param data
    */
   async createAll(data: Array<any>): Promise<any> {
-    return await request({
-      method: "post",
-      url: `${this.baseUrl}/create/all`,
-      data
-    })
+    return await http.post(`${this.baseUrl}/create/all`, { data });
   }
 
   /**
@@ -55,11 +49,7 @@ class Crud {
    * @param data
    */
   async update(id: number, data: any): Promise<any> {
-    return await request({
-      method: "put",
-      url: `${this.baseUrl}/${id}`,
-      data
-    })
+    return await http.request("put", `${this.baseUrl}/${id}`, { data });
   }
 
   /**
@@ -67,11 +57,31 @@ class Crud {
    * @param ids
    */
   async delete(ids: string): Promise<any> {
-    return await request({
-      method: "delete",
-      url: `${this.baseUrl}/${ids}`
-    })
+    return await http.request("delete", `${this.baseUrl}/${ids}`);
   }
 }
 
-export default Crud
+export function useRequest(model: Crud) {
+  const pageRequest = async query => {
+    return await model.list(query.page, query.pageSize, query.filters);
+  };
+  const editRequest = async ({ form, row }) => {
+    form.id = row.id;
+    return await model.update(row.id, form);
+  };
+  const delRequest = async ({ row }) => {
+    return await model.delete(row.id);
+  };
+
+  const addRequest = async ({ form }) => {
+    return await model.create(form);
+  };
+  return {
+    pageRequest,
+    addRequest,
+    editRequest,
+    delRequest
+  };
+}
+
+export default Crud;

@@ -15,8 +15,8 @@ defineProps({
     <m-icon v-if="menu?.icon" class="text-red-900" :icon="menu.icon" />
     <h2 class="text-xl font-bold">{{ menu?.title }}</h2>
   </div>
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4 mb-8 mt-1">
-    <item-desc :item="item" v-for="item in menu?.navs" />
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4 mb-8 mt-3">
+    <item-desc :item="item" v-for="item in menu?.links" />
   </div>
 </template>
 
