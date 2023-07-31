@@ -1,0 +1,14 @@
+version: '1.0.0'
+services:
+    service:
+        container_name: nav
+        build:
+            context: ./
+            dockerfile: ./Dockerfile
+            labels: nav:latest
+        environment:
+        # 时区
+        - TZ=Asia/Shanghai
+        ports:
+            - "9000:80"
+        restart: unless-stopped
