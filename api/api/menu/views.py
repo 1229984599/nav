@@ -11,6 +11,7 @@ async def get_menu_tree(menu_item: Menu) -> dict:
         "id": menu_item.id,
         "title": menu_item.title,
         "icon": menu_item.icon,
+        "color": menu_item.color,
         "links": await menu_item.links
     }
     children = await menu_item.children

@@ -18,7 +18,7 @@ function handleSubmit() {}
     class="w-full h-full"
     v-model="searchQuery"
     :fetch-suggestions="querySearchAsync"
-    placeholder="电视剧 / 电影 / 动漫 / 综艺 ..."
+    placeholder="请输入搜索关键词"
   >
     <template #default="{ item }">
       <div class="flex justify-between">

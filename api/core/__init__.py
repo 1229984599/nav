@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 # 加载环境变量配置
 root_dir = Path(__file__).resolve().parent.parent
-load_dotenv(str(root_dir.joinpath('settings', '.env')))
+load_dotenv(str(root_dir.joinpath('config', '.env')))
 
 from settings import settings
 

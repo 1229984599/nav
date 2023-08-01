@@ -53,9 +53,9 @@ class APISettings(BaseSettings):
     }
 
 
-@lru_cache()
+# @lru_cache()
 def get_settings():
-    return APISettings()
+    return APISettings(_env_file='config/.env')
 
 
 settings = get_settings()

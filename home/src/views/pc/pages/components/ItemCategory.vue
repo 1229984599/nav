@@ -12,7 +12,11 @@ defineProps({
 
 <template>
   <div :id="menu?.title" class="flex gap-x-2 items-center">
-    <m-icon v-if="menu?.icon" class="text-red-900" :icon="menu.icon" />
+    <m-icon
+      v-if="menu?.icon"
+      :style="{ color: menu?.color }"
+      :icon="menu.icon"
+    />
     <h2 class="text-xl font-bold">{{ menu?.title }}</h2>
   </div>
   <div class="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4 mb-8 mt-3">

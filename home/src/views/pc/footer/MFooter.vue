@@ -2,10 +2,12 @@
 import MIcon from "@/components/MIcon.vue";
 import { scrollTop } from "@/utils/window";
 import AddLink from "@/views/pc/footer/AddLink.vue";
+import { useSiteStore } from "@/store/site";
 
 defineOptions({
   name: "MFooter",
 });
+const siteStore = useSiteStore();
 </script>
 
 <template>
@@ -22,7 +24,7 @@ defineOptions({
 
     <footer class="mt-5">
       <!-- 版权信息 -->
-      <div class="text-zinc-500">&copy;2017-2023 design by moxiaoying</div>
+      <div class="text-zinc-500">{{ siteStore.siteInfo.footer }}</div>
     </footer>
     <div
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"

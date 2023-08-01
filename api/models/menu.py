@@ -8,6 +8,5 @@ class Menu(BaseModel):
     # parent_id = fields.IntField(default=0, description='父id')
     parent = fields.ForeignKeyField('models.Menu', related_name='children', null=True)
     order = fields.IntField(default=0, description='值越大越靠前')
+    color = fields.CharField(7, null=True, description='图标颜色hex')
     links = fields.ManyToManyField("models.Links", related_name="menus", null=True)
-
-

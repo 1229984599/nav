@@ -1,10 +1,12 @@
 import { CreateCrudOptionsRet } from "@fast-crud/fast-crud";
 import menuModel from "@/api/menu";
 import { useRequest } from "@/api/crud";
+import { UseIconForm } from "@/hooks/icon";
 
 export default function createCrudOptions(crudExpose: {
   doRefresh: () => void;
 }): CreateCrudOptionsRet {
+  const iconForm = UseIconForm();
   return {
     crudOptions: {
       request: {
@@ -27,10 +29,7 @@ export default function createCrudOptions(crudExpose: {
           type: "text",
           search: { show: true } // 开启查询
         },
-        icon: {
-          title: "图标",
-          type: "text"
-        }
+        ...iconForm
         // created: {
         //   title: "创建时间",
         //   type: "datetime",

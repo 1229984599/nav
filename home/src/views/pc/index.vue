@@ -7,13 +7,19 @@ import MFooter from "@/views/pc/footer/MFooter.vue";
 import AppMain from "@/views/pc/app-main/AppMain.vue";
 import { computed, onMounted } from "vue";
 import { isMobile } from "@/utils/window";
+import { useSiteStore } from "@/store/site";
+import { useTitle } from "@vueuse/core";
 
 const appStore = useAppStore();
-onMounted(() => {
+const siteStore = useSiteStore();
+onMounted(async () => {
   if (isMobile.value) {
     appStore.isCollapse = true;
   }
+  await siteStore.getSiteInfo();
 });
+
+useTitle(siteStore.siteInfo.title);
 </script>
 
 <template>
@@ -21,7 +27,6 @@ onMounted(() => {
     <el-container>
       <el-aside :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'">
         <m-logo />
-
         <m-side-menu />
       </el-aside>
       <el-container
@@ -52,6 +57,7 @@ onMounted(() => {
 
 ul {
   height: calc(100% - #{$navHeaderHeight});
+  border-right: none;
 }
 
 .el-header {

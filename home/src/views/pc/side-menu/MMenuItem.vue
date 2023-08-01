@@ -5,6 +5,10 @@ import { useRouter } from "vue-router";
 
 defineProps({
   item: Object,
+  iconSize: {
+    type: [String, Number],
+    default: 25,
+  },
 });
 const router = useRouter();
 
@@ -26,7 +30,12 @@ function gotoList(item: any) {
   >
     <template #title>
       <div @click="gotoList(item)" class="flex">
-        <m-icon size="20" class="pr-1" :icon="item.icon" />
+        <m-icon
+          :size="iconSize"
+          class="pr-1"
+          :style="{ color: item?.color }"
+          :icon="item.icon"
+        />
         <span>{{ item.title }}</span>
       </div>
     </template>
@@ -35,13 +44,20 @@ function gotoList(item: any) {
       :index="submenu.title"
       v-for="submenu in item.children"
     >
-      <m-icon size="20" class="pr-1" :icon="submenu.icon" />
+      <m-icon :size="iconSize" class="pr-1" :icon="submenu.icon" />
       {{ submenu.title }}
     </el-menu-item>
   </el-sub-menu>
-  <el-menu-item @click="gotoList(<MenuType>item)" v-else :index="item?.title">
-    <m-icon size="20" class="pr-1" :icon="item?.icon" />
-    {{ item.title }}
+  <el-menu-item @click="gotoList(item)" v-else :index="item?.title">
+    <m-icon
+      :size="iconSize"
+      class="pr-1"
+      :color="item.color"
+      :icon="item?.icon"
+    />
+    <span class="text-zinc-800 font-bold">
+      {{ item.title }}
+    </span>
   </el-menu-item>
 </template>
 

@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { isUrl } from "@/utils/window";
+import { isUrl } from "@pureadmin/utils";
 
 defineOptions({
-  name: "MIcon",
+  name: "MIcon"
 });
 const props = defineProps({
   icon: {
     type: String,
-    default: "",
+    default: ""
   },
   size: {
     typer: [String, Number],
-    default: 32,
+    default: 32
   },
   color: {
     type: String,
-    default: "",
-  },
+    default: ""
+  }
 });
 </script>
 
@@ -37,7 +37,7 @@ const props = defineProps({
 
 <style lang="scss" scoped>
 .icon-size {
-  @apply shadow-sm rounded-full;
+  @apply shadow-sm border rounded-full border-gray-100;
   color: v-bind(color);
   object-fit: cover;
 }

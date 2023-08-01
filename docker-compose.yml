@@ -8,6 +8,9 @@ services:
         environment:
         # 时区
         - TZ=Asia/Shanghai
+        volumns:
+        # 映射配置文件
+        - ./config:/app/config
         ports:
             - "9000:80"
         restart: unless-stopped

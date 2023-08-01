@@ -5,6 +5,7 @@ import { useMenuStore } from "@/store/modules/menu";
 import { ref } from "vue";
 import { message } from "@/utils/message";
 import { ElMessageBox } from "element-plus";
+import { UseIconForm } from "@/hooks/icon";
 
 const menuStore = useMenuStore();
 export default function createCrudOptions(crudExpose: {
@@ -12,6 +13,7 @@ export default function createCrudOptions(crudExpose: {
 }): CreateCrudOptionsRet {
   const selectedIds = ref([]);
   const spiderLoading = ref(false);
+  const iconForm = UseIconForm(false);
   return {
     crudOptions: {
       request: {
@@ -72,10 +74,7 @@ export default function createCrudOptions(crudExpose: {
           type: "text",
           search: { show: true } // 开启查询
         },
-        icon: {
-          title: "图标",
-          type: "text"
-        },
+        ...iconForm,
         href: {
           title: "链接",
           type: "text",
@@ -85,6 +84,9 @@ export default function createCrudOptions(crudExpose: {
         },
         is_self: {
           title: "站内打开",
+          column: {
+            width: 90
+          },
           type: "dict-switch",
           dict: dict({
             data: [
@@ -126,18 +128,18 @@ export default function createCrudOptions(crudExpose: {
           form: {
             show: true
           }
-        },
-        created: {
-          title: "创建时间",
-          type: "datetime",
-          form: { show: false, submit: false }, // 表单配置
-          viewForm: {
-            show: true
-          },
-          column: {
-            width: 180
-          }
         }
+        // created: {
+        //   title: "创建时间",
+        //   type: "datetime",
+        //   form: { show: false, submit: false }, // 表单配置
+        //   viewForm: {
+        //     show: true
+        //   },
+        //   column: {
+        //     width: 180
+        //   }
+        // }
       }
     }
   };

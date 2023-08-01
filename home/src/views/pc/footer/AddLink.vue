@@ -13,7 +13,8 @@ const form = reactive({
   icon: "",
   href: "",
   desc: "",
-  isSelf: false,
+  color: "",
+  is_self: false,
   menus: [],
 });
 const isSpiderInfo = computed(() => {
@@ -25,7 +26,7 @@ const rules: FormRules = reactive<FormRules>({
   title: [{ required: true, message: "请输入标题", trigger: "blur" }],
   icon: [{ required: true, message: "请输入图标", trigger: "blur" }],
   href: [{ required: true, message: "请输入链接", trigger: "blur" }],
-  desc: [{ required: true, message: "请输入描述", trigger: "blur" }],
+  // desc: [{ required: true, message: "请输入描述", trigger: "blur" }],
 });
 
 /**
@@ -85,7 +86,26 @@ async function handleSubmit() {
           <el-input v-model="form.title" />
         </el-form-item>
         <el-form-item label="图标" prop="icon">
-          <el-input v-model="form.icon" />
+          <el-input v-model="form.icon">
+            <template #append>
+              <m-icon :color="form.color" :icon="form.icon" />
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="颜色" prop="color">
+          <el-color-picker
+            v-model="form.color"
+            :predefine="[
+              '#ff4500',
+              '#ff8c00',
+              '#ffd700',
+              '#90ee90',
+              '#00ced1',
+              '#1e90ff',
+              '#c71585',
+              '#c7158577',
+            ]"
+          ></el-color-picker>
         </el-form-item>
         <el-form-item label="描述" prop="desc">
           <el-input type="textarea" v-model="form.desc" />
@@ -105,14 +125,14 @@ async function handleSubmit() {
               v-for="menu in menuStore.menuList"
               :value="menu?.id"
             >
-              <m-icon :icon="menu?.icon" />
+              <m-icon :color="menu.color" :icon="menu?.icon" />
               <span class="text-gray-700">{{ menu?.title }}</span>
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="站内打开" prop="isSelf">
+        <el-form-item label="站内打开" prop="is_self">
           <el-switch
-            v-model="form.isSelf"
+            v-model="form.is_self"
             active-text="是"
             inactive-text="否"
             inline-prompt

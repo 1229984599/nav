@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MIcon from "@/components/MIcon.vue";
+
 defineProps({
   item: {
     type: Object,
@@ -14,15 +16,16 @@ defineProps({
     class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
   >
     <div class="shrink-0">
-      <img
-        class="w-10 h-auto rounded-full"
-        :src="item.icon"
-        :alt="item?.title"
+      <m-icon
+        :style="{ color: item?.color }"
+        :icon="item.icon"
+        :size="50"
+        class="rounded-full"
       />
     </div>
 
     <div class="truncate pl-1.5">
-      <div class="text-lg font-bold">{{ item.title }}</div>
+      <div class="text-base font-bold">{{ item.title }}</div>
       <span class="desc">
         {{ item?.desc || "暂无描述信息" }}
       </span>
@@ -32,7 +35,7 @@ defineProps({
 
 <style lang="scss" scoped>
 .desc {
-  @apply text-sm block h-[40px] mt-1 whitespace-normal text-gray-400 w-full duration-300 hover:text-gray-600;
+  @apply text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full duration-300 hover:text-gray-600;
   //text-indent: 10px;
 }
 
