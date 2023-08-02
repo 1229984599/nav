@@ -1,4 +1,4 @@
-tortoise-orm<=0.19.3
+tortoise-orm~=0.19.3
 fastapi<=0.99.1
 fastapi-pagination<=0.12.6
 BeautifulSoup4>=4.12.2
@@ -7,5 +7,6 @@ passlib>=1.7.4
 bcrypt>=4.0.1
 loguru
 httpx
-uvicorn
-python-dotenv
+uvicorn==0.23.2
+python-dotenv==1.0.0
+# Jinja2

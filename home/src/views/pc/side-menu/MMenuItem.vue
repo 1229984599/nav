@@ -33,7 +33,7 @@ function gotoList(item: any) {
         <m-icon
           :size="iconSize"
           class="pr-1"
-          :style="{ color: item?.color }"
+          :color="item.color"
           :icon="item.icon"
         />
         <span>{{ item.title }}</span>
@@ -44,7 +44,12 @@ function gotoList(item: any) {
       :index="submenu.title"
       v-for="submenu in item.children"
     >
-      <m-icon :size="iconSize" class="pr-1" :icon="submenu.icon" />
+      <m-icon
+        :color="submenu.color"
+        :size="iconSize"
+        class="pr-1"
+        :icon="submenu.icon"
+      />
       {{ submenu.title }}
     </el-menu-item>
   </el-sub-menu>

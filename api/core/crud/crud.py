@@ -1,5 +1,6 @@
 from typing import Union, Any, List
 from fastapi import APIRouter, Depends
+from tortoise.contrib.pydantic import PydanticModel
 from tortoise.queryset import QuerySet
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
@@ -27,8 +28,8 @@ class ModelCrud(APIRouter):
         self.schema_filters = schema_filters or model.schema_filters()
 
     @classmethod
-    def pre_create(cls, item: dict) -> dict:
-        return item
+    def pre_create(cls, item: PydanticModel) -> dict:
+        return item.dict()
 
     @classmethod
     def pre_create_all(cls, items: list):
@@ -36,8 +37,8 @@ class ModelCrud(APIRouter):
             yield cls.pre_create(item.dict())
 
     @classmethod
-    async def pre_update(cls, item: dict, item_id=None) -> dict:
-        return item
+    async def pre_update(cls, item: PydanticModel, item_id=None) -> dict:
+        return item.dict(exclude_unset=True)
 
     @classmethod
     def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
@@ -83,7 +84,7 @@ class ModelCrud(APIRouter):
                    summary=f'{model_name} Create',
                    dependencies=depends_create)
         async def handle_create(item: schema_create):
-            item = self.pre_create(item.dict())
+            item = self.pre_create(item)
             new_item = await self.model.create_one(item)
             data = await self.schema_create.from_tortoise_orm(new_item)
             return BaseApiOut(data=data)
@@ -100,7 +101,7 @@ class ModelCrud(APIRouter):
                   summary=f'{model_name} Update',
                   dependencies=depends_update)
         async def handle_update(item_id: str, item: schema_update):
-            item = await self.pre_update(item.dict(exclude_unset=True), item_id=item_id)
+            item = await self.pre_update(item, item_id=item_id)
             updated_item = await self.model.update_one(item_id, item)
             # data = await schema_update.from_queryset_single(updated_item)
             data = await schema_update.from_queryset(updated_item)

@@ -8,6 +8,7 @@ from pydantic import BaseSettings
 class APISettings(BaseSettings):
     # 开发模式配置
     DEBUG: bool = os.environ.get('DEBUG', True)
+    Jinja = os.environ.get('Jinja', False)
 
     # 项目文档
     TITLE: str = "FastApi后台管理模板"
@@ -31,7 +32,7 @@ class APISettings(BaseSettings):
     SECRET_KEY: str = os.environ.get('SECRET_KEY', 'dsklfjsladjflsadj')
 
     # 项目根路径
-    BASE_PATH: Path = Path(__file__).resolve().parent.parent
+    BASE_PATH: Path = Path(__file__).resolve().parent
 
     # 数据库连接配置
     DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite://system.db')
@@ -53,7 +54,7 @@ class APISettings(BaseSettings):
     }
 
 
-# @lru_cache()
+@lru_cache()
 def get_settings():
     return APISettings(_env_file='config/.env')
 

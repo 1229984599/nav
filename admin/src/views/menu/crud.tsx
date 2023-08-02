@@ -1,7 +1,18 @@
-import { CreateCrudOptionsRet } from "@fast-crud/fast-crud";
+import {
+  asyncCompute,
+  compute,
+  CreateCrudOptionsRet,
+  dict
+} from "@fast-crud/fast-crud";
 import menuModel from "@/api/menu";
-import { useRequest } from "@/api/crud";
+import Crud, { useRequest } from "@/api/crud";
 import { UseIconForm } from "@/hooks/icon";
+
+async function getMenuList(currentId: number) {
+  const { items } = await menuModel.list(1, 100);
+  // return items;
+  return items?.filter(item => item.id !== currentId);
+}
 
 export default function createCrudOptions(crudExpose: {
   doRefresh: () => void;
@@ -10,7 +21,21 @@ export default function createCrudOptions(crudExpose: {
   return {
     crudOptions: {
       request: {
-        ...useRequest(menuModel)
+        ...useRequest(menuModel),
+        pageRequest: async (query: {
+          page: number | undefined;
+          pageSize: number | undefined;
+          filters: {} | undefined;
+        }) => {
+          const data = await menuModel.getMenuTree();
+          return {
+            items: data,
+            page: 1,
+            pages: 1,
+            size: 20,
+            total: 100
+          };
+        }
       },
       form: {
         col: { span: 24 }
@@ -29,7 +54,27 @@ export default function createCrudOptions(crudExpose: {
           type: "text",
           search: { show: true } // 开启查询
         },
-        ...iconForm
+        ...iconForm,
+        parent_id: {
+          title: "父级菜单",
+          type: "dict-select",
+          column: {
+            show: false
+          },
+          editForm: {
+            col: { span: 12 }
+          },
+          dict: dict({
+            getData: async ({ row }) => {
+              debugger;
+              return await getMenuList(row?.id);
+            },
+            label: "title",
+            value: "id",
+            immediate: false
+            // data: [{ label: "aa", value: "bb" }]
+          })
+        }
         // created: {
         //   title: "创建时间",
         //   type: "datetime",

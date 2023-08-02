@@ -13,12 +13,12 @@ const siteStore = useSiteStore();
       to="/"
     >
       <m-icon
-        :icon="siteStore.siteInfo.icon"
+        :icon="siteStore.siteInfo?.icon"
         :size="40"
-        :color="siteStore.siteInfo.color"
+        :color="siteStore.siteInfo?.color"
       />
-      <span class="logo-title" :style="{ color: siteStore.siteInfo.color }">{{
-        siteStore.siteInfo.title
+      <span class="logo-title" :style="{ color: siteStore.siteInfo?.color }">{{
+        siteStore.siteInfo?.title
       }}</span>
     </router-link>
   </div>

@@ -1,3 +1,4 @@
+from tortoise.contrib.pydantic import PydanticModel
 from tortoise.queryset import QuerySet
 
 from core.crud import ModelCrud
@@ -13,12 +14,14 @@ class UserCrud(ModelCrud):
         return super().pre_list(queryset, item)
 
     @classmethod
-    def pre_create(cls, item: dict) -> dict:
+    def pre_create(cls, item: PydanticModel) -> dict:
+        item = super().pre_create(item)
         item['password'] = get_password_hash(item['password'])
         return item
 
     @classmethod
-    async def pre_update(cls, item: dict, item_id=None) -> dict:
+    async def pre_update(cls, item: PydanticModel, item_id=None) -> dict:
+        item = await super().pre_update(item, item_id)
         if item.get('password'):
             item['password'] = get_password_hash(item['password'])
         return item

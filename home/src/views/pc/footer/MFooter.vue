@@ -24,7 +24,10 @@ const siteStore = useSiteStore();
 
     <footer class="mt-5">
       <!-- 版权信息 -->
-      <div class="text-zinc-500">{{ siteStore.siteInfo.footer }}</div>
+      <div
+        class="text-zinc-500 text-sm"
+        v-html="siteStore.siteInfo?.footer"
+      ></div>
     </footer>
     <div
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"

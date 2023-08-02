@@ -8,7 +8,7 @@ services:
         environment:
         # 时区
         - TZ=Asia/Shanghai
-        volumns:
+        volumes:
         # 映射配置文件
         - ./config:/app/config
         ports:

@@ -36,7 +36,6 @@ function handleSubmit() {
 onMounted(async () => {
   const data = await siteModel.get();
   Object.assign(form, data);
-  debugger;
 });
 </script>
 <template>

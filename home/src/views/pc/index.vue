@@ -5,7 +5,7 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "@/views/pc/footer/MFooter.vue";
 import AppMain from "@/views/pc/app-main/AppMain.vue";
-import { computed, onMounted } from "vue";
+import { onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
@@ -17,9 +17,8 @@ onMounted(async () => {
     appStore.isCollapse = true;
   }
   await siteStore.getSiteInfo();
+  useTitle(siteStore.siteInfo.title);
 });
-
-useTitle(siteStore.siteInfo.title);
 </script>
 
 <template>
