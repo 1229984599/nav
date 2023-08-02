@@ -8,8 +8,6 @@ from pydantic import BaseSettings
 class APISettings(BaseSettings):
     # 开发模式配置
     DEBUG: bool = os.environ.get('DEBUG', True)
-    Jinja = os.environ.get('Jinja', False)
-
     # 项目文档
     TITLE: str = "FastApi后台管理模板"
     DESCRIPTION: str = "FastAPI 基于 Tortoise-orm 实现的大型项目框架"

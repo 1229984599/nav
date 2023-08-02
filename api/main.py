@@ -12,16 +12,13 @@ from fastapi.openapi.docs import get_swagger_ui_html
 
 from core.server import create_app
 from settings import settings
-from static import register_templates
 
 app = create_app()
 
-if settings.Jinja:
-    register_templates(app)
-else:
-    @app.get("/", include_in_schema=False)
-    async def index():
-        return RedirectResponse(settings.DOCS_URL)
+
+@app.get("/", include_in_schema=False)
+async def index():
+    return RedirectResponse(settings.DOCS_URL)
 
 
 @app.get(settings.DOCS_URL, include_in_schema=False)
