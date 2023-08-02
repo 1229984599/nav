@@ -4,12 +4,24 @@
 $sidebar-width: 250px;
 $sidebar-hide-width: 64px;
 
-/* width */
+/* 指定滚动条宽度和颜色 */
 ::-webkit-scrollbar {
-    width: 10px;
+  width: 4px;
 }
+
+/* 指定滚动条轨道的颜色 */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+  background: #f1f1f1;
+}
+
+/* 指定滚动条的滑块颜色 */
+::-webkit-scrollbar-thumb {
+  background: #7d929f
+}
+
+/* 鼠标悬停在滚动条上时的滑块颜色 */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 /* Handle */
@@ -19,4 +31,11 @@ html, body, #app {
     height: 100%;
     padding: 0;
     margin: 0;
+}
+
+
+.el-input__inner {
+  /* 将focus状态的样式设置为空 */
+  border-color: transparent;
+  box-shadow: none;
 }

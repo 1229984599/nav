@@ -11,7 +11,6 @@ class MenuCrud(ModelCrud):
         return item.dict(exclude_unset=True)
 
 
-
 menu_router = MenuCrud(Menu, schema_list=MenuSchemaList,
                        schema_update=MenuSchemaUpdate,
                        schema_filters=Menu.schema_filters(include=('title',))).register_crud()

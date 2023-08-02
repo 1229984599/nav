@@ -35,7 +35,7 @@ const siteStore = useSiteStore();
       <!--      回到顶部-->
       <m-icon
         class="tool-item"
-        @click="scrollTop('.el-main')"
+        @click="scrollTop('.right-container')"
         icon="ph:rocket-fill"
       />
       <!--      添加链接-->

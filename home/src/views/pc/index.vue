@@ -9,6 +9,7 @@ import { onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
+import MSearch from "@/components/MSearch.vue";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -22,24 +23,31 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="common-layout">
-    <el-container>
-      <el-aside :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'">
+  <div class="common-layout flex">
+    <!--    左侧菜单-->
+    <div class="h-screen left-container">
+      <el-aside
+        class="h-full"
+        :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'"
+      >
         <m-logo />
         <m-side-menu />
       </el-aside>
-      <el-container
-        :class="appStore.isCollapse ? 'hide-right-main' : 'right-main'"
-      >
-        <el-header class="border-b-2 shadow-gray-200">
-          <m-navbar />
-        </el-header>
-        <el-main>
-          <app-main />
-          <m-footer />
-        </el-main>
-      </el-container>
-    </el-container>
+    </div>
+    <!--    右侧内容-->
+    <div
+      class="h-screen right-container overflow-y-auto"
+      :class="appStore.isCollapse ? 'hide-right-main' : 'right-main'"
+    >
+      <div class="nav-search">
+        <m-navbar class="navbar" />
+        <m-search class="py-40 flex justify-center" />
+      </div>
+      <div class="p-6">
+        <app-main />
+        <m-footer />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -48,21 +56,44 @@ onMounted(async () => {
 
 .common-layout {
   background-color: #{$bg};
-}
 
-:deep(.el-container) {
-  height: 100vh;
+  .nav-search {
+    color: #282a2d;
+    position: relative;
+    background-size: 400%;
+    background-position: 0% 100%;
+    animation: gradient 7.5s ease-in-out infinite;
+    background-image: linear-gradient(
+      45deg,
+      #8618db 0%,
+      #d711ff 50%,
+      #460fdd 100%
+    );
+    .navbar {
+      height: 60px;
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      word-wrap: break-word;
+      box-sizing: border-box;
+      top: 0;
+      z-index: 1080;
+      position: sticky;
+      right: 0;
+      transition:
+        color 0.3s,
+        background-color 0.3s;
+      box-shadow: none;
+      color: initial;
+      background: rgba(255, 255, 255, 1);
+    }
+  }
 }
 
 ul {
   height: calc(100% - #{$navHeaderHeight});
   border-right: none;
-}
-
-.el-header {
-  padding: 0;
-  background-color: #{$bg};
-  border-bottom: 1px solid #e8e8e8;
 }
 
 .menu-side {
@@ -75,11 +106,9 @@ ul {
 
 .right-main {
   width: calc(100% - #{$sideBarWidth});
-  transition: width 0.5s;
 }
 
 .hide-right-main {
   width: calc(100% - #{$hideSideBarWidth});
-  transition: width 0.5s;
 }
 </style>

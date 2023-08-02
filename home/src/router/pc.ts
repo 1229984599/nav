@@ -9,7 +9,12 @@ export const pcRoutes: RouteRecordRaw[] = [
       {
         path: "/list",
         component: () => import("@/views/pc/pages/list.vue"),
-        name: "AppMain",
+        name: "List",
+      },
+      {
+        path: "/search",
+        component: () => import("@/views/pc/pages/search.vue"),
+        name: "Search",
       },
     ],
   },

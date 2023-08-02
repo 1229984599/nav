@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import MIcon from "@/components/MIcon.vue";
 import { PropType } from "vue";
 import { useRouter } from "vue-router";
+import SubMuneItem from "@/views/pc/side-menu/SubMuneItem.vue";
 
 defineProps({
   item: Object,
@@ -30,13 +30,7 @@ function gotoList(item: any) {
   >
     <template #title>
       <div @click="gotoList(item)" class="flex">
-        <m-icon
-          :size="iconSize"
-          class="pr-1"
-          :color="item.color"
-          :icon="item.icon"
-        />
-        <span>{{ item.title }}</span>
+        <sub-mune-item :item="item" :icon-size="iconSize" />
       </div>
     </template>
     <el-menu-item
@@ -44,25 +38,11 @@ function gotoList(item: any) {
       :index="submenu.title"
       v-for="submenu in item.children"
     >
-      <m-icon
-        :color="submenu.color"
-        :size="iconSize"
-        class="pr-1"
-        :icon="submenu.icon"
-      />
-      {{ submenu.title }}
+      <sub-mune-item :item="submenu" :icon-size="iconSize" />
     </el-menu-item>
   </el-sub-menu>
   <el-menu-item @click="gotoList(item)" v-else :index="item?.title">
-    <m-icon
-      :size="iconSize"
-      class="pr-1"
-      :color="item.color"
-      :icon="item?.icon"
-    />
-    <span class="text-zinc-800 font-bold">
-      {{ item.title }}
-    </span>
+    <sub-mune-item :item="item" :icon-size="iconSize" />
   </el-menu-item>
 </template>
 

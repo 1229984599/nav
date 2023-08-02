@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=home-frontend-builder /app/home/dist /var/www/html/home
 COPY --from=admin-frontend-builder /app/admin/dist /var/www/html/admin
 COPY api /app
-RUN pip install -r /app/requirements.txt -i https://pypi.org/simple
+RUN pip install -r /app/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 添加Nginx配置文件
 COPY ./nginx.conf /etc/nginx/nginx.conf

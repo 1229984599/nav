@@ -1,9 +1,24 @@
 import Crud from "@/api/crud";
 import { request } from "@/utils/service";
+import {
+  CreateMenuSchema,
+  LinkSchemaList,
+  LinksSchemaFilters,
+  PageLinkSchemaList,
+  SiteInfo,
+} from "./types";
 
-class Nav extends Crud {
+class Links extends Crud {
+  async list(
+    page: number = 1,
+    pageSize: number = 10,
+    filters: LinksSchemaFilters = {},
+  ): Promise<PageLinkSchemaList> {
+    return await super.list(page, pageSize, filters);
+  }
+
   async getSiteInfo(url: string) {
-    return request({
+    return await request<SiteInfo>({
       method: "post",
       url: `${this.baseUrl}/siteinfo`,
       params: {
@@ -11,7 +26,8 @@ class Nav extends Crud {
       },
     });
   }
-  async createWithMenu(data: any): Promise<any> {
+
+  async createWithMenu(data: CreateMenuSchema): Promise<any> {
     return await request({
       url: `${this.baseUrl}/menu/create`,
       method: "post",
@@ -20,4 +36,4 @@ class Nav extends Crud {
   }
 }
 
-export default new Nav("/link");
+export default new Links("/link");

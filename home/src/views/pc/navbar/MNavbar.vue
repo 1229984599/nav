@@ -2,9 +2,8 @@
 import MIcon from "@/components/MIcon.vue";
 import { useAppStore } from "@/store/app";
 import { onMounted, ref } from "vue";
-import { getYiyan } from "@/api/yiyan";
+import { getYiyan } from "@/api/spider";
 import MProfile from "@/views/pc/navbar/MProfile.vue";
-import MSearch from "@/views/pc/navbar/MSearch.vue";
 
 const appStore = useAppStore();
 const yiyan = ref("");
@@ -18,16 +17,14 @@ onMounted(refresh);
 </script>
 
 <template>
-  <div class="flex items-center justify-between h-full">
+  <div class="flex items-center justify-between">
     <m-icon
       @click="appStore.toggleSlide()"
       class="cursor-pointer px-2"
       icon="ph:list-fill"
     />
     <div class="w-full flex items-center justify-between">
-      <div class="w-1/4">
-        <m-search />
-      </div>
+      <!--      占位，防止一言到最前面-->
       <span></span>
       <span
         @click="refresh"

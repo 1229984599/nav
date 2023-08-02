@@ -82,19 +82,6 @@ export default function createCrudOptions(crudExpose: {
             order: 0
           }
         },
-        is_self: {
-          title: "站内打开",
-          column: {
-            width: 90
-          },
-          type: "dict-switch",
-          dict: dict({
-            data: [
-              { value: true, label: "是" },
-              { value: false, label: "否" }
-            ]
-          })
-        },
         menus: {
           title: "菜单",
           type: "dict-select",
@@ -102,6 +89,7 @@ export default function createCrudOptions(crudExpose: {
             show: true
           },
           form: {
+            col: { span: 14 },
             component: {
               multiple: true
             }
@@ -119,6 +107,23 @@ export default function createCrudOptions(crudExpose: {
             immediate: true
           })
         },
+        is_self: {
+          title: "站内打开",
+          column: {
+            width: 90
+          },
+          form: {
+            col: { span: 6 }
+          },
+          type: "dict-switch",
+          dict: dict({
+            data: [
+              { value: true, label: "是" },
+              { value: false, label: "否" }
+            ]
+          })
+        },
+
         desc: {
           title: "描述",
           type: "textarea",
