@@ -32,10 +32,3 @@ html, body, #app {
     padding: 0;
     margin: 0;
 }
-
-
-.el-input__inner {
-  /* 将focus状态的样式设置为空 */
-  border-color: transparent;
-  box-shadow: none;
-}

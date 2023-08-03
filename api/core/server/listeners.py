@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from settings import settings
 from tortoise.contrib.fastapi import register_tortoise
+from migrate import init_data
 
 
 def register_init(app: FastAPI) -> None:
@@ -28,4 +29,3 @@ def register_init(app: FastAPI) -> None:
         关闭
         :return:
         """
-

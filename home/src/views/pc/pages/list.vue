@@ -13,8 +13,12 @@ watch(
     if (el) {
       el.scrollIntoView({
         behavior: "smooth",
-        block: "start",
+        block: "center",
       });
+      // el.scrollTop = 60;
+      // window.scrollBy(0, 100);
+      // el.offsetTop += 50;
+      // debugger;
     }
   },
   {

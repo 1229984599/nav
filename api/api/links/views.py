@@ -52,7 +52,7 @@ async def handle_update(item_id: str, item: UpdateMenuSchema):
 
 
 @link_router.post('/siteinfo')
-async def handle_sietinfo(url: str):
+async def handle_siteinfo(url: str):
     data = await get_site_info(url)
     return BaseApiOut(data=data)
 

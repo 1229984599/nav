@@ -27,7 +27,7 @@ class APISettings(BaseSettings):
     ALGORITHM: str = os.environ.get('ALGORITHM', 'ALGORITHM')
 
     # 生产环境保管好 SECRET_KEY
-    SECRET_KEY: str = os.environ.get('SECRET_KEY', 'dsklfjsladjflsadj')
+    SECRET_KEY: str = os.environ.get('SECRET_KEY', 'development key')
 
     # 项目根路径
     BASE_PATH: Path = Path(__file__).resolve().parent
@@ -54,7 +54,7 @@ class APISettings(BaseSettings):
 
 @lru_cache()
 def get_settings():
-    return APISettings(_env_file='config/.env')
+    return APISettings()
 
 
 settings = get_settings()

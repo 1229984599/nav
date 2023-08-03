@@ -18,12 +18,20 @@ const fetchSuggestions = async (
 const handleSuggestionClick = (link: LinkSchemaList) => {
   // 点击搜索推荐结果，处理相应的操作
   window.open(link.href, "_blank");
+  searchValue.value = "";
 };
 </script>
 
 <template>
-  <div class="container mx-auto py-10">
-    <div class="relative w-3/5">
+  <div class="mx-auto pb-20 pt-10 relative">
+    <div class="w-3/5">
+      <ul
+        class="pb-3 flex justify-center gap-x-10 cursor-pointer text-gray-200/50"
+      >
+        <li class="li-item">百度</li>
+        <li class="li-item">百度</li>
+        <li class="li-item">百度</li>
+      </ul>
       <el-autocomplete
         :trigger-on-focus="false"
         :highlight-first-item="true"
@@ -47,9 +55,21 @@ const handleSuggestionClick = (link: LinkSchemaList) => {
   </div>
 </template>
 
-<style lang="scss">
-.el-input__wrapper {
+<style lang="scss" scoped>
+:deep(.el-input__wrapper) {
   border-color: transparent !important;
   box-shadow: none !important;
+}
+
+.li-item {
+  border-bottom-width: 3px;
+  word-break: keep-all;
+  border-bottom-color: rgba(255, 255, 255, 0.01);
+  transition: color 0.3s ease-in-out;
+  &:hover,
+  &:active {
+    color: rgb(255 255 255);
+    border-bottom-color: rgb(255 255 255);
+  }
 }
 </style>

@@ -2,10 +2,11 @@
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
 import { PropType } from "vue";
+import { MenuSchemaTree } from "@/api/menu/types";
 
 defineProps({
   menu: {
-    type: Object,
+    type: Object as PropType<MenuSchemaTree>,
   },
 });
 </script>

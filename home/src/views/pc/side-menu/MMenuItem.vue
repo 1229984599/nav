@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { PropType } from "vue";
 import { useRouter } from "vue-router";
-import SubMuneItem from "@/views/pc/side-menu/SubMuneItem.vue";
+import SubMenuItem from "@/views/pc/side-menu/SubMenuItem.vue";
+import { MenuSchemaTree } from "@/api/menu/types";
 
 defineProps({
-  item: Object,
+  item: Object as PropType<MenuSchemaTree>,
   iconSize: {
     type: [String, Number],
     default: 25,
@@ -30,7 +31,7 @@ function gotoList(item: any) {
   >
     <template #title>
       <div @click="gotoList(item)" class="flex">
-        <sub-mune-item :item="item" :icon-size="iconSize" />
+        <sub-menu-item :item="item" :icon-size="iconSize" />
       </div>
     </template>
     <el-menu-item
@@ -38,11 +39,11 @@ function gotoList(item: any) {
       :index="submenu.title"
       v-for="submenu in item.children"
     >
-      <sub-mune-item :item="submenu" :icon-size="iconSize" />
+      <sub-menu-item :item="submenu" :icon-size="iconSize" />
     </el-menu-item>
   </el-sub-menu>
   <el-menu-item @click="gotoList(item)" v-else :index="item?.title">
-    <sub-mune-item :item="item" :icon-size="iconSize" />
+    <sub-menu-item :item="item" :icon-size="iconSize" />
   </el-menu-item>
 </template>
 

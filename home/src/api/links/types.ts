@@ -30,15 +30,15 @@ export interface LinkSchemaList {
   /**
    * Color，图标颜色hex
    */
-  color?: null | string;
+  color?: string;
   /**
    * Created，创建时间
    */
-  created?: Date | null;
+  created?: Date;
   /**
    * Desc
    */
-  desc?: null | string;
+  desc?: string;
   /**
    * Href
    */
@@ -46,7 +46,7 @@ export interface LinkSchemaList {
   /**
    * Icon
    */
-  icon?: null | string;
+  icon?: string;
   /**
    * Id
    */
@@ -62,7 +62,7 @@ export interface LinkSchemaList {
   /**
    * Order，值越大越靠前
    */
-  order?: number | null;
+  order?: number;
   /**
    * Title
    */
@@ -70,7 +70,7 @@ export interface LinkSchemaList {
   /**
    * Updated，更新时间
    */
-  updated?: Date | null;
+  updated?: Date;
 }
 
 /**
@@ -111,11 +111,11 @@ export interface CreateMenuSchema {
   /**
    * Color，图标颜色hex
    */
-  color?: null | string;
+  color?: string;
   /**
    * Desc
    */
-  desc?: null | string;
+  desc?: string;
   /**
    * Href
    */
@@ -123,7 +123,7 @@ export interface CreateMenuSchema {
   /**
    * Icon
    */
-  icon?: null | string;
+  icon?: string;
   /**
    * Is Self
    */

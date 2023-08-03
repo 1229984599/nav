@@ -7,7 +7,7 @@ defineOptions({
 });
 const props = defineProps({
   icon: {
-    type: String,
+    type: [String],
     default: "",
   },
   size: {

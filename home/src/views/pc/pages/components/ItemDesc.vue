@@ -1,41 +1,48 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
+import { PropType } from "vue";
+import { LinkSchemaList } from "@/api/links/types";
 
 defineProps({
   item: {
-    type: Object,
+    type: Object as PropType<LinkSchemaList>,
     required: true,
   },
 });
 </script>
 
 <template>
-  <a
-    :href="item?.href"
-    :target="item?.is_self ? '_self' : '_blank'"
-    class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
-  >
-    <div class="shrink-0">
-      <m-icon
-        :style="{ color: item?.color }"
-        :icon="item.icon"
-        :size="50"
-        class="rounded-full"
-      />
-    </div>
+  <el-tooltip :disabled="!item?.desc" :enterable="false">
+    <a
+      :href="item?.href"
+      :target="item?.is_self ? '_self' : '_blank'"
+      class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
+    >
+      <div class="shrink-0">
+        <m-icon
+          :style="{ color: item?.color }"
+          :icon="item?.icon"
+          :size="50"
+          class="rounded-full w-8 md:w-full"
+        />
+      </div>
 
-    <div class="truncate pl-1.5">
-      <div class="text-base font-bold">{{ item.title }}</div>
-      <span class="desc">
-        {{ item?.desc || "暂无描述信息" }}
-      </span>
-    </div>
-  </a>
+      <div class="truncate pl-1.5">
+        <div class="text-sm md:text-base font-bold">{{ item.title }}</div>
+        <span class="desc">
+          {{ item?.desc || "暂无描述信息" }}
+        </span>
+      </div>
+    </a>
+    <template #content>
+      <div class="max-w-[280px]">{{ item.desc }}</div>
+    </template>
+  </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
 .desc {
-  @apply text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full duration-300 hover:text-gray-600;
+  @apply text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full;
   //text-indent: 10px;
 }
 

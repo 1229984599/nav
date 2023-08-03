@@ -34,9 +34,7 @@ const rules: FormRules = reactive<FormRules>({
  */
 async function handleSiteInfo() {
   const data = await linksModel.getSiteInfo(form.href);
-  form.title = data?.title;
-  form.icon = data?.icon;
-  form.desc = data?.desc;
+  Object.assign(form, data);
 }
 
 function handleCancel() {
@@ -155,4 +153,11 @@ async function handleSubmit() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.el-input-group__append) {
+  //border-color: transparent;
+  box-shadow: none;
+  color: unset;
+  background-color: white;
+}
+</style>

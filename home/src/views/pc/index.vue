@@ -5,11 +5,13 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "@/views/pc/footer/MFooter.vue";
 import AppMain from "@/views/pc/app-main/AppMain.vue";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
 import MSearch from "@/components/MSearch.vue";
+import MMenuOther from "@/views/pc/side-menu/MMenuOther.vue";
+import cssValue from "@/styles/variables.scss";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -20,6 +22,9 @@ onMounted(async () => {
   await siteStore.getSiteInfo();
   useTitle(siteStore.siteInfo.title);
 });
+// const leftWidth = computed(() => {
+//   return appStore.isCollapse ? 0 : cssValue?.sideBarWidth;
+// });
 </script>
 
 <template>
@@ -27,11 +32,12 @@ onMounted(async () => {
     <!--    左侧菜单-->
     <div class="h-screen left-container">
       <el-aside
-        class="h-full"
+        class="h-full relative"
         :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'"
       >
         <m-logo />
         <m-side-menu />
+        <m-menu-other class="menu-other w-full absolute bottom-0" />
       </el-aside>
     </div>
     <!--    右侧内容-->
@@ -39,9 +45,9 @@ onMounted(async () => {
       class="h-screen right-container overflow-y-auto"
       :class="appStore.isCollapse ? 'hide-right-main' : 'right-main'"
     >
+      <m-navbar class="navbar border-b border-b-gray-100" />
       <div class="nav-search">
-        <m-navbar class="navbar" />
-        <m-search class="py-40 flex justify-center" />
+        <m-search class="flex justify-center" />
       </div>
       <div class="p-6">
         <app-main />
@@ -57,18 +63,30 @@ onMounted(async () => {
 .common-layout {
   background-color: #{$bg};
 
-  .nav-search {
-    color: #282a2d;
-    position: relative;
-    background-size: 400%;
-    background-position: 0% 100%;
-    animation: gradient 7.5s ease-in-out infinite;
-    background-image: linear-gradient(
-      45deg,
-      #8618db 0%,
-      #d711ff 50%,
-      #460fdd 100%
-    );
+  .left-container {
+    ul {
+      height: calc(100% - #{$navHeaderHeight});
+      border-right: none;
+    }
+
+    .menu-side {
+      width: #{$sideBarWidth};
+    }
+
+    .hide-menu-side {
+      width: #{$hideSideBarWidth};
+    }
+  }
+
+  .right-container {
+    .right-main {
+      width: calc(100% - #{$sideBarWidth});
+    }
+
+    .hide-right-main {
+      width: calc(100% - #{$hideSideBarWidth});
+    }
+
     .navbar {
       height: 60px;
       width: 100%;
@@ -78,7 +96,7 @@ onMounted(async () => {
       word-wrap: break-word;
       box-sizing: border-box;
       top: 0;
-      z-index: 1080;
+      z-index: 1;
       position: sticky;
       right: 0;
       transition:
@@ -88,27 +106,20 @@ onMounted(async () => {
       color: initial;
       background: rgba(255, 255, 255, 1);
     }
+
+    .nav-search {
+      color: #282a2d;
+      //position: relative;
+      background-size: 400%;
+      background-position: 0% 100%;
+      animation: gradient 7.5s ease-in-out infinite;
+      background-image: linear-gradient(
+        45deg,
+        #8618db 0%,
+        #d711ff 50%,
+        #460fdd 100%
+      );
+    }
   }
-}
-
-ul {
-  height: calc(100% - #{$navHeaderHeight});
-  border-right: none;
-}
-
-.menu-side {
-  width: #{$sideBarWidth};
-}
-
-.hide-menu-side {
-  width: #{$hideSideBarWidth};
-}
-
-.right-main {
-  width: calc(100% - #{$sideBarWidth});
-}
-
-.hide-right-main {
-  width: calc(100% - #{$hideSideBarWidth});
 }
 </style>

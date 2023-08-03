@@ -1,13 +1,11 @@
-import { CreateCrudOptionsRet, dict } from "@fast-crud/fast-crud";
-import linkModel from "@/api/links";
+import { CreateCrudOptionsRet } from "@fast-crud/fast-crud";
+import friendModel from "@/api/friend";
 import { useRequest } from "@/api/crud";
-import { useMenuStore } from "@/store/modules/menu";
 import { ref } from "vue";
 import { message } from "@/utils/message";
 import { ElMessageBox } from "element-plus";
 import { UseIconForm } from "@/hooks/icon";
 
-const menuStore = useMenuStore();
 export default function createCrudOptions(crudExpose: {
   doRefresh: () => void;
 }): CreateCrudOptionsRet {
@@ -17,7 +15,7 @@ export default function createCrudOptions(crudExpose: {
   return {
     crudOptions: {
       request: {
-        ...useRequest(linkModel)
+        ...useRequest(friendModel)
       },
       actionbar: {
         buttons: {
@@ -26,7 +24,7 @@ export default function createCrudOptions(crudExpose: {
             type: "danger",
             click: context => {
               ElMessageBox.confirm("确定要批量删除吗？").then(() => {
-                linkModel.delete(selectedIds.value.join(",")).then(() => {
+                friendModel.delete(selectedIds.value.join(",")).then(() => {
                   crudExpose.doRefresh();
                   message("删除成功", { type: "success" });
                 });
@@ -42,10 +40,9 @@ export default function createCrudOptions(crudExpose: {
               text: "采集",
               type: "success",
               loading: spiderLoading,
-              click: async ({ form }) => {
+              click: ({ form }) => {
                 spiderLoading.value = true;
-                spiderLoading.value = true;
-                linkModel
+                friendModel
                   .getSiteInfo(form.href)
                   .then(data => Object.assign(form, data))
                   .finally(() => {
@@ -86,48 +83,6 @@ export default function createCrudOptions(crudExpose: {
             order: 0
           }
         },
-        menus: {
-          title: "菜单",
-          type: "dict-select",
-          search: {
-            show: true
-          },
-          form: {
-            col: { span: 14 },
-            component: {
-              multiple: true
-            }
-          },
-          column: {
-            component: {
-              color: "auto"
-            }
-          },
-          dict: dict({
-            // url: "/sys/authority/role/list",
-            getData: menuStore.getMenuList,
-            value: "id",
-            label: "title",
-            immediate: true
-          })
-        },
-        is_self: {
-          title: "站内打开",
-          column: {
-            width: 90
-          },
-          form: {
-            col: { span: 6 }
-          },
-          type: "dict-switch",
-          dict: dict({
-            data: [
-              { value: true, label: "是" },
-              { value: false, label: "否" }
-            ]
-          })
-        },
-
         desc: {
           title: "描述",
           type: "textarea",

@@ -17,8 +17,8 @@ class Links extends Crud {
     return await super.list(page, pageSize, filters);
   }
 
-  async getSiteInfo(url: string) {
-    return await request<SiteInfo>({
+  async getSiteInfo(url: string): Promise<SiteInfo> {
+    return await request({
       method: "post",
       url: `${this.baseUrl}/siteinfo`,
       params: {
