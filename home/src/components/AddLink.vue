@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import MIcon from "@/components/MIcon.vue";
 import linksModel from "@/api/links";
 import { isMobile, isUrl } from "@/utils/window";
@@ -59,8 +59,6 @@ async function handleSubmit() {
       });
   });
 }
-
-onMounted(menuStore.getMenuList);
 </script>
 
 <template>
@@ -111,24 +109,33 @@ onMounted(menuStore.getMenuList);
           <el-input type="textarea" v-model="form.desc" />
         </el-form-item>
         <el-form-item label="分类" prop="menus">
-          <el-select
+          <el-tree-select
+            v-model="form.menus"
+            :data="menuStore.menuTree"
+            multiple
+            :render-after-expand="false"
+            show-checkbox
+            check-strictly
+            check-on-click-node
+            highlight-current
             filterable
             clearable
-            multiple
-            v-model="form.menus"
             placeholder="请选择"
             class="w-full"
+            :props="{
+              label: 'title',
+              value: 'id',
+            }"
+            node-key="id"
+            value-key="id"
           >
-            <el-option
-              class="flex space-x-2 hover:text-red-900"
-              :label="menu.title"
-              v-for="menu in menuStore.menuList"
-              :value="menu?.id"
-            >
-              <m-icon :color="menu.color" :icon="menu?.icon" />
-              <span class="text-gray-700">{{ menu?.title }}</span>
-            </el-option>
-          </el-select>
+            <template #default="{ data }">
+              <div class="flex gap-x-1">
+                <m-icon :size="20" :color="data.color" :icon="data?.icon" />
+                <span>{{ data.title }}</span>
+              </div>
+            </template>
+          </el-tree-select>
         </el-form-item>
         <el-form-item label="站内打开" prop="is_self">
           <el-switch
