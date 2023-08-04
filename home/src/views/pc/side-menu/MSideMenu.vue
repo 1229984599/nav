@@ -8,7 +8,6 @@ const appStore = useAppStore();
 const menuStore = useMenuStore();
 onMounted(() => {
   menuStore.getMenuTree();
-  menuStore.getMenuList();
 });
 </script>
 

@@ -12,7 +12,7 @@ services:
         # 配置文件
         volumes:
         # 映射配置文件
-#        - ./data:/app/data
+        - ./data:/app/data
         ports:
             - "9000:80"
         restart: unless-stopped

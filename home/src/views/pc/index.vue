@@ -5,13 +5,11 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "@/views/pc/footer/MFooter.vue";
 import AppMain from "@/views/pc/app-main/AppMain.vue";
-import { computed, onMounted } from "vue";
+import { onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
-import MSearch from "@/components/MSearch.vue";
-import MMenuOther from "@/views/pc/side-menu/MMenuOther.vue";
-import cssValue from "@/styles/variables.scss";
+import MSearch from "@/components/m-search/index.vue";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -37,17 +35,13 @@ onMounted(async () => {
       >
         <m-logo />
         <m-side-menu />
-        <m-menu-other class="menu-other w-full absolute bottom-0" />
       </el-aside>
     </div>
     <!--    右侧内容-->
-    <div
-      class="h-screen right-container overflow-y-auto"
-      :class="appStore.isCollapse ? 'hide-right-main' : 'right-main'"
-    >
+    <div class="h-screen right-container w-full overflow-y-auto">
       <m-navbar class="navbar border-b border-b-gray-100" />
       <div class="nav-search">
-        <m-search class="flex justify-center" />
+        <m-search />
       </div>
       <div class="p-6">
         <app-main />
@@ -109,7 +103,7 @@ onMounted(async () => {
 
     .nav-search {
       color: #282a2d;
-      //position: relative;
+      position: relative;
       background-size: 400%;
       background-position: 0% 100%;
       animation: gradient 7.5s ease-in-out infinite;

@@ -7,6 +7,9 @@ import {
 import menuModel from "@/api/menu";
 import Crud, { useRequest } from "@/api/crud";
 import { UseIconForm } from "@/hooks/icon";
+import { ElMessage } from "element-plus";
+import { useActionButtons } from "@/hooks/crud";
+import { type CrudExpose } from "@fast-crud/fast-crud/dist/d/d/expose";
 
 async function getMenuList(currentId: number) {
   const { items } = await menuModel.list(1, 100);
@@ -14,10 +17,11 @@ async function getMenuList(currentId: number) {
   return items?.filter(item => item.id !== currentId);
 }
 
-export default function createCrudOptions(crudExpose: {
-  doRefresh: () => void;
-}): CreateCrudOptionsRet {
+export default function createCrudOptions(
+  crudExpose: CrudExpose
+): CreateCrudOptionsRet {
   const iconForm = UseIconForm();
+  const { save, deleteAll } = useActionButtons(crudExpose, menuModel);
   return {
     crudOptions: {
       request: {
@@ -33,12 +37,21 @@ export default function createCrudOptions(crudExpose: {
             page: 1,
             pages: 1,
             size: 20,
-            total: 100
+            total: 20
           };
         }
       },
-      form: {
-        col: { span: 24 }
+      actionbar: {
+        buttons: {
+          deleteAll,
+          save
+        }
+      },
+      table: {
+        editable: {
+          enabled: true,
+          mode: "free" //模式，free=自由编辑，row=行编辑
+        }
       },
       columns: {
         id: {
@@ -61,12 +74,11 @@ export default function createCrudOptions(crudExpose: {
           column: {
             show: false
           },
-          editForm: {
+          form: {
             col: { span: 12 }
           },
           dict: dict({
             getData: async ({ row }) => {
-              debugger;
               return await getMenuList(row?.id);
             },
             label: "title",
@@ -74,18 +86,28 @@ export default function createCrudOptions(crudExpose: {
             immediate: false
             // data: [{ label: "aa", value: "bb" }]
           })
+        },
+        order: {
+          title: "排序",
+          type: "number",
+          column: {
+            showTitle: "值越小越靠前"
+          },
+          form: {
+            col: { span: 12 }
+          }
+        },
+        create_time: {
+          title: "创建时间",
+          type: "datetime",
+          form: { show: false, submit: false }, // 表单配置
+          viewForm: {
+            show: true
+          },
+          column: {
+            width: 180
+          }
         }
-        // created: {
-        //   title: "创建时间",
-        //   type: "datetime",
-        //   form: { show: false, submit: false }, // 表单配置
-        //   viewForm: {
-        //     show: true
-        //   },
-        //   column: {
-        //     width: 180
-        //   }
-        // }
       }
     }
   };

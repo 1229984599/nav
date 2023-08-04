@@ -1,5 +1,5 @@
 // 引入fast-crud
-import { FastCrud } from "@fast-crud/fast-crud";
+import { FastCrud, setLogger } from "@fast-crud/fast-crud";
 import "@fast-crud/fast-crud/dist/style.css";
 
 // 请选择ui: element/ antdv /naive。三选一，不支持动态切换
@@ -7,6 +7,9 @@ import "@fast-crud/fast-crud/dist/style.css";
 import ui from "@fast-crud/ui-element";
 import { App, Component, ref } from "vue";
 import { http } from "@/utils/http";
+
+// 设置日志级别
+setLogger("error");
 
 export function useFastCrud(app: App) {
   // 先安装ui
@@ -66,7 +69,11 @@ export function useFastCrud(app: App) {
         pagination: {
           pageSize: 10
         },
-
+        form: {
+          col: {
+            span: 24
+          }
+        },
         columns: {
           $checked: {
             title: "选择",
@@ -78,19 +85,7 @@ export function useFastCrud(app: App) {
               columnSetDisabled: true //禁止在列设置中选择
             }
           }
-        },
-        // actionbar: {
-        //   buttons: {
-        //     sync: {
-        //       text: "批量删除",
-        //       type: "danger",
-        //       click: context => {
-        //         debugger
-        //         console.log(context);
-        //       }
-        //     }
-        //   }
-        // }
+        }
       };
     }
   });

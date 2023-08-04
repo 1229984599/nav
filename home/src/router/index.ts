@@ -1,6 +1,6 @@
 import {
   createRouter,
-  createWebHistory,
+  createWebHashHistory,
   Router,
   RouteRecordRaw,
 } from "vue-router";
@@ -9,7 +9,7 @@ import { pcRoutes } from "@/router/pc";
 export const systemRoutes: RouteRecordRaw[] = [];
 
 const router: Router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [...systemRoutes, ...pcRoutes],
 });
 

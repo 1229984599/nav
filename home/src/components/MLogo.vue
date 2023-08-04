@@ -51,8 +51,9 @@ const siteStore = useSiteStore();
       Arial,
       Helvetica,
       sans-serif;
+    padding-left: 2px;
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     overflow: hidden;
     text-align: left;
     text-overflow: ellipsis;

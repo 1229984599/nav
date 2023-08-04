@@ -9,9 +9,9 @@ from .utils import get_password_hash
 
 class UserCrud(ModelCrud):
     @classmethod
-    def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
+    async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
         # queryset = queryset.filter(is_delete=False)
-        return super().pre_list(queryset, item)
+        return await super().pre_list(queryset, item)
 
     @classmethod
     def pre_create(cls, item: PydanticModel) -> dict:

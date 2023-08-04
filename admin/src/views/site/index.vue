@@ -87,3 +87,11 @@ onMounted(async () => {
     </el-form>
   </div>
 </template>
+<style scoped>
+:deep(.el-input-group__append) {
+  //border-color: transparent;
+  box-shadow: none;
+  color: unset;
+  background-color: white;
+}
+</style>

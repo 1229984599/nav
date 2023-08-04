@@ -9,7 +9,7 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
       title: "图标",
       type: "text",
       column: {
-        width: showUrl ? "auto" : 60,
+        // width: showUrl ? "auto" : 100,
         cellRender(scope) {
           return (
             <div class="flex items-center gap-x-2">

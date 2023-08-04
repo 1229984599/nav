@@ -39,6 +39,6 @@ const props = defineProps({
 .icon-size {
   @apply shadow-sm rounded-full;
   color: v-bind(color);
-  object-fit: cover;
+  object-fit: fill;
 }
 </style>

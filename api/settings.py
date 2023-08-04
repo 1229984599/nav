@@ -33,7 +33,7 @@ class APISettings(BaseSettings):
     BASE_PATH: Path = Path(__file__).resolve().parent
 
     # 数据库连接配置
-    DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite://system.db')
+    DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite://data/data.db')
 
     # 数据库配置
     DATABASE_CONFIG: Dict = {

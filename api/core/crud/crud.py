@@ -41,7 +41,7 @@ class ModelCrud(APIRouter):
         return item.dict(exclude_unset=True)
 
     @classmethod
-    def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
+    async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
         """
         数据预处理：搜索字段
         :param queryset:
@@ -65,10 +65,11 @@ class ModelCrud(APIRouter):
         @self.post('/list', response_model=BaseApiOut[Page[self.schema_list]], name=f'{model_name}Read',
                    summary=f'{model_name} List',
                    dependencies=depends_list)
-        async def handle_list(filters: schema_filters, params: Params = Depends(), order_by: str = '-created'):
+        async def handle_list(filters: schema_filters, params: Params = Depends(), order_by: str = '-create_time'):
             queryset = self.model.filter(is_delete=False)
-            queryset = self.pre_list(queryset, filters.dict(exclude_defaults=True))
-            queryset = queryset.order_by(order_by)
+            queryset = await self.pre_list(queryset, filters.dict(exclude_defaults=True))
+            if order_by:
+                queryset = queryset.order_by(*order_by.split(','))
             data = await paginate(queryset, params, True)
             return BaseApiOut(data=data)
 
@@ -103,8 +104,7 @@ class ModelCrud(APIRouter):
         async def handle_update(item_id: str, item: schema_update):
             item = await self.pre_update(item, item_id=item_id)
             updated_item = await self.model.update_one(item_id, item)
-            # data = await schema_update.from_queryset_single(updated_item)
-            data = await schema_update.from_queryset(updated_item)
+            data = await schema_update.from_queryset_single(updated_item)
             return BaseApiOut(data=data)
 
         @self.put('/update/all', response_model=BaseApiOut, name=f'{model_name}Update',

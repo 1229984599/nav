@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import MIcon from "@/components/MIcon.vue";
 import linksModel from "@/api/links";
 import { isMobile, isUrl } from "@/utils/window";
@@ -59,6 +59,8 @@ async function handleSubmit() {
       });
   });
 }
+
+onMounted(menuStore.getMenuList);
 </script>
 
 <template>

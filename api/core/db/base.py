@@ -86,9 +86,9 @@ class BaseSchemaMixin:
 
 
 class TimestampMixin:
-    created = fields.DatetimeField(
+    create_time = fields.DatetimeField(
         null=True, auto_now_add=True, description="创建时间")
-    updated = fields.DatetimeField(
+    update_time = fields.DatetimeField(
         null=True, auto_now=True, description="更新时间")
 
 

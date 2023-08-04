@@ -1,17 +1,14 @@
 import { CreateCrudOptionsRet } from "@fast-crud/fast-crud";
 import friendModel from "@/api/friend";
 import { useRequest } from "@/api/crud";
-import { ref } from "vue";
-import { message } from "@/utils/message";
-import { ElMessageBox } from "element-plus";
 import { UseIconForm } from "@/hooks/icon";
+import { useSpiderButtons } from "@/hooks/spider";
+import { useActionButtons } from "@/hooks/crud";
 
-export default function createCrudOptions(crudExpose: {
-  doRefresh: () => void;
-}): CreateCrudOptionsRet {
-  const selectedIds = ref([]);
-  const spiderLoading = ref(false);
+export default function createCrudOptions(crudExpose): CreateCrudOptionsRet {
   const iconForm = UseIconForm(false);
+  const { spider } = useSpiderButtons(friendModel);
+  const actionButton = useActionButtons(crudExpose, friendModel);
   return {
     crudOptions: {
       request: {
@@ -19,46 +16,14 @@ export default function createCrudOptions(crudExpose: {
       },
       actionbar: {
         buttons: {
-          deleteAll: {
-            text: "批量删除",
-            type: "danger",
-            click: context => {
-              ElMessageBox.confirm("确定要批量删除吗？").then(() => {
-                friendModel.delete(selectedIds.value.join(",")).then(() => {
-                  crudExpose.doRefresh();
-                  message("删除成功", { type: "success" });
-                });
-              });
-            }
-          }
+          ...actionButton
         }
       },
       form: {
         wrapper: {
           buttons: {
-            spider: {
-              text: "采集",
-              type: "success",
-              loading: spiderLoading,
-              click: ({ form }) => {
-                spiderLoading.value = true;
-                friendModel
-                  .getSiteInfo(form.href)
-                  .then(data => Object.assign(form, data))
-                  .finally(() => {
-                    spiderLoading.value = false;
-                  });
-              }
-            }
+            spider
           }
-        },
-        col: {
-          span: 24
-        }
-      },
-      table: {
-        onSelectionChange: (changed: any[]) => {
-          selectedIds.value = changed.map(item => item.id);
         }
       },
       columns: {
@@ -92,18 +57,19 @@ export default function createCrudOptions(crudExpose: {
           form: {
             show: true
           }
+        },
+        create_time: {
+          title: "创建时间",
+          type: "datetime",
+          form: { show: false, submit: false }, // 表单配置
+          viewForm: {
+            show: true
+          },
+          column: {
+            width: 180,
+            order: 2
+          }
         }
-        // created: {
-        //   title: "创建时间",
-        //   type: "datetime",
-        //   form: { show: false, submit: false }, // 表单配置
-        //   viewForm: {
-        //     show: true
-        //   },
-        //   column: {
-        //     width: 180
-        //   }
-        // }
       }
     }
   };

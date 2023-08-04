@@ -8,11 +8,11 @@ from .schemas import CreateMenuSchema, SetMenuSchema, LinkSchemaList, UpdateMenu
 
 class LinkCrud(ModelCrud):
     @classmethod
-    def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
+    async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
         if item.get('menus'):
             menus = item.pop('menus')
             queryset = queryset.filter(menus__in=menus)
-        return super().pre_list(queryset, item)
+        return await super().pre_list(queryset, item)
 
 
 link_router = LinkCrud(Links,

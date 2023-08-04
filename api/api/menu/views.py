@@ -1,9 +1,15 @@
+from tortoise.queryset import QuerySet
+
 from core.crud import ModelCrud, BaseApiOut
 from models import Menu, Links
 from .schemas import SetLinkSchema, MenuSchemaList, MenuSchemaUpdate
 
 
 class MenuCrud(ModelCrud):
+    @classmethod
+    async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
+        return await super().pre_list(queryset, item)
+
     @classmethod
     async def pre_update(cls, item: MenuSchemaUpdate, item_id=None) -> dict:
         if not item.parent_id:
@@ -24,6 +30,8 @@ async def get_menu_tree(menu_item: Menu) -> dict:
         "icon": menu_item.icon,
         "color": menu_item.color,
         "links": await menu_item.links,
+        "order": menu_item.order,
+        "create_time": menu_item.create_time,
         "parent_id": menu_item.parent_id,
     }
     children = await menu_item.children
@@ -34,7 +42,7 @@ async def get_menu_tree(menu_item: Menu) -> dict:
 
 @menu_router.get('/tree', description='返回菜单树')
 async def handle_get_menu_tree():
-    all_menu_items = await Menu.all().prefetch_related(
+    all_menu_items = await Menu.all().order_by('order').prefetch_related(
         "links", "children__children")
     menu_tree = []
     for menu_item in all_menu_items:
