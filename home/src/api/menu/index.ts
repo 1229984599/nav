@@ -8,11 +8,13 @@ import {
 
 class Menu extends Crud {
   async list(
-    page: number = 1,
-    pageSize: number = 10,
+    query = {
+      page: 1,
+      pageSize: 10,
+    },
     filters: MenuSchemaFilters = {},
   ): Promise<PageMenuSchemaList> {
-    return await super.list(page, pageSize, filters);
+    return await super.list(query, filters);
   }
   async getMenuTree(): Promise<MenuSchemaTree> {
     return await request({

@@ -1,5 +1,11 @@
 import { request } from "@/utils/service";
 
+interface QueryParams {
+  page?: number;
+  pageSize?: number;
+  order_by?: string;
+}
+
 class Crud {
   protected readonly baseUrl: string;
 
@@ -9,21 +15,22 @@ class Crud {
 
   /**
    * 获取列表
-   * @param page
-   * @param pageSize
+   * @param query
    * @param filters
    */
   async list(
-    page: number = 1,
-    pageSize: number = 10,
+    query: QueryParams = {
+      page: 1,
+      pageSize: 10,
+      order_by: "-create_time",
+    },
     filters = {},
   ): Promise<any> {
     return await request({
       method: "post",
       url: `${this.baseUrl}/list`,
       params: {
-        page: page,
-        size: pageSize,
+        ...query,
       },
       data: filters,
     });

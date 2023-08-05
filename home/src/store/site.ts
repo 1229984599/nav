@@ -3,7 +3,7 @@ import { SiteSchema } from "@/api/site/types";
 import siteModel from "@/api/site";
 
 /**
- * 记录分类和所有数据
+ * 站点信息
  */
 export const useSiteStore = defineStore("siteInfo", {
   state: () => ({

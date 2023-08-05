@@ -3,7 +3,7 @@ import { FriendSchemaList } from "@/api/friend/types";
 import friendModel from "@/api/friend";
 
 /**
- * 记录分类和所有数据
+ * 记录分友情链接
  */
 export const useFriendStore = defineStore("friend", {
   state: () => ({
@@ -11,7 +11,7 @@ export const useFriendStore = defineStore("friend", {
   }),
   actions: {
     async getFriendList() {
-      const { items } = await friendModel.list(1, 100);
+      const { items } = await friendModel.list({ page: 1, pageSize: 100 });
       this.friendList = items;
       return items;
     },

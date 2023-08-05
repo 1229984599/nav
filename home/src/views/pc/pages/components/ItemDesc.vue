@@ -16,7 +16,7 @@ defineProps({
     <a
       :href="item?.href"
       :target="item?.is_self ? '_self' : '_blank'"
-      class="cursor-pointer bg-white box rounded-md p-4 flex space-x-2 items-center"
+      class="cursor-pointer bg-white box rounded-md p-2 md:p-4 flex space-x-2 items-center"
     >
       <div class="shrink-0">
         <m-icon

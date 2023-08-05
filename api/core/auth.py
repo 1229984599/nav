@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import  Security, HTTPException
+from fastapi import Security, HTTPException
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearer, JwtAuthorizationCredentials, JwtRefreshBearerCookie
 
 from core import settings
@@ -10,7 +10,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 access_security = JwtAccessBearerCookie(
     secret_key=settings.SECRET_KEY,
-    # auto_error=True,
+    auto_error=False,
     access_expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     # change access token validation timedelta
 )
@@ -42,8 +42,20 @@ def get_password_hash(password: str) -> str:
 
 
 async def get_current_user(credentials: JwtAuthorizationCredentials = Security(access_security)):
-    user = await User.find_by_username(credentials['username'])
+    try:
+        username = credentials['username']
+    except TypeError:
+        raise HTTPException(status_code=419, detail='非法请求，请重新登录')
+    user = await User.find_by_username(username)
     # 当前用户是否存在
     if not user:
         raise HTTPException(status_code=419, detail='用户不存在，请检查是否登录')
     return user
+
+
+async def is_login(credentials: JwtAuthorizationCredentials = Security(access_security)) -> bool | None:
+    try:
+        username = credentials['username']
+    except TypeError:
+        return False
+    return await User.get_or_none(username=username)

@@ -1,4 +1,4 @@
-from api.system.utils import get_password_hash
+from core.auth import get_password_hash
 from models import Site, User
 
 

@@ -5,7 +5,7 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "@/views/pc/footer/MFooter.vue";
 import AppMain from "@/views/pc/app-main/AppMain.vue";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
@@ -20,9 +20,10 @@ onMounted(async () => {
   await siteStore.getSiteInfo();
   useTitle(siteStore.siteInfo.title);
 });
-// const leftWidth = computed(() => {
-//   return appStore.isCollapse ? 0 : cssValue?.sideBarWidth;
-// });
+// 是否显示遮罩
+const isMask = computed(() => {
+  return isMobile.value ? !appStore.isCollapse : false;
+});
 </script>
 
 <template>
@@ -33,7 +34,7 @@ onMounted(async () => {
         class="h-full relative"
         :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'"
       >
-        <m-logo />
+        <m-logo class="bg-white" />
         <m-side-menu />
       </el-aside>
     </div>
@@ -45,6 +46,7 @@ onMounted(async () => {
         <app-main />
         <m-footer />
       </div>
+      <div v-show="isMask" class="mask"></div>
     </div>
   </div>
 </template>
@@ -71,12 +73,23 @@ onMounted(async () => {
   }
 
   .right-container {
-    .right-main {
-      width: calc(100% - #{$sideBarWidth});
-    }
+    //.right-main {
+    //  width: calc(100% - #{$sideBarWidth});
+    //}
+    //
+    //.hide-right-main {
+    //  width: calc(100% - #{$hideSideBarWidth});
+    //}
 
-    .hide-right-main {
-      width: calc(100% - #{$hideSideBarWidth});
+    .mask {
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 20;
+      cursor: pointer;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.3);
+      width: calc(100% - #{$sideBarWidth});
     }
 
     .navbar {

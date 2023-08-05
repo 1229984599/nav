@@ -10,11 +10,14 @@ import {
 
 class Links extends Crud {
   async list(
-    page: number = 1,
-    pageSize: number = 10,
+    query = {
+      page: 1,
+      pageSize: 10,
+      order_by: "-create_time",
+    },
     filters: LinksSchemaFilters = {},
   ): Promise<PageLinkSchemaList> {
-    return await super.list(page, pageSize, filters);
+    return await super.list(query, filters);
   }
 
   async getSiteInfo(url: string): Promise<SiteInfo> {

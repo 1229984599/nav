@@ -8,11 +8,9 @@ services:
         environment:
         # 时区
         - TZ=Asia/Shanghai
+        # 数据库配置
         - DATABASE_URI=sqlite:///app/data/data.db
         # 配置文件
-        volumes:
-        # 映射配置文件
-        - ./data:/app/data
         ports:
             - "9000:80"
         restart: unless-stopped

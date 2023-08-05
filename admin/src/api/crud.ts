@@ -21,8 +21,7 @@ class Crud {
     return await http.post(`${this.baseUrl}/list`, {
       params: {
         page: page,
-        size: pageSize,
-        order_by: "order"
+        size: pageSize
       },
       data: filters
     });

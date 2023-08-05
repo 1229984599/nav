@@ -3,18 +3,14 @@ import { request } from "@/utils/service";
 import { FriendSchemaFilters, PageFriendSchemaList, SiteInfo } from "./types";
 
 class Friend extends Crud {
-  /**
-   * 获取列表
-   * @param page
-   * @param pageSize
-   * @param filters
-   */
   async list(
-    page: number = 1,
-    pageSize: number = 10,
+    query = {
+      page: 1,
+      pageSize: 10,
+    },
     filters: FriendSchemaFilters = {},
   ): Promise<PageFriendSchemaList> {
-    return await super.list(page, pageSize, filters);
+    return await super.list(query, filters);
   }
 
   async getSiteInfo(url: string): Promise<SiteInfo> {

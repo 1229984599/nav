@@ -1,24 +1,49 @@
-from tortoise.queryset import QuerySet
+from typing import Callable
+
+from fastapi import Depends
+
+from fastapi_pagination import Params
+from fastapi_pagination.ext.tortoise import paginate
 
 from core.crud import ModelCrud, BaseApiOut
-from models import Links, Menu
+from models import Links, Menu, User
 from .utils import get_site_info
 from .schemas import CreateMenuSchema, SetMenuSchema, LinkSchemaList, UpdateMenuSchema, FilterSchemaList
+from core.auth import get_current_user, is_login
 
 
 class LinkCrud(ModelCrud):
-    @classmethod
-    async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
-        if item.get('menus'):
-            menus = item.pop('menus')
-            queryset = queryset.filter(menus__in=menus)
-        return await super().pre_list(queryset, item)
+
+    @property
+    def route_list(self) -> Callable:
+        schema_filters = self.schema_filters
+
+        async def route(filters: schema_filters,
+                        params: Params = Depends(), order_by: str = '-create_time',
+                        user: User = Depends(is_login)):
+            queryset = self.model.filter(is_delete=False)
+            item = filters.dict(exclude_defaults=True)
+            if item.get('menus'):
+                menus = item.pop('menus')
+                queryset = queryset.filter(menus__in=menus)
+            if not user:
+                queryset = queryset.filter(is_vip=False)
+            queryset = await self.pre_list(queryset, item)
+            if order_by:
+                queryset = queryset.order_by(*order_by.split(','))
+            data = await paginate(queryset, params, True)
+            return BaseApiOut(data=data)
+
+        return route
 
 
 link_router = LinkCrud(Links,
                        schema_list=LinkSchemaList,
                        schema_filters=FilterSchemaList
-                       ).register_crud()
+                       ).register_crud(
+    depends_create=[Depends(get_current_user)],
+    depends_update=[Depends(get_current_user)]
+)
 
 
 @link_router.post('/menu/create', response_model=BaseApiOut)

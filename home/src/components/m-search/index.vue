@@ -8,6 +8,7 @@ import { computed, onMounted, Ref, ref } from "vue";
 import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
 import { useSiteStore } from "@/store/site";
+import MLogo from "@/components/MLogo.vue";
 
 defineOptions({
   name: "MSearch",
@@ -20,7 +21,10 @@ async function fetchSuggestions(
   callback: (arg: any) => void,
 ) {
   // 模拟根据搜索词过滤结果
-  const { items } = await linkModel.list(1, 10, { title: queryString });
+  const { items } = await linkModel.list(
+    { page: 1, pageSize: 10, order_by: "order" },
+    { title: queryString },
+  );
   callback(items);
 }
 
@@ -33,12 +37,8 @@ function handleSuggestionClick(link: any) {
 
 <template>
   <div class="mx-auto pt-8 pb-4 relative">
-    <m-icon
-      :icon="siteStore.siteInfo?.icon"
-      :size="60"
-      :color="siteStore.siteInfo?.color"
-      class="flex justify-center"
-    />
+    <m-logo font-size="22px" class="flex justify-center text-2xl" />
+
     <!-- 第二栏：搜索框 -->
     <div
       class="flex justify-center py-3"
@@ -46,9 +46,9 @@ function handleSuggestionClick(link: any) {
     >
       <div class="relative w-4/5 md:w-1/2">
         <el-autocomplete
-          :trigger-on-focus="false"
           :highlight-first-item="true"
           :fit-input-width="true"
+          :trigger-on-focus="true"
           value-key="title"
           v-model="searchQuery"
           :fetch-suggestions="fetchSuggestions"
@@ -64,12 +64,6 @@ function handleSuggestionClick(link: any) {
             />
           </template>
         </el-autocomplete>
-        <div
-          class="cursor-pointer absolute top-1 right-0 h-full py-1"
-          @click="handleSuggestionClick"
-        >
-          <div class="ic:outline-search w-8 h-8 text-white"></div>
-        </div>
       </div>
     </div>
 

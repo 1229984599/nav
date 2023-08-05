@@ -1,13 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from models import Site
 from core.crud import BaseApiOut
 from .schemas import SiteSchemaList, SiteSchemaUpdate
+from core.auth import get_current_user
 
 site_router = APIRouter()
 
 
 @site_router.post('/update', response_model=BaseApiOut[SiteSchemaUpdate])
-async def handle_update_site(site: SiteSchemaUpdate):
+async def handle_update_site(site: SiteSchemaUpdate,user= Depends(get_current_user)):
     """
     创建或者更新数据
     """

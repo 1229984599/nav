@@ -2,6 +2,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { ElMessage } from "element-plus";
 // @ts-ignore
 import { merge } from "lodash-es";
+import { getToken } from "@/utils/cookies";
 /** 创建请求实例 */
 function createService() {
   // 创建一个 axios 实例命名为 service
@@ -56,6 +57,7 @@ function createRequest(service: AxiosInstance) {
     const defaultConfig = {
       headers: {
         // 携带 Token
+        Authorization: `Bearer ${getToken()}`,
         "Content-Type": "application/json",
       },
       timeout: 5000,

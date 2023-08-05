@@ -19,9 +19,9 @@ class APISettings(BaseSettings):
     REDOC_URL: Optional[str] = "/openapi/redoc"
 
     # token过期时间 分钟
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 1
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 10
     # refresh token过期时间 分钟
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     # 生成token的加密算法
     ALGORITHM: str = os.environ.get('ALGORITHM', 'ALGORITHM')

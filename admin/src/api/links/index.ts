@@ -16,7 +16,8 @@ class Links extends Crud {
     const resp = await http.post(`${this.baseUrl}/list`, {
       params: {
         page: page,
-        size: pageSize
+        size: pageSize,
+        order_by: "order"
       },
       data: filters
     });

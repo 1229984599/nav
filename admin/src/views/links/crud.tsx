@@ -110,7 +110,21 @@ export default function createCrudOptions(crudExpose): CreateCrudOptionsRet {
         order: {
           title: "排序",
           type: "number"
+        },
+        is_vip: {
+          title: "是否vip",
+          type: "dict-switch",
+          column: {
+            width: 160
+          },
+          dict: dict({
+            data: [
+              { value: true, label: "是" },
+              { value: false, label: "否" }
+            ]
+          })
         }
+
         // created: {
         //   title: "创建时间",
         //   type: "datetime",

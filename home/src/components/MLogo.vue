@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useSiteStore } from "@/store/site";
 import MIcon from "@/components/MIcon.vue";
-
+defineProps({
+  fontSize: {
+    type: String,
+    default: "20px",
+  },
+});
 const siteStore = useSiteStore();
 </script>
 
@@ -29,7 +34,6 @@ const siteStore = useSiteStore();
 
 .layout-logo-container {
   display: flex;
-  background-color: #fff;
   align-items: center;
   position: relative;
   width: 100%;
@@ -52,7 +56,7 @@ const siteStore = useSiteStore();
       Helvetica,
       sans-serif;
     padding-left: 2px;
-    font-size: 20px;
+    font-size: v-bind(fontSize);
     font-weight: 700;
     overflow: hidden;
     text-align: left;

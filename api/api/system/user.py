@@ -1,10 +1,12 @@
+from fastapi import Depends
+
 from tortoise.contrib.pydantic import PydanticModel
 from tortoise.queryset import QuerySet
 
 from core.crud import ModelCrud
 
 from models import User
-from .utils import get_password_hash
+from core.auth import get_password_hash, get_current_user
 
 
 class UserCrud(ModelCrud):
@@ -28,6 +30,10 @@ class UserCrud(ModelCrud):
 
 
 user_router = UserCrud(User,
+                       schema_list=User.schema_list(exclude=('password',)),
                        schema_filters=User.schema_filters(include=('username',))
                        # dependencies=[Depends(check_permission)]
-                       ).register_crud()
+                       ).register_crud(
+    depends_create=[Depends(get_current_user)],
+    depends_update=[Depends(get_current_user)],
+)

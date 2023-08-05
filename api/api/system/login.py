@@ -5,7 +5,7 @@ from fastapi_jwt import JwtAuthorizationCredentials
 from core.crud import BaseApiOut
 
 from .schemas import UserRead, Token
-from .utils import verify_password, get_password_hash, get_current_user, access_security, refresh_security
+from core.auth import verify_password, get_password_hash, get_current_user, access_security, refresh_security
 from models import User
 from settings import settings
 

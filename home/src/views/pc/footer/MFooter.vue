@@ -6,12 +6,14 @@ import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
 import { onMounted } from "vue";
 import SubMenuItem from "@/views/pc/side-menu/SubMenuItem.vue";
+import { useUserStore } from "@/store/user";
 
 defineOptions({
   name: "MFooter",
 });
 const siteStore = useSiteStore();
 const friendStore = useFriendStore();
+const userStore = useUserStore();
 onMounted(friendStore.getFriendList);
 const item = {
   title: "友情链接",
@@ -54,7 +56,7 @@ const item = {
         icon="ph:rocket-fill"
       />
       <!--      添加链接-->
-      <add-link class="tool-item" />
+      <add-link v-if="userStore.token" class="tool-item" />
     </div>
   </div>
 </template>
