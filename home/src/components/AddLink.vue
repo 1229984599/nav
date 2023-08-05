@@ -92,6 +92,7 @@ async function handleSubmit() {
         </el-form-item>
         <el-form-item label="颜色" prop="color">
           <el-color-picker
+            size="large"
             v-model="form.color"
             :predefine="[
               '#ff4500',

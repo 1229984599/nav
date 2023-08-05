@@ -40,9 +40,7 @@ onMounted(async () => {
     <!--    右侧内容-->
     <div class="h-screen right-container w-full overflow-y-auto">
       <m-navbar class="navbar border-b border-b-gray-100" />
-      <div class="nav-search">
-        <m-search />
-      </div>
+      <m-search />
       <div class="p-6">
         <app-main />
         <m-footer />
@@ -99,20 +97,6 @@ onMounted(async () => {
       box-shadow: none;
       color: initial;
       background: rgba(255, 255, 255, 1);
-    }
-
-    .nav-search {
-      color: #282a2d;
-      position: relative;
-      background-size: 400%;
-      background-position: 0% 100%;
-      animation: gradient 7.5s ease-in-out infinite;
-      background-image: linear-gradient(
-        45deg,
-        #8618db 0%,
-        #d711ff 50%,
-        #460fdd 100%
-      );
     }
   }
 }

@@ -55,7 +55,6 @@ const item = {
       />
       <!--      添加链接-->
       <add-link class="tool-item" />
-      <m-icon class="tool-item" icon="carbon:up-to-top" />
     </div>
   </div>
 </template>

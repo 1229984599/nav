@@ -2,7 +2,7 @@
 import MIcon from "@/components/MIcon.vue";
 import { useAppStore } from "@/store/app";
 import MProfile from "@/views/pc/navbar/MProfile.vue";
-import MWeather from "@/views/pc/navbar/MWeather.vue";
+import MWeather from "@/components/MWeather.vue";
 import MYiyan from "@/components/MYiyan.vue";
 
 const appStore = useAppStore();

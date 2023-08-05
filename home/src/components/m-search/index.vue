@@ -5,17 +5,14 @@ export default {
 </script>
 <script setup lang="ts">
 import { computed, onMounted, Ref, ref } from "vue";
-import MNotify from "./notify.vue";
-import { useSearchStore } from "@/store/search";
 import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
+import { useSiteStore } from "@/store/site";
 
 defineOptions({
   name: "MSearch",
 });
-
-const searchStore = useSearchStore();
-
+const siteStore = useSiteStore();
 const searchQuery = ref("");
 
 async function fetchSuggestions(
@@ -29,43 +26,19 @@ async function fetchSuggestions(
 
 // 搜索功能
 function handleSuggestionClick(link: any) {
-  // 在这里处理搜索逻辑，你可以根据searchQuery的值来进行搜索
-  // console.log("搜索内容：", currentSearchUrl.value);
-  // window.open(currentSearchUrl.value, "_blank");
   window.open(link.href, "_blank");
   searchQuery.value = "";
 }
-
-const currentSearchUrl = computed(() => {
-  return `${searchStore.currentItem.href}${searchQuery.value}`;
-});
-
-onMounted(searchStore.initCurrentItem);
 </script>
 
 <template>
-  <div class="mx-auto py-20 relative">
-    <!-- 第一栏：导航分类 -->
-    <nav class="flex justify-center">
-      <ul class="flex space-x-6">
-        <li
-          v-for="category in searchStore.categoryList"
-          :key="category.id"
-          @click="searchStore.changeCurrentCategory(category.id)"
-          :class="{
-            'nav-active': searchStore.currentCategory.id === category.id,
-          }"
-          class="nav-item"
-        >
-          {{ category.title }}
-          <span
-            v-if="searchStore.currentCategory.id === category.id"
-            class="block h-1 bg-white w-2/3 mx-auto mt-1 rounded-full"
-          ></span>
-        </li>
-      </ul>
-    </nav>
-
+  <div class="mx-auto pt-8 pb-4 relative">
+    <m-icon
+      :icon="siteStore.siteInfo?.icon"
+      :size="60"
+      :color="siteStore.siteInfo?.color"
+      class="flex justify-center"
+    />
     <!-- 第二栏：搜索框 -->
     <div
       class="flex justify-center py-3"
@@ -100,20 +73,6 @@ onMounted(searchStore.initCurrentItem);
       </div>
     </div>
 
-    <!-- 第三栏：子导航 -->
-    <nav class="flex justify-center">
-      <ul class="flex space-x-6 h-4">
-        <li
-          v-for="(item, index) in searchStore.currentCategory.children"
-          :key="index"
-          @click="searchStore.changeCurrentItem(item.title)"
-          class="opacity-100"
-        >
-          {{ item.title }}
-        </li>
-        <li style="display: none">dsfsd</li>
-      </ul>
-    </nav>
     <!--    搜索推荐-->
     <!-- 第四栏：通知 -->
   </div>

@@ -27,7 +27,7 @@ defineProps({
         />
       </div>
 
-      <div class="truncate pl-1.5">
+      <div class="truncate md:pl-1.5">
         <div class="text-sm md:text-base font-bold">{{ item.title }}</div>
         <span class="desc">
           {{ item?.desc || "暂无描述信息" }}
