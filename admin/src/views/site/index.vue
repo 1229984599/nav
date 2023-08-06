@@ -22,6 +22,7 @@ const rules: FormRules = reactive<FormRules>({
   // href: [{ required: true, message: "请输入链接", trigger: "blur" }],
   // desc: [{ required: true, message: "请输入描述", trigger: "blur" }],
 });
+
 function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
@@ -31,6 +32,16 @@ function handleSubmit() {
       // location.reload();
     });
   });
+}
+
+const uploadUrl = `${import.meta.env.VITE_API}/site/upload`;
+
+function handleUploadSuccess(res) {
+  if (res.code == 200) {
+    form.icon = res.data.img_url;
+  } else {
+    ElMessage.error("上传失败");
+  }
 }
 
 onMounted(async () => {
@@ -56,7 +67,17 @@ onMounted(async () => {
       <el-form-item label="图标" prop="icon">
         <el-input v-model="form.icon">
           <template #append>
-            <m-icon :color="form.color" :icon="form.icon" />
+            <div class="flex gap-x-2 items-center">
+              <m-icon :color="form.color" :icon="form.icon" />
+              <el-upload
+                class="h-[40px] w-auto"
+                :on-success="handleUploadSuccess"
+                :action="uploadUrl"
+              >
+                <m-icon icon="material-symbols:upload-file" color="red" />
+                <span class="text-xs text-gray-400">上传图片</span>
+              </el-upload>
+            </div>
           </template>
         </el-input>
         <span class="text-gray-400 text-sm"
@@ -89,9 +110,7 @@ onMounted(async () => {
 </template>
 <style scoped>
 :deep(.el-input-group__append) {
-  //border-color: transparent;
-  box-shadow: none;
-  color: unset;
+  //border-color: transparent; box-shadow: none; color: unset;
   background-color: white;
 }
 </style>

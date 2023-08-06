@@ -5,16 +5,16 @@ import {
   dict
 } from "@fast-crud/fast-crud";
 import menuModel from "@/api/menu";
-import Crud, { useRequest } from "@/api/crud";
+import { useRequest } from "@/api/crud";
 import { UseIconForm } from "@/hooks/icon";
-import { ElMessage } from "element-plus";
 import { useActionButtons } from "@/hooks/crud";
 import { type CrudExpose } from "@fast-crud/fast-crud/dist/d/d/expose";
 
 async function getMenuList(currentId: number) {
-  const { items } = await menuModel.list(1, 100);
-  // return items;
-  return items?.filter(item => item.id !== currentId);
+  // 给parent_id赋值防止后端查询组件过滤默认值
+  const { items } = await menuModel.list(1, 100, { parent_id: 0 });
+  return items;
+  // return items?.filter(item => item.id !== currentId);
 }
 
 export default function createCrudOptions(
@@ -76,6 +76,23 @@ export default function createCrudOptions(
           },
           form: {
             col: { span: 12 }
+            // component: {
+            //   name: "el-tree-select",
+            //   props: {
+            //     filterable: true,
+            //     placeholder: "请选择ds",
+            //     "node-key": "id",
+            //     "value-key": "id",
+            //     props: {
+            //       label: "title",
+            //       value: "id"
+            //     },
+            //     label: "title",
+            //     value: "id",
+            //     remote: true,
+            //     "remote-method": menuModel.getMenuTree
+            //   }
+            // }
           },
           dict: dict({
             getData: async ({ row }) => {

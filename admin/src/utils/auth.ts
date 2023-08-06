@@ -1,11 +1,10 @@
 import Cookies from "js-cookie";
 import { storageSession } from "@pureadmin/utils";
 import { useUserStoreHook } from "@/store/modules/user";
-import { Token, UserRead,UserSchemaRead } from "@/api/login/types";
-
+import { Token, UserRead, UserSchemaRead } from "@/api/login/types";
 
 export const sessionKey = "user-info";
-export const TokenKey = "authorized-token";
+export const TokenKey = "moxiaoying-token-key";
 
 /** 获取`token` */
 export function getToken(): Token {
@@ -27,7 +26,10 @@ function setSessionKey(username: string, roles: Array<string>) {
 export function setUserInfo(user: UserRead) {
   if (user.username && user.roles) {
     let { username, roles } = user;
-    setSessionKey(username, roles.map(item => item.name));
+    setSessionKey(
+      username,
+      roles.map(item => item.name)
+    );
   } else {
     const username =
       storageSession().getItem<UserSchemaRead>(sessionKey)?.username ?? "";

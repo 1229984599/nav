@@ -20,7 +20,9 @@ defineProps({
     />
     <h2 class="text-xl font-bold">{{ menu?.title }}</h2>
   </div>
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4 mb-8 mt-3">
+  <div
+    class="grid grid-cols-2 md:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8 mt-3"
+  >
     <item-desc :item="item" v-for="item in menu?.links" />
   </div>
 </template>

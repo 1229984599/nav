@@ -1,6 +1,7 @@
 /** 统一处理 Cookie */
 
 import CacheKey from "@/constants/cache-key";
+// @ts-ignore
 import Cookies from "js-cookie";
 import { LoginResponseData } from "@/api/login/types";
 

@@ -7,6 +7,10 @@ passlib>=1.7.4
 bcrypt>=4.0.1
 loguru
 httpx
+asyncmy
+asyncpg
+aiosqlite
+python-multipart
 uvicorn==0.23.2
 python-dotenv==1.0.0
 # Jinja2

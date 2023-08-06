@@ -16,6 +16,7 @@ dependencies = [
     "passlib>=1.7.4",
     "bcrypt>=4.0.1",
     "Jinja2>=3.1.2",
+    "asyncmy>=0.2.8",
 ]
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -30,6 +31,7 @@ verify_ssl = true
 [tool.pdm.dev-dependencies]
 dev = [
     "faker>=19.2.0",
+    "python-multipart>=0.0.6",
 ]
 
 [build-system]

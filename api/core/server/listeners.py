@@ -13,6 +13,8 @@ def register_init(app: FastAPI) -> None:
 
     @app.on_event("startup")
     async def init_connect():
+        # 初始化数据
+        await init_data()
         # 连接数据库
         register_tortoise(
             app,

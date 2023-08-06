@@ -42,7 +42,7 @@ const isMask = computed(() => {
     <div class="h-screen right-container w-full overflow-y-auto">
       <m-navbar class="navbar border-b border-b-gray-100" />
       <m-search />
-      <div class="p-6">
+      <div class="p-2 md:p-6">
         <app-main />
         <m-footer />
       </div>

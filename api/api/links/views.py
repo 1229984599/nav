@@ -64,16 +64,20 @@ async def handle_create(createSchema: CreateMenuSchema):
 async def handle_update(item_id: str, item: UpdateMenuSchema):
     link = await Links.get_or_none(id=item_id)
     if not link:
-        return BaseApiOut(code=400, message='导航不存在')
-    updated_item = await Links.filter(id=item_id).update(**item.dict(exclude_unset=True, exclude={'menus'}))
+        return BaseApiOut(code=400, message='链接不存在')
+    data_dict = item.dict(exclude_unset=True, exclude={'menus'})
+    if data_dict:
+        updated_item = await Links.filter(id=item_id).update(**data_dict)
     pass
+    # 如果需要更新菜单
     if isinstance(item.menus, list):
         await link.menus.clear()
         # 删除关联
         menus = await Menu.filter(id__in=item.menus)
         await link.menus.add(*menus)
+
     # data = await UpdateMenuSchema.from_queryset_single(updated_item)
-    return BaseApiOut(data=updated_item)
+    return BaseApiOut()
 
 
 @link_router.post('/siteinfo')

@@ -1,17 +1,26 @@
 from fastapi import Depends
+from tortoise.contrib.pydantic import PydanticModel
 
 from tortoise.queryset import QuerySet
 
 from core.crud import ModelCrud, BaseApiOut
 from models import Menu, Links, User
-from .schemas import SetLinkSchema, MenuSchemaList, MenuSchemaUpdate
-from core.auth import get_current_user,is_login
+from .schemas import MenuSchemaList, MenuSchemaUpdate, MenuSchemaFilters
+from core.auth import get_current_user, is_login
 
 
 class MenuCrud(ModelCrud):
     @classmethod
     async def pre_list(cls, queryset: QuerySet, item: dict) -> QuerySet:
+        if item.get('parent_id') == 0:
+            item.pop('parent_id')
+            queryset = queryset.filter(parent_id=None)
+        pass
         return await super().pre_list(queryset, item)
+
+    # @classmethod
+    # def pre_create(cls, item: PydanticModel) -> dict:
+    #     pass
 
     @classmethod
     async def pre_update(cls, item: MenuSchemaUpdate, item_id=None) -> dict:
@@ -22,7 +31,8 @@ class MenuCrud(ModelCrud):
 
 menu_router = MenuCrud(Menu, schema_list=MenuSchemaList,
                        schema_update=MenuSchemaUpdate,
-                       schema_filters=Menu.schema_filters(include=('title',))
+                       schema_create=MenuSchemaUpdate,
+                       schema_filters=MenuSchemaFilters
                        ).register_crud(
     depends_create=[Depends(get_current_user)],
     depends_update=[Depends(get_current_user)],
@@ -46,7 +56,7 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
     }
     children = await menu_item.children
     if children:
-        menu_tree["children"] = [await get_menu_tree(child) for child in children]
+        menu_tree["children"] = [await get_menu_tree(child, user) for child in children]
     return menu_tree
 
 

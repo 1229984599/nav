@@ -10,6 +10,7 @@ services:
         - TZ=Asia/Shanghai
         # 数据库配置
         - DATABASE_URI=sqlite:///app/data/data.db
+        # - DATABASE_URI=mysql://myuser:mypass@db.host:3306/somedb
         # 配置文件
         ports:
             - "9000:80"
