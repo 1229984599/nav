@@ -14,6 +14,7 @@ async def get_site_info(url: str) -> dict:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36'
     }, verify=False) as client:
         response = await client.get(url)
+        response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'html.parser')
     # 获取icon
     icon = soup.find('link', rel='shortcut icon')

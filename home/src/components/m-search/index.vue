@@ -48,7 +48,7 @@ function handleSuggestionClick(link: any) {
         <el-autocomplete
           :highlight-first-item="true"
           :fit-input-width="true"
-          :trigger-on-focus="true"
+          :trigger-on-focus="false"
           value-key="title"
           v-model="searchQuery"
           :fetch-suggestions="fetchSuggestions"
