@@ -17,5 +17,5 @@ export const refreshTokenApi = () => {
 };
 
 export const getUserInfo = () => {
-  return http.request<UserRead>("get", "/login/users/me");
+  return http.request<UserRead>("get", "/login/user/me");
 };

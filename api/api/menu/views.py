@@ -7,6 +7,7 @@ from core.crud import ModelCrud, BaseApiOut
 from models import Menu, Links, User
 from .schemas import MenuSchemaList, MenuSchemaUpdate, MenuSchemaFilters
 from core.auth import get_current_user, is_login
+# from fastapi_cache.decorator import cache
 
 
 class MenuCrud(ModelCrud):
@@ -61,6 +62,7 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
 
 
 @menu_router.get('/tree', description='返回菜单树')
+# @cache(expire=60*30)
 async def handle_get_menu_tree(user: User = Depends(is_login)):
     queryset = Menu.all()
     all_menu_items = await queryset.order_by('order').prefetch_related(

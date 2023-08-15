@@ -4,16 +4,14 @@ export default {
 };
 </script>
 <script setup lang="ts">
-import { computed, onMounted, Ref, ref } from "vue";
+import { ref } from "vue";
 import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
-import { useSiteStore } from "@/store/site";
 import MLogo from "@/components/MLogo.vue";
 
 defineOptions({
   name: "MSearch",
 });
-const siteStore = useSiteStore();
 const searchQuery = ref("");
 
 async function fetchSuggestions(
@@ -104,10 +102,4 @@ li {
 .nav-active {
   @apply text-white font-bold;
 }
-
-//.active {
-//  &:after {
-//    color: white;
-//  }
-//}
 </style>

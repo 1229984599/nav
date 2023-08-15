@@ -14,4 +14,7 @@ services:
         # 配置文件
         ports:
             - "9000:80"
+        command: sh -c "nginx -g 'daemon off;' & uvicorn main:app --host 0.0.0.0 --port 8000"
+        volumes:
+          - ./data:/app/data
         restart: unless-stopped

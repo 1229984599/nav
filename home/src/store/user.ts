@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
 import { getToken, removeToken, setToken } from "@/utils/cookies";
-import { loginApi } from "@/api/login";
+import { loginApi, getUserinfoApi } from "@/api/login";
 import { LoginRequestData } from "@/api/login/types";
 
 export const useUserStore = defineStore("user", {
@@ -15,6 +15,11 @@ export const useUserStore = defineStore("user", {
       this.username = loginData.username;
       setToken(resp);
       this.token = resp.access_token;
+      await this.getUserinfo();
+    },
+    async getUserinfo() {
+      const resp = await getUserinfoApi();
+      this.username = <string>resp.username;
     },
     resetToken() {
       removeToken();
@@ -25,5 +30,8 @@ export const useUserStore = defineStore("user", {
       this.username = "";
       location.reload();
     },
+  },
+  persist: {
+    paths: ["username"],
   },
 });

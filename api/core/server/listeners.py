@@ -1,6 +1,9 @@
 from fastapi import FastAPI
-from settings import settings
 from tortoise.contrib.fastapi import register_tortoise
+# from fastapi_cache import FastAPICache
+# from fastapi_cache.backends.inmemory import InMemoryBackend
+
+from settings import settings
 from migrate import init_data
 
 
@@ -24,6 +27,8 @@ def register_init(app: FastAPI) -> None:
         )
         # 初始化 apscheduler
         # schedule.init_scheduler()
+        # 初始化fastapi-cache2
+        # FastAPICache.init(InMemoryBackend(), prefix='fastapi-cache', expire=60)
 
     @app.on_event('shutdown')
     async def shutdown_connect():

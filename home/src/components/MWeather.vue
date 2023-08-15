@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 window.WIDGET = {
   CONFIG: {
     modules: "01234",

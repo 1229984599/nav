@@ -65,7 +65,10 @@ export default function createCrudOptions(
         title: {
           title: "标题",
           type: "text",
-          search: { show: true } // 开启查询
+          search: { show: true }, // 开启查询
+          form: {
+            rules: [{ required: true, message: "请输入标题" }]
+          }
         },
         ...iconForm,
         parent_id: {

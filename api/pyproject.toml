@@ -17,6 +17,7 @@ dependencies = [
     "bcrypt>=4.0.1",
     "Jinja2>=3.1.2",
     "asyncmy>=0.2.8",
+    "fastapi-cache2>=0.2.1",
 ]
 requires-python = ">=3.10"
 license = { text = "MIT" }

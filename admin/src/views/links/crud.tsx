@@ -45,14 +45,19 @@ export default function createCrudOptions(crudExpose): CreateCrudOptionsRet {
         title: {
           title: "标题",
           type: "text",
-          search: { show: true } // 开启查询
+          search: { show: true }, // 开启查询
+          form: {
+            rules: [{ required: true, message: "请输入标题" }]
+          }
         },
         ...iconForm,
         href: {
           title: "链接",
           type: "text",
           form: {
-            order: 0
+            order: 0,
+            rules: [{ required: true, message: "请输入链接" }],
+            helper: "输入链接后，点击采集即可自动获取数据"
           }
         },
         menus: {
@@ -63,6 +68,7 @@ export default function createCrudOptions(crudExpose): CreateCrudOptionsRet {
           },
           form: {
             col: { span: 14 },
+            rules: [{ required: true, message: "菜单为必选项" }],
             component: {
               multiple: true
             }
@@ -109,13 +115,19 @@ export default function createCrudOptions(crudExpose): CreateCrudOptionsRet {
         },
         order: {
           title: "排序",
-          type: "number"
+          type: "number",
+          form: {
+            col: { span: 14 }
+          }
         },
         is_vip: {
           title: "是否vip",
           type: "dict-switch",
           column: {
             width: 160
+          },
+          form: {
+            col: { span: 6 }
           },
           dict: dict({
             data: [

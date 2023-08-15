@@ -58,7 +58,7 @@ async def refresh(
     # return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-@login_router.get("/users/me", response_model=BaseApiOut[UserRead])
+@login_router.get("/user/me", response_model=BaseApiOut[UserRead])
 async def read_current_user(user: User = Depends(get_current_user)):
     user = await UserRead.from_tortoise_orm(user)
     return BaseApiOut(data=user)

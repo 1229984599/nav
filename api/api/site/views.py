@@ -1,6 +1,7 @@
 from starlette.responses import FileResponse
-
 from fastapi import APIRouter, Depends, UploadFile, File, Request
+# from fastapi_cache.decorator import cache
+
 from models import Site
 from core.crud import BaseApiOut
 from .schemas import SiteSchemaUpdate
@@ -21,6 +22,7 @@ async def handle_update_site(site: SiteSchemaUpdate, user=Depends(get_current_us
 
 
 @site_router.get('/get', response_model=BaseApiOut)
+# @cache(expire=200)
 async def handle_get_site():
     """
     获取数据站点
