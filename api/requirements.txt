@@ -1,0 +1,13 @@
+fastapi-tortoise-crud>=0.1.17
+BeautifulSoup4>=4.12.2
+fastapi-jwt<=0.1.12
+passlib>=1.7.4
+bcrypt>=4.0.1
+loguru
+httpx
+asyncmy
+asyncpg
+aiosqlite
+python-multipart
+uvicorn==0.23.2
+python-dotenv==1.0.0

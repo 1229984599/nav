@@ -13,7 +13,7 @@ authors = [
     {name = "moxiaoying", email = "768091671@qq.com"},
 ]
 dependencies = [
-    "fastapi-tortoise-crud>=0.1.14",
+    "fastapi-tortoise-crud>=0.1.17",
     "loguru>=0.7.0",
     "httpx>=0.24.1",
     "BeautifulSoup4>=4.12.2",

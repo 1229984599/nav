@@ -79,7 +79,7 @@ const crudOptions: CrudOptions = {
         // immediate: true,
       }),
       column: {
-        width: 180,
+        width: 210,
 
         component: {
           color: "auto",
