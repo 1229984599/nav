@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { CompositionColumns } from "@fast-crud/fast-crud/dist/d/d/crud";
-import MIcon from "@/components/MIcon.vue";
+import MIcon from "@/components/icon.vue";
 
 export function UseIconForm(showUrl: boolean = true): CompositionColumns {
   const iconColor = ref("");
@@ -9,7 +9,7 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
       title: "图标",
       type: "text",
       column: {
-        // width: showUrl ? "auto" : 100,
+        width: showUrl ? 251 : 80,
         cellRender(scope) {
           return (
             <div class="flex items-center gap-x-2">
@@ -21,7 +21,8 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
               <div>{showUrl ? <span>{scope.value}</span> : <span></span>}</div>
             </div>
           );
-        }
+        },
+        editable: { disabled: true },
       },
       form: {
         col: { span: 18 },
@@ -32,7 +33,7 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
                 点我前往iconify查看图标
               </a>
             );
-          }
+          },
         },
         suffixRender(scope) {
           return (
@@ -43,14 +44,14 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
               ></MIcon>
             </div>
           );
-        }
-      }
+        },
+      },
     },
     color: {
       title: "颜色",
       type: "text",
       column: {
-        show: false
+        show: false,
       },
       form: {
         col: { span: 4 },
@@ -66,15 +67,15 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
               "#00ced1",
               "#1e90ff",
               "#c71585",
-              "#c7158577"
-            ]
-          }
+              "#c7158577",
+            ],
+          },
         },
         // @ts-ignore
         valueChange({ value }) {
           iconColor.value = value;
-        }
-      }
-    }
+        },
+      },
+    },
   };
 }

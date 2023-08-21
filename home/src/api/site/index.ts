@@ -1,4 +1,4 @@
-import { request } from "@/utils/service";
+import { request } from "@/utils/request";
 import { SiteSchema } from "./types";
 
 class Site {

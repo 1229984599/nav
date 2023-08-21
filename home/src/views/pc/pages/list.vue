@@ -16,7 +16,6 @@ watch(
         block: "center",
       });
       // el.scrollTop = 60;
-      // window.scrollBy(0, 100);
       // el.offsetTop += 50;
       // debugger;
     }
@@ -29,8 +28,13 @@ watch(
 
 <template>
   <div v-for="menu in menuStore.menuTree">
-    <item-category :menu="menu" />
-    <div class="gap-y-6" v-if="menu?.children && menu.children.length > 0">
+    <!--    菜单启用-->
+    <item-category :menu="menu" v-if="menu?.status" />
+    <!--    有子类并且菜单启用-->
+    <div
+      class="gap-y-6"
+      v-if="menu?.children && menu.children.length > 0 && menu?.status"
+    >
       <item-category :menu="subCat" v-for="subCat in menu.children" />
     </div>
   </div>

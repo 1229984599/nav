@@ -35,3 +35,8 @@ export interface UserRead {
    */
   username?: string;
 }
+export interface Token {
+  access_token: string;
+  refresh_token: string;
+  expires: string;
+}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-@author: xingxingzaixian
-@create: 2021/4/4
+@author: moxiaoying
+@create: 2023/4/4
 @description:
 """
 
@@ -10,7 +10,7 @@ from starlette.responses import RedirectResponse
 
 from fastapi.openapi.docs import get_swagger_ui_html
 
-from core.server import create_app
+from core import create_app
 from settings import settings
 
 app = create_app()
@@ -23,6 +23,10 @@ async def index():
 
 @app.get(settings.DOCS_URL, include_in_schema=False)
 async def custom_swagger_ui_html():
+    """
+    重写文档cdn为国内，防止链接被墙
+    :return:
+    """
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
         title=app.title + " - Swagger UI",
@@ -33,4 +37,4 @@ async def custom_swagger_ui_html():
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', host='0.0.0.0', port=8000, reload=settings.DEBUG, loop="asyncio")
+    uvicorn.run(app='main:app', host='0.0.0.0', port=8000, reload=settings.DEBUG)

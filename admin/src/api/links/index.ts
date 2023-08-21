@@ -1,49 +1,38 @@
-import Crud from "@/api/crud";
-import { http } from "@/utils/http";
+import Crud, { QueryParams } from "@/api/crud";
+import { request } from "@/utils/request";
+import {
+  CreateMenuSchema,
+  LinkSchemaList,
+  LinksSchemaFilters,
+  PageLinkSchemaList,
+  SiteInfo,
+} from "./types";
 
 class Links extends Crud {
-  /**
-   * 获取列表
-   * @param page
-   * @param pageSize
-   * @param filters
-   */
   async list(
-    page: number = 1,
-    pageSize: number = 10,
-    filters = {}
-  ): Promise<any> {
-    const resp = await http.post(`${this.baseUrl}/list`, {
+    query: QueryParams = {},
+    filters: LinksSchemaFilters = {},
+  ): Promise<PageLinkSchemaList> {
+    return await super.list(query, filters);
+  }
+
+  async getSiteInfo(url: string): Promise<SiteInfo> {
+    return await request({
+      method: "post",
+      url: `${this.baseUrl}/siteinfo`,
       params: {
-        page: page,
-        size: pageSize,
-        order_by: "order"
+        url: url,
       },
-      data: filters
     });
-    // @ts-ignore
-    resp.items.forEach(item => {
-      item.menus = item.menus?.map(menu => menu.id);
+  }
+
+  async createWithMenu(data: CreateMenuSchema): Promise<any> {
+    return await request({
+      url: `${this.baseUrl}/menu/create`,
+      method: "post",
+      data,
     });
-    return resp;
-  }
-
-  async create(data: any): Promise<any> {
-    return await http.post(`${this.baseUrl}/menu/create`, { data });
-  }
-
-  /**
-   * 更新
-   * @param id
-   * @param data
-   */
-  async update(id: number, data: any): Promise<any> {
-    return await http.request("put", `${this.baseUrl}/menu/${id}`, { data });
-  }
-
-  async getSiteInfo(url: string) {
-    return await http.post(`${this.baseUrl}/siteinfo?url=${url}`);
   }
 }
 
-export default new Links("/link");
+export default new Links("/links");

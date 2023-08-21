@@ -12,7 +12,12 @@ defineProps({
 </script>
 
 <template>
-  <el-tooltip :disabled="!item?.desc" :hide-after="100" :enterable="false">
+  <el-tooltip
+    v-if="item?.status"
+    :disabled="!item?.desc"
+    :hide-after="100"
+    :enterable="false"
+  >
     <a
       :href="item?.href"
       :target="item?.is_self ? '_self' : '_blank'"

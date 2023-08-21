@@ -1,10 +1,10 @@
-import { request } from "@/utils/service";
+import { request } from "@/utils/request";
 import { LoginRequestData, LoginResponseData, UserRead } from "./types";
 
 /** 登录并返回 Token */
 export function loginApi(data: LoginRequestData) {
   return request<LoginResponseData>({
-    url: "login/login",
+    url: "system/login/login",
     method: "post",
     data,
   });
@@ -13,7 +13,7 @@ export function loginApi(data: LoginRequestData) {
 // 获取个人信息
 export function getUserinfoApi() {
   return request<UserRead>({
-    url: "login/user/me",
+    url: "system/login/me",
     method: "get",
   });
 }

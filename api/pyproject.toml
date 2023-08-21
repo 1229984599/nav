@@ -1,27 +1,3 @@
-[project]
-name = ""
-version = ""
-description = ""
-authors = [
-    { name = "moxiaoying", email = "768091671@qq.com" },
-]
-dependencies = [
-    "tortoise-orm<=0.19.3",
-    "fastapi<=0.99.1",
-    "fastapi-pagination>=0.12.6",
-    "loguru>=0.7.0",
-    "httpx>=0.24.1",
-    "BeautifulSoup4>=4.12.2",
-    "fastapi-jwt>=0.1.12",
-    "passlib>=1.7.4",
-    "bcrypt>=4.0.1",
-    "Jinja2>=3.1.2",
-    "asyncmy>=0.2.8",
-    "fastapi-cache2>=0.2.1",
-]
-requires-python = ">=3.10"
-license = { text = "MIT" }
-
 [tool]
 [tool.pdm]
 [[tool.pdm.source]]
@@ -29,12 +5,27 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 
-[tool.pdm.dev-dependencies]
-dev = [
-    "faker>=19.2.0",
-    "python-multipart>=0.0.6",
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "moxiaoying", email = "768091671@qq.com"},
 ]
+dependencies = [
+    "fastapi-tortoise-crud>=0.1.14",
+    "loguru>=0.7.0",
+    "httpx>=0.24.1",
+    "BeautifulSoup4>=4.12.2",
+    "fastapi-jwt>=0.1.12",
+    "passlib>=1.7.4",
+    "bcrypt>=4.0.1",
+    "asyncmy",
+    "aiosqlite",
+    "python-multipart",
+    "uvicorn",
+    "python-dotenv"
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
 
-[build-system]
-requires = ["pdm-pep517>=1.0.0"]
-build-backend = "pdm.pep517.api"

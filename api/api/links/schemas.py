@@ -8,22 +8,22 @@ MenuRelation = Menu.schema_list(name='Relation', include=('id', 'title'))
 
 
 class CreateMenuSchema(Links.schema_create('CreateMenu', )):
-    menus: list[int] | None
+    menus: list[int] | None = None
 
 
 class FilterSchemaList(Links.schema_filters(include=('title', 'menus'))):
-    menus: list[int] | None
+    menus: list[int] | None = None
 
 
-class UpdateMenuSchema(Links.schema_update('UpdateMenu', )):
-    menus: list[int] | None
+# class UpdateMenuSchema(Links.schema_update('UpdateMenu', )):
+#     menus: list[int] | None = None
 
 
-class LinkSchemaList(Links.schema_list()):
-    menus: List[MenuRelation] = Field()
+class LinkSchemaList(Links.schema_list(exclude='menus', )):
+    menus: List[MenuRelation] = Field(default=[])
     pass
 
 
-class SetMenuSchema(BaseModel):
-    menus: list[int]
-    link_id: int
+# class SetMenuSchema(BaseModel):
+#     menus: list[int]
+#     link_id: int

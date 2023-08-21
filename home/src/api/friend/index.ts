@@ -1,5 +1,5 @@
 import Crud from "@/api/crud";
-import { request } from "@/utils/service";
+import { request } from "@/utils/request";
 import { FriendSchemaFilters, PageFriendSchemaList, SiteInfo } from "./types";
 
 class Friend extends Crud {

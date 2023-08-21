@@ -1,4 +1,4 @@
-from core.db import BaseModel
+from fastapi_tortoise_crud import BaseModel
 from tortoise import fields
 
 

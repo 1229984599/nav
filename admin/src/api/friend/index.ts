@@ -1,24 +1,20 @@
-import Crud from "@/api/crud";
-import { http } from "@/utils/http";
-import { SiteInfo } from "./types";
+import Crud, {QueryParams} from "@/api/crud";
+import { request } from "@/utils/request";
+import { FriendSchemaFilters, PageFriendSchemaList, SiteInfo } from "./types";
 
 class Friend extends Crud {
-  /**
-   * 获取列表
-   * @param page
-   * @param pageSize
-   * @param filters
-   */
   async list(
-    page: number = 1,
-    pageSize: number = 10,
-    filters = {}
-  ): Promise<any> {
-    return await super.list(page, pageSize, filters);
+    query:QueryParams={},
+    filters: FriendSchemaFilters = {},
+  ): Promise<PageFriendSchemaList> {
+    return await super.list(query, filters);
   }
 
   async getSiteInfo(url: string): Promise<SiteInfo> {
-    return await http.post(`${this.baseUrl}/siteinfo?url=${url}`);
+    return await request({
+      url: `${this.baseUrl}/siteinfo?url=${url}`,
+      method: "GET",
+    });
   }
 }
 

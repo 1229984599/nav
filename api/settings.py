@@ -2,7 +2,8 @@ import os
 from typing import Optional, Dict
 from pathlib import Path
 from functools import lru_cache
-from pydantic import BaseSettings
+
+from pydantic.v1 import BaseSettings
 
 
 class APISettings(BaseSettings):
@@ -12,14 +13,15 @@ class APISettings(BaseSettings):
     TITLE: str = "FastApi后台管理模板"
     DESCRIPTION: str = "FastAPI 基于 Tortoise-orm 实现的大型项目框架"
     # 文档地址 默认为docs
-    DOCS_URL: str = "/openapi/docs"
+    DOCS_URL: str = "/docs"
     # 文档关联请求数据接口
-    OPENAPI_URL: str = "/openapi/openapi.json"
+    OPENAPI_URL: str = "/openapi.json"
     # redoc 文档
-    REDOC_URL: Optional[str] = "/openapi/redoc"
+    REDOC_URL: Optional[str] = "/redoc"
 
     # token过期时间 分钟
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 10
+    # ACCESS_TOKEN_EXPIRE_MINUTES: int = 10
     # refresh token过期时间 分钟
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
@@ -44,7 +46,7 @@ class APISettings(BaseSettings):
             'models': {
                 # 设置key值“default”的数据库连接
                 'default_connection': 'default',
-                'models': ['models', 'models']
+                'models': ['models']
             }
         },
         'use_tz': False,

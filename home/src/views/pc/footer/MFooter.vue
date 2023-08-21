@@ -56,7 +56,7 @@ const item = {
         icon="ph:rocket-fill"
       />
       <!--      添加链接-->
-      <add-link v-if="userStore.token" class="tool-item" />
+      <add-link v-if="userStore.token?.access_token" class="tool-item" />
     </div>
   </div>
 </template>

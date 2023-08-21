@@ -1,9 +1,22 @@
-export default {
-  path: "/site",
-  meta: {
-    title: "站点信息",
-    icon: "dashicons:admin-site",
-    rank: 10
+import { RouteRecordRaw } from "vue-router";
+
+const siteRoutes: RouteRecordRaw[] = [
+  {
+    name: "site",
+    path: "/site",
+    redirect: "/site/list",
+    component: () => import("@/layout/index.vue"),
+    children: [
+      {
+        name: "siteList",
+        path: "/site/list",
+        component: () => import("@/views/site/index.vue"),
+        meta: {
+          title: "站点管理",
+          icon: "dashicons:admin-site",
+        },
+      },
+    ],
   },
-  component: () => import("@/views/site/index.vue")
-} as RouteConfigsTable;
+];
+export default siteRoutes;

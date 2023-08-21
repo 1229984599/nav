@@ -1,5 +1,5 @@
 import Crud from "@/api/crud";
-import { request } from "@/utils/service";
+import { request } from "@/utils/request";
 import {
   MenuSchemaFilters,
   MenuSchemaTree,

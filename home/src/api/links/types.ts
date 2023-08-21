@@ -23,53 +23,23 @@ export interface PageLinkSchemaList {
    */
   total: number;
 }
+
 /**
  * LinkSchemaList
  */
 export interface LinkSchemaList {
-  /**
-   * Color，图标颜色hex
-   */
   color?: string;
-  /**
-   * Created，创建时间
-   */
   created?: Date;
-  /**
-   * Desc
-   */
   desc?: string;
-  /**
-   * Href
-   */
   href?: string;
-  /**
-   * Icon
-   */
   icon?: string;
-  /**
-   * Id
-   */
   id?: number;
-  /**
-   * Is Self
-   */
   is_self?: boolean;
-  /**
-   * Menus
-   */
+  status?: boolean;
+  is_vip?: boolean;
   menus: MenuSchemaRelation[];
-  /**
-   * Order，值越大越靠前
-   */
   order?: number;
-  /**
-   * Title
-   */
   title?: string;
-  /**
-   * Updated，更新时间
-   */
   updated?: Date;
 }
 
@@ -95,6 +65,7 @@ export interface SiteInfo {
   icon?: string;
   desc?: string;
 }
+
 /**
  * LinksSchemaFilters
  */
@@ -104,6 +75,7 @@ export interface LinksSchemaFilters {
    */
   title?: string;
 }
+
 /**
  * CreateMenuSchema
  */

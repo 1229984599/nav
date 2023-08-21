@@ -27,7 +27,7 @@ export interface PageMenuSchemaList {
 }
 
 /**
- * MenuSchemaList
+ * 菜单列表
  */
 export interface MenuSchemaList {
   /**
@@ -70,6 +70,8 @@ export interface MenuSchemaList {
 
 export interface MenuSchemaTree {
   id?: number;
+  status?: boolean;
+  is_vip?: boolean;
   parent_id?: number;
   title?: string;
   icon?: string;

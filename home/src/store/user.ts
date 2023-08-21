@@ -1,37 +1,36 @@
 import { defineStore } from "pinia";
 
-import { getToken, removeToken, setToken } from "@/utils/cookies";
 import { loginApi, getUserinfoApi } from "@/api/login";
-import { LoginRequestData } from "@/api/login/types";
+import { LoginRequestData, Token, UserRead } from "@/api/login/types";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    token: getToken() || "",
-    username: "",
+    token: {} as Token,
+    userInfo: {} as UserRead,
   }),
+  getters: {
+    hasUserInfo(): boolean {
+      return !!this.userInfo.id;
+    },
+  },
   actions: {
     async login(loginData: LoginRequestData) {
-      const resp = await loginApi(loginData);
-      this.username = loginData.username;
-      setToken(resp);
-      this.token = resp.access_token;
-      await this.getUserinfo();
+      this.userInfo = loginData;
+      this.token = await loginApi(loginData);
     },
     async getUserinfo() {
-      const resp = await getUserinfoApi();
-      this.username = <string>resp.username;
+      this.userInfo = await getUserinfoApi();
     },
     resetToken() {
-      removeToken();
-      this.token = "";
+      this.token = { access_token: "", expires: "", refresh_token: "" };
     },
     logout() {
       this.resetToken();
-      this.username = "";
+      this.userInfo = {};
       location.reload();
     },
   },
   persist: {
-    paths: ["username"],
+    paths: ["token", "userInfo"],
   },
 });

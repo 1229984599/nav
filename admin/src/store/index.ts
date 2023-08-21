@@ -1,9 +1,6 @@
-import type { App } from "vue";
-import { createPinia } from "pinia";
-const store = createPinia();
+import { useUserStore } from "./modules/user";
+import { useAppStore } from "./modules/app";
+import { useTagsViewStore } from "./modules/tagsview";
+import {useMenuStore} from "./modules/menu";
 
-export function setupStore(app: App<Element>) {
-  app.use(store);
-}
-
-export { store };
+export { useUserStore, useAppStore, useTagsViewStore,useMenuStore };

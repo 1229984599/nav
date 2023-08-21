@@ -1,79 +1,39 @@
 import { defineStore } from "pinia";
-import { store } from "@/store";
-import { userType } from "./types";
-import { routerArrays } from "@/layout/types";
-import { router, resetRouter } from "@/router";
-import { storageSession } from "@pureadmin/utils";
-import { getLogin, refreshTokenApi, getUserInfo } from "@/api/login";
-import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
-import {
-  setToken,
-  removeToken,
-  sessionKey,
-  setUserInfo
-} from "@/utils/auth";
-import { Token, UserSchemaLogin, UserSchemaRead } from "@/api/login/types";
 
-export const useUserStore = defineStore({
-  id: "pure-user",
-  state: (): userType => ({
-    // 用户名
-    username:
-      storageSession().getItem<UserSchemaRead>(sessionKey)?.username ?? "",
-    // 页面级别权限
-    roles: storageSession().getItem<UserSchemaRead>(sessionKey)?.roles ?? []
+import { loginApi, getUserinfoApi } from "@/api/system/login";
+import { LoginRequestData, Token, UserRead } from "@/api/system/login/types";
+import router from "@/router";
+import { useTagsViewStore } from "@/store";
+
+export const useUserStore = defineStore("user", {
+  state: () => ({
+    token: {} as Token,
+    userInfo: {} as UserRead,
   }),
+  getters: {
+    hasUserInfo(): boolean {
+      return !!this.userInfo.id;
+    },
+  },
   actions: {
-    /** 存储用户名 */
-    SET_USERNAME(username: string) {
-      this.username = username;
+    async login(loginData: LoginRequestData) {
+      this.userInfo = loginData;
+      this.token = await loginApi(loginData);
     },
-    /** 存储角色 */
-    SET_ROLES(roles: Array<string>) {
-      this.roles = roles;
+    async getUserinfo() {
+      this.userInfo = await getUserinfoApi();
     },
-    /** 登入 */
-    async loginByUsername(data: UserSchemaLogin) {
-      return new Promise<Token>((resolve, reject) => {
-        getLogin(data)
-          .then(async token => {
-            setToken(token);
-            const userInfo = await getUserInfo();
-            setUserInfo(userInfo);
-            // @ts-ignore
-            resolve(token);
-          })
-          .catch(error => {
-            reject(error);
-          });
-      });
+    resetToken() {
+      this.token = { access_token: "", expires: "", refresh_token: "" };
     },
-    /** 前端登出（不调用接口） */
-    logOut() {
-      this.username = "";
-      this.roles = [];
-      removeToken();
-      useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
-      resetRouter();
-      router.push("/login");
+    logout() {
+      this.resetToken();
+      this.userInfo = {};
+      router.push({ name: "Login" });
+      useTagsViewStore().tagsViewList = [];
     },
-    /** 刷新`token` */
-    async handRefreshToken() {
-      return new Promise<Token>((resolve, reject) => {
-        refreshTokenApi()
-          .then(token => {
-            setToken(token);
-            // @ts-ignore
-            resolve(token);
-          })
-          .catch(error => {
-            reject(error);
-          });
-      });
-    }
-  }
+  },
+  persist: {
+    paths: ["token", "userInfo"],
+  },
 });
-
-export function useUserStoreHook() {
-  return useUserStore(store);
-}

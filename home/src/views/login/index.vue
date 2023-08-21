@@ -8,6 +8,7 @@ import MLogo from "@/components/MLogo.vue";
 import { useSiteStore } from "@/store/site";
 
 const router = useRouter();
+const userStore = useUserStore();
 /** 登录表单元素的引用 */
 const loginFormRef = ref<FormInstance | null>(null);
 
@@ -32,10 +33,11 @@ const handleLogin = () => {
   loginFormRef.value?.validate((valid: boolean, fields) => {
     if (valid) {
       loading.value = true;
-      useUserStore()
+      userStore
         .login(loginFormData)
         .then(() => {
           ElMessage.success("登录成功");
+          userStore.getUserinfo();
           router.push({ path: "/" });
         })
         .catch(() => {

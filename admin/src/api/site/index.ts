@@ -1,12 +1,21 @@
-import { http } from "@/utils/http";
+import { request } from "@/utils/request";
 import { SiteSchema } from "./types";
 
 class Site {
   async get(): Promise<SiteSchema> {
-    return await http.get("/site/get");
+    return await request({
+      url: "/site/get",
+      method: "get",
+    });
   }
-  async update(data: SiteSchema): Promise<boolean> {
-    return await http.post("/site/update", { data });
+
+  async update(data: SiteSchema): Promise<SiteSchema> {
+    return await request({
+      url: "/site/update",
+      method: "post",
+      data,
+    });
   }
 }
+
 export default new Site();

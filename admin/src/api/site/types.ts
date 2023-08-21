@@ -2,27 +2,27 @@
  * SiteSchemaCreate
  */
 export interface SiteSchema {
-  id?: null | Number;
+  id?: number | null;
   /**
    * Color，图标颜色hex
    */
-  color?: null | string;
+  color?: string;
   /**
    * Desc，站点描述
    */
-  desc?: null | string;
+  desc?: string;
   /**
    * Footer，底部版权信息等
    */
-  footer?: null | string;
+  footer?: string;
   /**
    * Icon，图标地址
    */
-  icon?: null | string;
+  icon?: string;
   /**
    * Keywords，站点关键字
    */
-  keywords?: null | string;
+  keywords?: string;
   /**
    * Title，网站标题
    */

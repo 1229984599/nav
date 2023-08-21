@@ -8,7 +8,7 @@
       <jdbc-url>jdbc:mysql://1.14.61.14:3306/nav_moxiaoying_t</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="data" uuid="6d39aae1-eac8-4e1a-ae65-d0c1dda55b20">
+    <data-source source="LOCAL" name="data" uuid="94e99f51-3276-4e98-aa14-de877a7ca865">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>

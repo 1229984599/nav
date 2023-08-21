@@ -7,12 +7,12 @@ const userStore = useUserStore();
 </script>
 
 <template>
-  <el-dropdown v-if="userStore.token">
+  <el-dropdown v-if="userStore.token?.access_token">
     <span class="flex items-center">
       <m-icon
         icon="https://img1.baidu.com/it/u=1217061905,2277984247&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
       />
-      <span>{{ userStore.username }}</span>
+      <span>{{ userStore.userInfo?.nickname }}</span>
     </span>
     <template #dropdown>
       <el-dropdown-menu class="divide-2 divide-gray-300">

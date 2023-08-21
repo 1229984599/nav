@@ -1,5 +1,5 @@
 import Crud from "@/api/crud";
-import { request } from "@/utils/service";
+import { request } from "@/utils/request";
 import {
   CreateMenuSchema,
   LinkSchemaList,
@@ -39,4 +39,4 @@ class Links extends Crud {
   }
 }
 
-export default new Links("/link");
+export default new Links("/links");

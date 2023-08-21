@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import asyncio
 from urllib.parse import urlparse, urljoin
 
-from utils.utils import ignore_async_errors
+from utils.error import ignore_async_errors
 
 
 @ignore_async_errors

@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { SiteSchema } from "@/api/site/types";
 import siteModel from "@/api/site";
-import MIcon from "@/components/MIcon.vue";
+import MIcon from "@/components/icon.vue";
 import { ElMessage, FormInstance, FormRules } from "element-plus";
 
 const form = reactive<SiteSchema>({
@@ -12,7 +12,7 @@ const form = reactive<SiteSchema>({
   desc: "",
   icon: "",
   color: "",
-  footer: ""
+  footer: "",
 });
 const ruleFormRef = ref<FormInstance>();
 
@@ -26,7 +26,7 @@ const rules: FormRules = reactive<FormRules>({
 function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
-    siteModel.update(form).then(data => {
+    siteModel.update(form).then((data) => {
       ElMessage.success("保存成功");
       Object.assign(form, data);
       // location.reload();
@@ -50,7 +50,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <div class="p-4 bg-white w-2/3">
+  <div class="p-4 bg-white w-2/3 relative">
     <el-form :model="form" :rules="rules" ref="ruleFormRef">
       <el-form-item label="标题" prop="title">
         <el-input v-model="form.title" />
@@ -97,7 +97,7 @@ onMounted(async () => {
             '#00ced1',
             '#1e90ff',
             '#c71585',
-            '#c7158577'
+            '#c7158577',
           ]"
         ></el-color-picker>
       </el-form-item>
@@ -110,7 +110,9 @@ onMounted(async () => {
 </template>
 <style scoped>
 :deep(.el-input-group__append) {
-  //border-color: transparent; box-shadow: none; color: unset;
+  //border-color: transparent;
+  box-shadow: none;
+  color: unset;
   background-color: white;
 }
 </style>
