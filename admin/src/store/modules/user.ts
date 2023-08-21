@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { loginApi, getUserinfoApi } from "@/api/system/login";
 import { LoginRequestData, Token, UserRead } from "@/api/system/login/types";
 import router from "@/router";
-import { useTagsViewStore } from "@/store";
+import { useTagsViewStore } from "./tagsview";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
