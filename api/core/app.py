@@ -29,10 +29,10 @@ def create_app() -> FastAPI:
     register_middleware(app)
 
     # 注册捕获全局异常
-    # register_exception(app)
+    register_exception(app)
     # 如果不想捕捉任何异常，可以将其注释掉。
-    if not settings.DEBUG:
-        register_exception(app)
+    # if not settings.DEBUG:
+    #     register_exception(app)
     # 注册分页
     add_pagination(app)
     return app

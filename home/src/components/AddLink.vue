@@ -47,16 +47,11 @@ function handleCancel() {
 async function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
-    linksModel
-      .createWithMenu(form)
-      .then((res) => {
-        dialogFormVisible.value = false;
-        ElMessage.success("添加成功");
-        location.reload();
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    linksModel.createWithMenu(form).then((res) => {
+      dialogFormVisible.value = false;
+      ElMessage.success("添加成功");
+      location.reload();
+    });
   });
 }
 </script>

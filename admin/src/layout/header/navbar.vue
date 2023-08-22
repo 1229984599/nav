@@ -46,9 +46,7 @@ const rotate = computed(() => {
         />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item class="hover:bg-zinc-600"
-              >个人中心
-            </el-dropdown-item>
+            <a href="/" class="hover:bg-zinc-600">主页 </a>
             <el-dropdown-item>修改密码</el-dropdown-item>
             <el-dropdown-item divided @click="userStore.logout"
               >退出登录
