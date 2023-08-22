@@ -117,7 +117,7 @@ const crudOptions: CrudOptions = {
       title: "排序",
       type: "number",
       form: {
-        col: { span: 14 },
+        col: { span: 6 },
       },
     },
     is_vip: {

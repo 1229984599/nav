@@ -8,6 +8,15 @@ import { useMenuStore } from "@/store/menu";
 
 const dialogFormVisible = ref(false);
 const menuStore = useMenuStore();
+const defaultForm = {
+  title: "",
+  icon: "",
+  href: "",
+  desc: "",
+  color: "",
+  is_self: false,
+  menus: [],
+};
 const form = reactive({
   title: "",
   icon: "",
@@ -17,6 +26,7 @@ const form = reactive({
   is_self: false,
   menus: [],
 });
+const spiderLoading = ref(false);
 const isSpiderInfo = computed(() => {
   return isUrl(form.href);
 });
@@ -26,18 +36,25 @@ const rules: FormRules = reactive<FormRules>({
   title: [{ required: true, message: "请输入标题", trigger: "blur" }],
   icon: [{ required: true, message: "请输入图标", trigger: "blur" }],
   href: [{ required: true, message: "请输入链接", trigger: "blur" }],
-  // desc: [{ required: true, message: "请输入描述", trigger: "blur" }],
+  menus: [{ required: true, message: "分类必选", trigger: "blur" }],
 });
 
 /**
  * 根据url采集站点信息
  */
 async function handleSiteInfo() {
-  const data = await linksModel.getSiteInfo(form.href);
-  Object.assign(form, data);
+  spiderLoading.value = true;
+  linksModel
+    .getSiteInfo(form.href)
+    .then((data) => {
+      Object.assign(form, data);
+    })
+    .finally(() => (spiderLoading.value = false));
 }
 
 function handleCancel() {
+  Object.assign(form, defaultForm);
+  debugger;
   dialogFormVisible.value = false;
 }
 
@@ -47,9 +64,10 @@ function handleCancel() {
 async function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
-    linksModel.createWithMenu(form).then((res) => {
+    linksModel.create(form).then(() => {
       dialogFormVisible.value = false;
       ElMessage.success("添加成功");
+      Object.assign(form, defaultForm);
       location.reload();
     });
   });
@@ -146,6 +164,7 @@ async function handleSubmit() {
         <div class="flex justify-center">
           <el-button
             :disabled="!isSpiderInfo"
+            :loading="spiderLoading"
             type="success"
             @click="handleSiteInfo"
             >采集
@@ -158,7 +177,7 @@ async function handleSubmit() {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 :deep(.el-input-group__append) {
   //border-color: transparent;
   box-shadow: none;

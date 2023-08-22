@@ -27,7 +27,7 @@ const rotate = computed(() => {
         @click="appStore.toggleCollapse"
         class="cursor-pointer"
         icon="ep:expand"
-        size="25"
+        :size="25"
         :rotate="rotate"
       />
       <!--      面包屑导航-->
@@ -46,8 +46,7 @@ const rotate = computed(() => {
         />
         <template #dropdown>
           <el-dropdown-menu>
-            <a href="/" class="hover:bg-zinc-600">主页 </a>
-            <el-dropdown-item>修改密码</el-dropdown-item>
+            <el-dropdown-item><a href="/">主页 </a></el-dropdown-item>
             <el-dropdown-item divided @click="userStore.logout"
               >退出登录
             </el-dropdown-item>

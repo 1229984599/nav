@@ -5,6 +5,7 @@ import type { FormInstance } from "element-plus";
 import { useUserStore } from "@/store";
 import router from "@/router";
 import { ElMessage } from "element-plus";
+import MIcon from "@/components/icon.vue";
 
 const loginForm = reactive({
   username: "",
@@ -45,9 +46,10 @@ function handleSubmit() {
       :rules="loginRules"
       @keyup.enter="handleSubmit"
     >
-      <div class="title-container">
+      <a class="title-container gap-x-2" href="/">
+        <m-icon icon="ion:logo-edge" color="white" :size="50" />
         <h3 class="title">用户登录</h3>
-      </div>
+      </a>
 
       <el-form-item prop="username">
         <el-input
@@ -153,11 +155,14 @@ $cursor: #fff;
 
   .title-container {
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
 
     .title {
       font-size: 26px;
       color: $light_gray;
-      margin: 0px auto 40px auto;
       text-align: center;
       font-weight: bold;
     }

@@ -25,7 +25,7 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
         editable: { disabled: true },
       },
       form: {
-        col: { span: 18 },
+        col: { span: 16 },
         helper: {
           render: () => {
             return (

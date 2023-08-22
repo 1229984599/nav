@@ -6,29 +6,30 @@ export default {
 <script setup lang="ts">
 import MIcon from "@/components/icon.vue";
 import { useAppStore } from "@/store";
+
 const appStore = useAppStore();
 const logoHeight = 44;
 </script>
 
 <template>
-  <router-link
+  <a
     key="collapse"
-    class="logo-container px-5 decoration-none"
+    class="logo-container decoration-none py-2"
+    :class="appStore.isCollapse ? 'justify-center' : 'pl-4'"
     :style="{ background: appStore.cssVar.menuBg }"
-    to="/"
+    href="/"
   >
     <m-icon icon="ion:logo-edge" color="white" :size="logoHeight" />
-    <h1 class="logo-title" v-if="!appStore.isCollapse">哈哈后台管理</h1>
-  </router-link>
+    <h1 class="logo-title" v-if="!appStore.isCollapse">哈哈导航</h1>
+  </a>
 </template>
 
 <style lang="scss" scoped>
 .logo-container {
   cursor: pointer;
-  padding: 10px 0 10px 0;
   display: flex !important;
   align-items: center;
-  justify-content: center;
+  //justify-content: center;
 
   .logo-title {
     margin-left: 10px;
