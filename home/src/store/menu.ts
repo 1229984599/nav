@@ -16,4 +16,7 @@ export const useMenuStore = defineStore("menu", {
       return this.menuTree;
     },
   },
+  persist: {
+    paths: ["menuTree"],
+  },
 });

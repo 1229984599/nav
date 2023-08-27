@@ -54,7 +54,6 @@ async function handleSiteInfo() {
 
 function handleCancel() {
   Object.assign(form, defaultForm);
-  debugger;
   dialogFormVisible.value = false;
 }
 

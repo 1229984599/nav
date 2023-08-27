@@ -3,7 +3,7 @@ import { onBeforeMount, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { useColumns } from "@fast-crud/fast-crud";
 import { FormScopeContext } from "@fast-crud/fast-crud/dist/d/d/crud";
 import { UseIconForm } from "@/hooks/icon";
-import site from "@/api/site";
+import siteModel from "@/api/site";
 
 const formRef = ref();
 const formOptions = ref();
@@ -12,38 +12,38 @@ const iconForm = UseIconForm();
 formOptions.value = buildFormOptions({
   form: {
     col: {
-      span: 24
+      span: 24,
     },
     doSubmit: ({ form }: FormScopeContext) => {
       console.log(form);
-    }
+    },
   },
   columns: {
     title: {
       title: "站点名称",
       type: "text",
       form: {
-        rules: [{ required: true, message: "此项必填" }]
-      }
+        rules: [{ required: true, message: "此项必填" }],
+      },
     },
     keywords: {
       title: "关键词",
-      type: "text"
+      type: "text",
     },
     desc: {
       title: "描述",
-      type: "textarea"
+      type: "textarea",
     },
     ...iconForm,
     footer: {
       title: "尾部信息",
-      type: "textarea"
-    }
-  }
+      type: "textarea",
+    },
+  },
 });
 onMounted(async () => {
   // debugger;
-  const data = await site.get();
+  const data = await siteModel.get();
   Object.assign(formOptions.value.initialForm, data);
 });
 </script>

@@ -16,7 +16,8 @@ async def init_data():
     # 如果没有数据，创建一个超级管理员
     if not await User.all().exists():
         print('Creating super user')
-        await User.create_one({"username": "admin", "password": get_password_hash("admina"), "nickname": "超级管理员","status":1})
+        await User.create_one(
+            {"username": "admin", "password": get_password_hash("admina"), "nickname": "超级管理员", "status": 1})
     # 如果没有数据，创建一个默认站点
     if not await Site.all().exists():
         await Site.create_one({
@@ -25,6 +26,6 @@ async def init_data():
             "desc": '哈哈导航',
             "keywords": '哈哈导航',
             "color": '#104A84',
-            "footer":'<a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank">渝ICP备2021008654号</a>\n2023 - 2023 哈哈导航. All Rights Reserved.'
+            "footer": '<a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank">渝ICP备2021008654号</a>2023 - 2023 哈哈导航. All Rights Reserved.'
         })
     await Tortoise.close_connections()

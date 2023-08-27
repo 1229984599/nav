@@ -1,4 +1,7 @@
-<script setup>
+<script lang="js" setup>
+import { useSiteStore } from "@/store/site";
+
+const siteStore = useSiteStore();
 window.WIDGET = {
   CONFIG: {
     modules: "01234",
@@ -17,7 +20,7 @@ window.WIDGET = {
     fixed: "false",
     vertical: "top",
     horizontal: "left",
-    key: "99ecd36cb84c4f3992227befc9c09c74",
+    key: siteStore.siteInfo.weather_key,
   },
 };
 const script = document.createElement("script");

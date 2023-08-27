@@ -42,6 +42,11 @@ const item = {
 
     <footer class="mt-5">
       <!-- 版权信息 -->
+      <span class="text-zinc-500 text-sm">
+        <a href="https://beian.miit.gov.cn" target="_blank">{{
+          siteStore.siteInfo?.copyright
+        }}</a>
+      </span>
       <div
         class="text-zinc-500 text-sm"
         v-html="siteStore.siteInfo?.footer"

@@ -20,6 +20,15 @@ const systemRoutes: RouteRecordRaw[] = [
         },
         component: () => import("@/views/system/user/index.vue"),
       },
+      {
+        name: "siteList",
+        path: "/site/list",
+        component: () => import("@/views/system/site/index.vue"),
+        meta: {
+          title: "站点设置",
+          icon: "dashicons:admin-site",
+        },
+      },
     ],
   },
 ];

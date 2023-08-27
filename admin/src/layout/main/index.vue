@@ -27,7 +27,7 @@ watch(
 <template>
   <m-tags-view />
   <div class="app-main">
-    <router-view v-slot="{ Component, route }">
+    <router-view :key="$route.path" v-slot="{ Component, route }">
       <transition name="fade-transform" mode="out-in">
         <keep-alive>
           <component :is="Component" :key="route.path" />
@@ -42,6 +42,7 @@ watch(
 
 .app-main {
   min-height: calc(100vh - #{$headerHeight} - 43px);
+  max-height: calc(100vh - #{$headerHeight} - 43px);
   width: 100%;
   position: relative;
   padding: 5px;

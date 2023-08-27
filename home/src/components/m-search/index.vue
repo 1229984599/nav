@@ -31,6 +31,12 @@ function handleSuggestionClick(link: any) {
   window.open(link.href, "_blank");
   searchQuery.value = "";
 }
+
+// 跳转到百度搜索
+function handleBaiduSearch() {
+  window.open("https://www.baidu.com/s?wd=" + searchQuery.value, "_blank");
+  searchQuery.value = "";
+}
 </script>
 
 <template>
@@ -56,8 +62,9 @@ function handleSuggestionClick(link: any) {
         >
           <template #suffix>
             <m-icon
+              @click="handleBaiduSearch"
               icon="mingcute:search-line"
-              size="28"
+              :size="28"
               class="cursor-pointer h-full"
             />
           </template>

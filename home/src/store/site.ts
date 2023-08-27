@@ -19,4 +19,5 @@ export const useSiteStore = defineStore("siteInfo", {
       return this.siteInfo;
     },
   },
+  persist: true,
 });

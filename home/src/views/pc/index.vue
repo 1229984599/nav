@@ -10,6 +10,7 @@ import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
 import MSearch from "@/components/m-search/index.vue";
+import MMask from "@/components/m-mask.vue";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -46,7 +47,7 @@ const isMask = computed(() => {
         <app-main />
         <m-footer />
       </div>
-      <div v-show="isMask" class="mask"></div>
+      <m-mask :is-mask="isMask" />
     </div>
   </div>
 </template>
@@ -82,13 +83,6 @@ const isMask = computed(() => {
     //}
 
     .mask {
-      position: fixed;
-      right: 0;
-      top: 0;
-      z-index: 20;
-      cursor: pointer;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.3);
       width: calc(100% - #{$sideBarWidth});
     }
 

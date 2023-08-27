@@ -27,4 +27,8 @@ export interface SiteSchema {
    * Title，网站标题
    */
   title?: string;
+  yiyan?: boolean;
+  weather?: boolean;
+  weather_key?: string;
+  copyright?: string;
 }

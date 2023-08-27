@@ -6,5 +6,5 @@ class SiteSchemaList(Site.schema_list()):
 
 
 class SiteSchemaUpdate(Site.schema_update()):
-    id: int | str | None
+    id: int | str | None = None
     pass

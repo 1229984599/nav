@@ -16,4 +16,5 @@ export const useFriendStore = defineStore("friend", {
       return items;
     },
   },
+  persist: true,
 });
