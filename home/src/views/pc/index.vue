@@ -59,6 +59,7 @@ const isMask = computed(() => {
   background-color: #{$bg};
 
   .left-container {
+    z-index: 60;
     ul {
       height: calc(100% - #{$navHeaderHeight});
       border-right: none;
@@ -66,26 +67,20 @@ const isMask = computed(() => {
 
     .menu-side {
       width: #{$sideBarWidth};
+      transition: width #{$sideBarDuration};
     }
 
     .hide-menu-side {
       width: #{$hideSideBarWidth};
+      transition: width #{$sideBarDuration};
+    }
+
+    :deep(.el-menu--collapse) {
+      width: 100%;
     }
   }
 
   .right-container {
-    //.right-main {
-    //  width: calc(100% - #{$sideBarWidth});
-    //}
-    //
-    //.hide-right-main {
-    //  width: calc(100% - #{$hideSideBarWidth});
-    //}
-
-    .mask {
-      width: calc(100% - #{$sideBarWidth});
-    }
-
     .navbar {
       height: 60px;
       width: 100%;

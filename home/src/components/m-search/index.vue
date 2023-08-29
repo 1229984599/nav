@@ -8,6 +8,7 @@ import { ref } from "vue";
 import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
 import MLogo from "@/components/MLogo.vue";
+import { getBaiduSuggestions } from "@/api/spider";
 
 defineOptions({
   name: "MSearch",
@@ -23,18 +24,31 @@ async function fetchSuggestions(
     { page: 1, pageSize: 10, order_by: "order" },
     { title: queryString },
   );
+  // 如果items长度为0，就调用百度搜索数据
+  if (items.length === 0) {
+    const baiduSuggestions = await getBaiduSuggestions(queryString);
+    return callback(baiduSuggestions);
+  }
   callback(items);
 }
 
 // 搜索功能
 function handleSuggestionClick(link: any) {
+  if (!link.href) {
+    handleBaiduSearch(link.title);
+    return;
+  }
   window.open(link.href, "_blank");
   searchQuery.value = "";
 }
 
 // 跳转到百度搜索
-function handleBaiduSearch() {
-  window.open("https://www.baidu.com/s?wd=" + searchQuery.value, "_blank");
+function handleBaiduSearch(kw: string = "") {
+  if (kw === "") {
+    window.open("https://www.baidu.com/s?wd=" + searchQuery.value, "_blank");
+  } else {
+    window.open("https://www.baidu.com/s?wd=" + kw, "_blank");
+  }
   searchQuery.value = "";
 }
 </script>
@@ -53,13 +67,20 @@ function handleBaiduSearch() {
           :highlight-first-item="true"
           :fit-input-width="true"
           :trigger-on-focus="false"
-          value-key="title"
           v-model="searchQuery"
           :fetch-suggestions="fetchSuggestions"
           @select="handleSuggestionClick"
-          placeholder="请输入需要搜索的站点"
+          placeholder="请输入需要搜索的内容"
           class="w-full px-2 py-2 bg-white rounded-full"
         >
+          <template #default="{ item }">
+            <div class="flex justify-between">
+              <span class="px-2 w-3/4 text-truncate">{{ item.title }}</span>
+              <span class="text-zinc-600 font-bold text-truncate">{{
+                item.menus[0].title
+              }}</span>
+            </div>
+          </template>
           <template #suffix>
             <m-icon
               @click="handleBaiduSearch"
@@ -82,31 +103,9 @@ function handleBaiduSearch() {
   border-color: transparent !important;
   box-shadow: none !important;
 }
-
-/* 去掉li标签前面的小圆点，鼠标放上去有一个小手出现 */
-li {
-  list-style: none;
-  cursor: pointer;
-  /* 导航栏高亮时在文字底部添加一个白色下划线 */
-  span {
-    transition: width 0.3s ease;
-  }
-
-  &:hover span {
-    width: 100%;
-  }
-}
-
-.nav-item {
-  transition: color 0.5s;
-  cursor: pointer;
-
-  &:hover {
-    @apply text-white;
-  }
-}
-
-.nav-active {
-  @apply text-white font-bold;
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

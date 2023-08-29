@@ -5,7 +5,7 @@ import AddLink from "@/components/AddLink.vue";
 import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
 import { onMounted } from "vue";
-import SubMenuItem from "@/views/pc/side-menu/SubMenuItem.vue";
+import SubMenuItem from "../side-menu/SubMenuItem.vue";
 import { useUserStore } from "@/store/user";
 
 defineOptions({
@@ -20,6 +20,11 @@ const item = {
   icon: "file-icons:freedos",
   color: "red",
 };
+
+function handleScrollTop() {
+  location.hash = "#/list";
+  scrollTop(".right-container");
+}
 </script>
 
 <template>
@@ -57,7 +62,7 @@ const item = {
     >
       <m-icon
         class="tool-item"
-        @click="scrollTop('.right-container')"
+        @click="handleScrollTop"
         icon="ph:rocket-fill"
       />
       <!--      添加链接-->

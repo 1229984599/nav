@@ -21,9 +21,10 @@ defineProps({
   position: fixed;
   right: 0;
   top: 0;
-  z-index: 20;
+  z-index: 50;
   cursor: pointer;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
+  width: 100%;
 }
 </style>

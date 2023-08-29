@@ -12,10 +12,10 @@ const siteStore = useSiteStore();
 
 <template>
   <div class="layout-logo-container px-5">
-    <router-link
+    <a
       key="collapse"
       class="flex decoration-none items-center justify-center"
-      to="/"
+      href="/"
     >
       <m-icon
         :icon="siteStore.siteInfo?.icon"
@@ -25,7 +25,7 @@ const siteStore = useSiteStore();
       <span class="logo-title" :style="{ color: siteStore.siteInfo?.color }">{{
         siteStore.siteInfo?.title
       }}</span>
-    </router-link>
+    </a>
   </div>
 </template>
 

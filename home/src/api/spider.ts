@@ -5,6 +5,8 @@ export async function getYiyan() {
   return resp.data;
 }
 
+/*
+ */
 export async function getBaiduSuggestions(query: string) {
   const response = await axios.get(
     `https://www.baidu.com/su?wd=${encodeURIComponent(query)}&cb=`,
@@ -12,5 +14,8 @@ export async function getBaiduSuggestions(query: string) {
   // 提取JSON部分
   const apiResponse = response.data.match(/^\(([^)]+)\)/)[1];
   const data = JSON.parse(apiResponse.replace(/(\w+)(?=:)/g, '"$1"'));
-  return data.s;
+  return data.s.map((item: any) => ({
+    title: item,
+    menus: [{ title: "百度" }],
+  }));
 }
