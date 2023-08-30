@@ -10,7 +10,8 @@ export async function getYiyan() {
 export async function getBaiduSuggestions(query: string) {
   const response = await axios({
     method: "get",
-    url: `/baidu/su`,
+    baseURL: "/baidu",
+    url: `/su`,
     params: {
       wd: query,
       cb: "",
