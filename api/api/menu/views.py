@@ -41,7 +41,7 @@ menu_router = MenuCrud(Menu, schema_list=MenuSchemaList,
 
 # 递归函数，用于获取菜单树
 async def get_menu_tree(menu_item: Menu, user) -> dict:
-    link_query = menu_item.links
+    link_query = menu_item.links.order_by('order')
     if not user:
         link_query = link_query.filter(is_vip=False)
     links = await link_query.all().values()

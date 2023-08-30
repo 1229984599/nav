@@ -13,6 +13,9 @@ class Links extends Crud {
     query: QueryParams = {},
     filters: LinksSchemaFilters = {},
   ): Promise<PageLinkSchemaList> {
+    if (!query.order_by) {
+      query.order_by = "order";
+    }
     return await super.list(query, filters);
   }
 

@@ -119,6 +119,9 @@ const crudOptions: CrudOptions = {
       form: {
         col: { span: 6 },
       },
+      column: {
+        sortable: "custom",
+      },
     },
     is_vip: {
       title: "是否vip",
