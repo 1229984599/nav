@@ -23,11 +23,6 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ""),
         },
-        "/baidu": {
-          target: "https://www.baidu.com",
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/baidu/, ""),
-        },
       },
     },
     plugins: [vue()],

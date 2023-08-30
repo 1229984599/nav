@@ -1,4 +1,5 @@
 import axios from "axios";
+import { request } from "@/utils/request";
 
 export async function getYiyan() {
   const resp = await axios.get("https://v1.hitokoto.cn/");
@@ -8,18 +9,16 @@ export async function getYiyan() {
 /*
  */
 export async function getBaiduSuggestions(query: string) {
-  const response = await axios({
+  const response = await request({
     method: "get",
-    baseURL: "/baidu",
-    url: `/su`,
+    url: `/spider/baidu`,
     params: {
-      wd: query,
-      cb: "",
+      query: query,
     },
   });
   // 提取JSON部分
   // @ts-ignore
-  const apiResponse = response.data.match(/^\(([^)]+)\)/)[1];
+  const apiResponse = response.match(/^\(([^)]+)\)/)[1];
   const data = JSON.parse(apiResponse.replace(/(\w+)(?=:)/g, '"$1"'));
   return data.s.map((item: any) => ({
     title: item,
