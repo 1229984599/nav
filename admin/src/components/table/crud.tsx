@@ -27,6 +27,10 @@ export default function createCrudOptions(
             width: 180,
             order: 100,
           },
+          search: {
+            show: true,
+            order: 100,
+          },
           form: {
             rules: [{ required: true, message: "请选择状态" }],
             col: { span: 6 },

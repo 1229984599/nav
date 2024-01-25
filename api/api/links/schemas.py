@@ -11,8 +11,9 @@ class CreateMenuSchema(Links.schema_create('CreateMenu', )):
     menus: list[int] | None = None
 
 
-class FilterSchemaList(Links.schema_filters(include=('title', 'menus'))):
+class FilterSchemaList(Links.schema_filters(include=('title', 'menus', 'status'))):
     menus: list[int] | None = None
+    status: bool | None | str = None
 
 
 # class UpdateMenuSchema(Links.schema_update('UpdateMenu', )):
@@ -22,7 +23,6 @@ class FilterSchemaList(Links.schema_filters(include=('title', 'menus'))):
 class LinkSchemaList(Links.schema_list(exclude='menus', )):
     menus: List[MenuRelation] = Field(default=[])
     pass
-
 
 # class SetMenuSchema(BaseModel):
 #     menus: list[int]

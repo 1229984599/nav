@@ -1,5 +1,11 @@
 // 引入fast-crud
-import { FastCrud, setLogger, useTypes } from "@fast-crud/fast-crud";
+import {
+  CrudBinding,
+  CrudOptions,
+  FastCrud,
+  setLogger,
+  useTypes,
+} from "@fast-crud/fast-crud";
 import "@fast-crud/fast-crud/dist/style.css";
 
 // 请选择ui: element/ antdv /naive。三选一，不支持动态切换
@@ -25,7 +31,7 @@ export function useFastCrud(app: App) {
       return await request(config); //根据dict的url，异步返回一个字典数组
     },
     //公共crud配置
-    commonOptions() {
+    commonOptions(): CrudOptions {
       return {
         request: {
           //接口请求配置
@@ -35,8 +41,8 @@ export function useFastCrud(app: App) {
             //转换为你pageRequest所需要的请求参数结构
             const query = {
               params: {
-                page: page.currentPage,
-                size: page.pageSize,
+                page: page?.currentPage,
+                size: page?.pageSize,
                 order_by: "",
               },
               filters: form,
@@ -64,20 +70,22 @@ export function useFastCrud(app: App) {
         //你可以在此处配置你的其他crudOptions公共配置
         table: {
           editable: {
-            enabled: true,
-            mode: "free", //模式，free=自由编辑，row=行编辑
-            activeTrigger: "onClick", //激活编辑的触发方式，dblclick=双击，click=单击
+            enabled: false,
+            mode: "free",
+            activeTrigger: "onClick",
+            activeDefault: false,
           },
         },
         rowHandle: {
           align: "center",
+          width: 180,
           buttons: {
-            view: {
-              icon: "View",
-              text: "",
-            },
             edit: {
               icon: "edit",
+              text: "",
+            },
+            view: {
+              icon: "view",
               text: "",
             },
             remove: {

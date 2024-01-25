@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import variable from "@/styles/variables.module.scss";
 import { isMobile } from "@/utils/window";
+import site from "@/api/site";
+
 export const useAppStore = defineStore("app", {
   state: () => {
     return {
@@ -13,7 +15,11 @@ export const useAppStore = defineStore("app", {
       this.isCollapse = !this.isCollapse;
     },
     changeBgColor(color: string) {
+      // @ts-ignore
       this.cssVar.menuBg = color;
+    },
+    async clearCache() {
+      return await site.clearCache();
     },
   },
   persist: {

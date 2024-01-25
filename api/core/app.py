@@ -1,10 +1,10 @@
+from fastapi import FastAPI
+
 from .exception import register_exception
 from .listeners import register_init
 from .middleware import register_middleware
 from .router import register_router
-from fastapi import FastAPI, Depends
 from settings import settings
-from fastapi_pagination import add_pagination
 
 
 def create_app() -> FastAPI:
@@ -19,6 +19,7 @@ def create_app() -> FastAPI:
         docs_url=settings.DOCS_URL,
         redoc_url=settings.REDOC_URL,
     )
+
     # 初始化
     register_init(app)
 

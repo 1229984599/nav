@@ -10,12 +10,18 @@ import { useAppStore, useUserStore } from "@/store";
 import MIcon from "@/components/icon.vue";
 import MThemeSelect from "@/layout/header/theme-select/index.vue";
 import { isMobile } from "@/utils/window";
+import { ElMessage } from "element-plus";
 
 const appStore = useAppStore();
 const userStore = useUserStore();
 const rotate = computed(() => {
   return appStore.isCollapse ? 0 : 2;
 });
+
+async function handleClearCache() {
+  await appStore.clearCache();
+  ElMessage.success("清除缓存成功");
+}
 </script>
 
 <template>
@@ -35,6 +41,13 @@ const rotate = computed(() => {
     </div>
     <!--    右侧-->
     <div class="flex items-center gap-x-2">
+      <!--      清除缓存-->
+      <m-icon
+        @click="handleClearCache"
+        :size="25"
+        class="cursor-pointer"
+        icon="ant-design:clear-outlined"
+      ></m-icon>
       <!--      主题切换-->
       <m-theme-select />
       <!--      个人中心-->

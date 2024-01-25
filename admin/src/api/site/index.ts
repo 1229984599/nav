@@ -16,6 +16,13 @@ class Site {
       data,
     });
   }
+
+  async clearCache() {
+    return await request({
+      url: "/site/clear_cache",
+      method: "post",
+    });
+  }
 }
 
 export default new Site();

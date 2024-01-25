@@ -27,7 +27,15 @@ const crudOptions: CrudOptions = {
     title: {
       title: "标题",
       type: "text",
-      search: { show: true }, // 开启查询
+      search: {
+        show: true,
+        component: {
+          props: {
+            placeholder: "请输入标题",
+            clearable: true,
+          },
+        },
+      }, // 开启查询
       form: {
         rules: [{ required: true, message: "请输入标题" }],
       },

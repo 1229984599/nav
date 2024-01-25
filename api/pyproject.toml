@@ -22,9 +22,9 @@ dependencies = [
     "bcrypt>=4.0.1",
     "asyncmy",
     "aiosqlite",
-    "python-multipart",
     "uvicorn",
-    "python-dotenv"
+    "python-dotenv",
+    "fastapi-cache2>=0.2.1",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}

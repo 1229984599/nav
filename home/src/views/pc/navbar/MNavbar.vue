@@ -5,6 +5,7 @@ import MWeather from "@/components/MWeather.vue";
 import MYiyan from "@/components/MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
+import { isMobile } from "@/utils/window";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();

@@ -26,6 +26,7 @@ async def init_data():
             "desc": '哈哈导航',
             "keywords": '哈哈导航',
             "color": '#104A84',
-            "footer": '<a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank">渝ICP备2021008654号</a>2023 - 2023 哈哈导航. All Rights Reserved.'
+            "copyright": '渝ICP备2021008654号',
+            "footer": 'Copyright © 2023 哈哈导航. All Rights Reserved.'
         })
     await Tortoise.close_connections()

@@ -11,6 +11,7 @@ window.WIDGET = {
     cityColor: "FF0000",
     citySize: "16",
     aqiColor: "FF9900",
+    top: 0,
     aqiSize: "16",
     weatherIconSize: "24",
     alertIconSize: "18",
@@ -33,4 +34,8 @@ document.body.appendChild(script);
   <div id="he-plugin-simple"></div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss">
+#weather-view-he {
+  height: auto !important;
+}
+</style>

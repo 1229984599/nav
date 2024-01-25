@@ -34,9 +34,9 @@ defineProps({
 
       <div class="truncate md:pl-1.5">
         <div class="text-sm md:text-base font-bold">{{ item.title }}</div>
-        <span class="desc">
+        <p class="desc">
           {{ item?.desc || "暂无描述信息" }}
-        </span>
+        </p>
       </div>
     </a>
     <template #content>
@@ -47,7 +47,7 @@ defineProps({
 
 <style lang="scss" scoped>
 .desc {
-  @apply text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full;
+  @apply text-ellipsis text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full;
   //text-indent: 10px;
 }
 

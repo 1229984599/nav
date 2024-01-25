@@ -2,12 +2,11 @@ from fastapi import Depends
 from tortoise.contrib.pydantic import PydanticModel
 
 from fastapi_tortoise_crud import ModelCrud, BaseApiOut
-from models import Menu, User, Links
+from models import Menu, User
 from .schemas import MenuSchemaList, MenuSchemaUpdate, MenuSchemaFilters
 from auth.auth import get_current_user, is_login
 
-
-# from fastapi_cache.decorator import cache
+from fastapi_cache.decorator import cache
 
 
 class MenuCrud(ModelCrud):
@@ -51,7 +50,7 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
         "icon": menu_item.icon,
         "color": menu_item.color,
         "links": links,
-        "is_vip":menu_item.is_vip,
+        "is_vip": menu_item.is_vip,
         "status": menu_item.status,
         "order": menu_item.order,
         "create_time": menu_item.create_time,
@@ -64,7 +63,7 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
 
 
 @menu_router.get('/tree', description='返回菜单树', response_model=BaseApiOut)
-# @cache(expire=60*30)
+@cache(namespace='menu', expire=60 * 60 * 24)
 async def handle_get_menu_tree(user: User = Depends(is_login)):
     queryset = Menu.all()
     all_menu_items = await queryset.order_by('order').prefetch_related(

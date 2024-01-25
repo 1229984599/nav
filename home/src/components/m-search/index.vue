@@ -64,6 +64,7 @@ function handleBaiduSearch(kw: string = "") {
     >
       <div class="relative w-4/5 md:w-1/2">
         <el-autocomplete
+          autofocus
           :highlight-first-item="true"
           :fit-input-width="true"
           :trigger-on-focus="false"

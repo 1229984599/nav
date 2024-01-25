@@ -44,7 +44,7 @@ export function useActionButtons(
           const selected = crudExpose
             .getTableRef()
             .tableRef.getSelectionRows()
-            .map((item) => item.id);
+            .map((item: { id: any }) => item.id);
           if (selected.length > 0) {
             model.delete(selected.join(",")).then(async () => {
               await crudExpose.doRefresh();

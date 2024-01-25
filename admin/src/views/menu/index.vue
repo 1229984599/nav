@@ -13,6 +13,16 @@ const iconForm = UseIconForm(true);
 const { spider } = useSpiderButtons(menuModel);
 
 const crudOptions: CrudOptions = {
+  rowHandle: {
+    buttons: {
+      edit: {
+        tooltip: {
+          placement: "top",
+          content: "编辑",
+        },
+      },
+    },
+  },
   form: {
     wrapper: {
       buttons: {

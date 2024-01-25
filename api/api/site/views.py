@@ -1,9 +1,9 @@
 from starlette.responses import FileResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-# from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
+from fastapi_tortoise_crud import BaseApiOut
 
 from models import Site
-from fastapi_tortoise_crud import BaseApiOut
 from .schemas import SiteSchemaUpdate
 from auth.auth import get_current_user
 from settings import settings
@@ -16,9 +16,12 @@ async def handle_update_site(site: SiteSchemaUpdate):
     """
     创更新数据
     """
-    data = await Site.update_one(site.id, site.dict(exclude_unset=True, exclude={"id"}))
-    site_info = await Site.get_or_none(id=data)
-    data = await SiteSchemaUpdate.from_tortoise_orm(site_info)
+    first_model = await Site.first()
+    await first_model.update_from_dict(site.dict(exclude_unset=True, exclude={"id"}))
+    await first_model.save()
+    # data = await Site.update_one(site.id, site.dict(exclude_unset=True, exclude={"id"}))
+    # site_info = await Site.get_or_none(id=data)
+    data = await SiteSchemaUpdate.from_tortoise_orm(first_model)
     return BaseApiOut(data=data)
 
 
@@ -28,7 +31,7 @@ async def handle_get_site():
     """
     获取数据站点
     """
-    data = await Site.get_or_none(id=1)
+    data = await Site.first()
     data = await Site.schema_list().from_tortoise_orm(data)
     return BaseApiOut(data=data)
 
@@ -48,3 +51,12 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
 async def get_image(filename: str):
     img_path = settings.BASE_PATH.joinpath('img').joinpath(filename)
     return FileResponse(img_path)
+
+
+@site_router.post('/clear_cache')
+async def handle_clear_cache():
+    """
+    清除缓存
+    """
+    data = await FastAPICache.clear(namespace='menu')
+    return BaseApiOut(message='缓存清除成功')

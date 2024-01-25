@@ -8,8 +8,10 @@ import { isMobile } from "@/utils/window";
 
 const appStore = useAppStore();
 const menuStore = useMenuStore();
+const loading = ref(false);
 onMounted(() => {
-  menuStore.getMenuTree();
+  loading.value = true;
+  menuStore.getMenuTree().finally(() => (loading.value = false));
 });
 const target = ref(null);
 onClickOutside(target, () => {
@@ -21,6 +23,7 @@ onClickOutside(target, () => {
 
 <template>
   <el-menu
+    v-loading.fullscreen.lock="loading"
     ref="target"
     :collapse-transition="false"
     :collapse="appStore.isCollapse"

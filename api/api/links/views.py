@@ -21,8 +21,9 @@ class LinkCrud(ModelCrud):
         async def route(filters: schema_filters,
                         params: Params = Depends(), order_by: str = '-create_time',
                         user: User = Depends(is_login)):
+            item = await self.pre_list(filters)
             queryset = self.model.filter()
-            item = filters.model_dump(exclude_defaults=True)
+            # item = filters.model_dump(exclude_defaults=True)
             if item.get('menus'):
                 menus = item.pop('menus')
                 queryset = queryset.filter(menus__in=menus)
@@ -30,8 +31,8 @@ class LinkCrud(ModelCrud):
                 queryset = queryset.filter(is_vip=False)
             if order_by:
                 queryset = queryset.order_by(*order_by.split(','))
-            search_item = {f'{k}__icontains': v for k, v in item.items() if v}
-            queryset = queryset.filter(**search_item)
+            # search_item = {f'{k}__icontains': v for k, v in item.items() if v}
+            queryset = queryset.filter(**item)
             data = await paginate(queryset, params, True)
             return BaseApiOut(data=data)
 
