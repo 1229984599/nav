@@ -19,5 +19,5 @@ class MenuSchemaUpdate(Menu.schema_update(exclude=('parent_id',))):
     pass
 
 
-class MenuSchemaFilters(Menu.schema_filters(include=('title',))):
+class MenuSchemaFilters(Menu.schema_filters(include=('title', 'status'))):
     parent_id: int | str | None = None

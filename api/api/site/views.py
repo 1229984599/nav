@@ -1,6 +1,5 @@
 from starlette.responses import FileResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-from fastapi_cache import FastAPICache
 from fastapi_tortoise_crud import BaseApiOut
 
 from models import Site
@@ -53,10 +52,10 @@ async def get_image(filename: str):
     return FileResponse(img_path)
 
 
-@site_router.post('/clear_cache')
-async def handle_clear_cache():
-    """
-    清除缓存
-    """
-    data = await FastAPICache.clear(namespace='menu')
-    return BaseApiOut(message='缓存清除成功')
+# @site_router.post('/clear_cache')
+# async def handle_clear_cache():
+#     """
+#     清除缓存
+#     """
+#     data = await FastAPICache.clear(namespace='menu')
+#     return BaseApiOut(message='缓存清除成功')

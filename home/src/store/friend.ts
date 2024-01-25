@@ -11,7 +11,12 @@ export const useFriendStore = defineStore("friend", {
   }),
   actions: {
     async getFriendList() {
-      const { items } = await friendModel.list({ page: 1, pageSize: 100 });
+      const { items } = await friendModel.list(
+        { page: 1, pageSize: 100 },
+        {
+          status: true,
+        },
+      );
       this.friendList = items;
       return items;
     },

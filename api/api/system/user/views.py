@@ -24,7 +24,7 @@ class UserCrud(ModelCrud):
 
 user_router = UserCrud(User,
                        schema_list=schemas.UserList,
-                       schema_filters=User.schema_filters(include=('username',)),
+                       schema_filters=User.schema_filters(include=('username', 'status')),
                        schema_update=schemas.UserUpdate,
                        schema_read=schemas.UserList,
                        # dependencies=[Depends(check_permission)]

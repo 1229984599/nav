@@ -1,5 +1,5 @@
 import json
-
+import asyncio
 import httpx
 
 
@@ -7,7 +7,7 @@ async def get_yiyan():
     url = "https://v1.hitokoto.cn/"
     async with httpx.AsyncClient() as client:
         response = await client.get(url)
-    return response.text
+    return response.json()
 
 
 async def get_baidu_suggestions(query: str = ''):
@@ -21,3 +21,6 @@ async def get_baidu_suggestions(query: str = ''):
     # data = json.loads(api_response.replace("'", '"'))
     # 返回百度搜索结果
     return response.text
+
+if __name__ == '__main__':
+    print(asyncio.run(get_yiyan()))

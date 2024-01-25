@@ -43,7 +43,7 @@ const crudOptions: CrudOptions = {
       title: "描述",
       type: "textarea",
       column: {
-        show: true,
+        show: false,
       },
       form: {
         show: true,

@@ -14,4 +14,5 @@ async def baidu_spider(query: str = ''):
 @spider_router.get("/yiyan", response_model=BaseApiOut)
 async def yiyan_spider():
     data = await get_yiyan()
+    print(data)
     return BaseApiOut(data=data)

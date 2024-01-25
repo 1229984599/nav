@@ -52,6 +52,12 @@ export function useFastCrud(app: App) {
               // @ts-ignore
               query.params.order_by = sort.asc ? sort.prop : `-${sort.prop}`;
             }
+            // 修改form中status为
+            if (form?.status === "") {
+              form.status = null;
+            }
+
+            // debugger;
 
             return query;
           },
@@ -71,14 +77,14 @@ export function useFastCrud(app: App) {
         table: {
           editable: {
             enabled: false,
-            mode: "free",
+            mode: "cell",
             activeTrigger: "onClick",
-            activeDefault: false,
           },
         },
         rowHandle: {
+          fixed: "right",
           align: "center",
-          width: 180,
+          width: 175,
           buttons: {
             edit: {
               icon: "edit",

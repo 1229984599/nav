@@ -16,6 +16,7 @@ class Menu extends Crud {
   ): Promise<PageMenuSchemaList> {
     return await super.list(query, filters);
   }
+
   async getMenuTree(): Promise<MenuSchemaTree> {
     return await request({
       method: "get",

@@ -1,10 +1,10 @@
-import Crud, {QueryParams} from "@/api/crud";
+import Crud, { QueryParams } from "@/api/crud";
 import { request } from "@/utils/request";
 import { FriendSchemaFilters, PageFriendSchemaList, SiteInfo } from "./types";
 
 class Friend extends Crud {
   async list(
-    query:QueryParams={},
+    query: QueryParams = {},
     filters: FriendSchemaFilters = {},
   ): Promise<PageFriendSchemaList> {
     return await super.list(query, filters);
@@ -13,7 +13,7 @@ class Friend extends Crud {
   async getSiteInfo(url: string): Promise<SiteInfo> {
     return await request({
       url: `${this.baseUrl}/siteinfo?url=${url}`,
-      method: "GET",
+      method: "post",
     });
   }
 }

@@ -6,7 +6,7 @@ from ..links.utils import get_site_info
 from auth.auth import get_current_user
 
 friend_router = ModelCrud(Friend,
-                          schema_filters=Friend.schema_filters(include=('title', ))
+                          schema_filters=Friend.schema_filters(include=('title','status'))
                           ).register_crud(
     depends_create=[Depends(get_current_user)],
     depends_update=[Depends(get_current_user)]

@@ -3,6 +3,7 @@ export interface SiteInfo {
   icon?: string;
   desc?: string;
 }
+
 /**
  * FriendSchemaFilters
  */
@@ -11,7 +12,9 @@ export interface FriendSchemaFilters {
    * Title
    */
   title?: string;
+  status?: boolean;
 }
+
 /**
  * Page_FriendSchemaList_
  */

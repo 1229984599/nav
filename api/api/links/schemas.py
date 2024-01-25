@@ -13,7 +13,6 @@ class CreateMenuSchema(Links.schema_create('CreateMenu', )):
 
 class FilterSchemaList(Links.schema_filters(include=('title', 'menus', 'status'))):
     menus: list[int] | None = None
-    status: bool | None | str = None
 
 
 # class UpdateMenuSchema(Links.schema_update('UpdateMenu', )):

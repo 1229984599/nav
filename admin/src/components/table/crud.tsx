@@ -1,7 +1,13 @@
-import { CreateCrudOptionsRet, dict } from "@fast-crud/fast-crud";
+import {
+  ColumnProps,
+  CreateCrudOptionsRet,
+  DataFormatterContext,
+  dict,
+} from "@fast-crud/fast-crud";
 import Crud, { useRequest } from "@/api/crud";
 import { useActionButtons } from "./hooks";
 import { type CrudExpose } from "@fast-crud/fast-crud/dist/d/d/expose";
+import { dayjs } from "element-plus";
 
 export default function createCrudOptions(
   crudExpose: CrudExpose,
@@ -17,6 +23,21 @@ export default function createCrudOptions(
         buttons: {
           deleteAll,
           save,
+        },
+      },
+      toolbar: {
+        export: {
+          onlyShow: true, //仅导出当前显示的列，与上面的配置效果相同
+          dataFormatter: ({ row, originalRow, col }: DataFormatterContext) => {
+            // 此方法里面要做的是修改row里面的数据
+            // { row, originalRow, col } :DataFormatterContext
+            //例如 格式化日期
+            if (col.key === "create_time" && originalRow.create_time) {
+              row.create_time = dayjs(originalRow.create_time).format(
+                "YYYY-MM-DD HH:mm:ss",
+              );
+            }
+          },
         },
       },
       columns: {
