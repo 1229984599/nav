@@ -9,14 +9,14 @@ dependencies:
     specifier: ^2.1.0
     version: 2.1.0(vue@3.3.4)
   '@fast-crud/fast-crud':
-    specifier: ^1.19.3
-    version: 1.19.3(vue@3.3.4)
+    specifier: ^1.20.1
+    version: 1.20.1(vue@3.3.4)
   '@fast-crud/ui-element':
-    specifier: ^1.19.3
-    version: 1.19.3
+    specifier: ^1.20.1
+    version: 1.20.1
   '@fast-crud/ui-interface':
-    specifier: ^1.19.3
-    version: 1.19.3
+    specifier: ^1.20.1
+    version: 1.20.1
   '@vueuse/core':
     specifier: ^10.3.0
     version: 10.3.0(vue@3.3.4)
@@ -598,8 +598,8 @@ packages:
     dev: true
     optional: true
 
-  /@fast-crud/fast-crud@1.19.3(vue@3.3.4):
-    resolution: {integrity: sha512-ZCisgHVKvJ2Q8gsPa4MN4+A9hXoYsR3aw8CzRBadtkle2P2uqc8Gc8IikSJdHeXZSPO+yf6FiIQqJVUC/N6VJw==}
+  /@fast-crud/fast-crud@1.20.1(vue@3.3.4):
+    resolution: {integrity: sha512-qwbrUS6fQz9Or9sHW48NPGn3NRvnBoMKcqIXa5Bv2ENHSf/4+Fhm3XcWDM+/BkrbnkMMLnnXNscxc5ni8FPvdg==}
     dependencies:
       file-saver: 2.0.5
       lru-cache: 10.1.0
@@ -609,12 +609,12 @@ packages:
       - vue
     dev: false
 
-  /@fast-crud/ui-element@1.19.3:
-    resolution: {integrity: sha512-NQCBEUPZO09oagP6PRv3s20LKPiC8CpiDhCDNran+2tuvy9NjYkayMbFPcrdUoRTgjGjRw+C198amRJs70OClA==}
+  /@fast-crud/ui-element@1.20.1:
+    resolution: {integrity: sha512-7KI6triU8KzK4YJOJbiDN+SiztFXL3+xMGf4J4+Utr1aDuxbotYFzjxFsIt/oMdY12MK4M61mGW5WsocTskm5g==}
     dev: false
 
-  /@fast-crud/ui-interface@1.19.3:
-    resolution: {integrity: sha512-tjhTy/eadx9UeSBgwLtPCZvPsOChNUtrv1uqWhD/duQL8GtyueWBvcTr3O65sNFVTwJh+NimF1/Gre3LAgfvwg==}
+  /@fast-crud/ui-interface@1.20.1:
+    resolution: {integrity: sha512-GC/MkO22sfwgL04CWZOlr5aVnwmTkxi7fjhu6i2Ie4udMF8elnFWpYYd2YCwqufzTz88HzoAsYvmrVJbfFYVyQ==}
     dependencies:
       lodash-es: 4.17.21
     dev: false

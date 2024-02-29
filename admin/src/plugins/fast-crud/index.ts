@@ -77,7 +77,7 @@ export function useFastCrud(app: App) {
         table: {
           editable: {
             enabled: false,
-            mode: "cell",
+            mode: "free",
             activeTrigger: "onClick",
           },
         },

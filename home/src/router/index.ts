@@ -1,6 +1,7 @@
 import {
   createRouter,
   createWebHashHistory,
+  createWebHistory,
   Router,
   RouteRecordRaw,
 } from "vue-router";
@@ -15,8 +16,17 @@ export const systemRoutes: RouteRecordRaw[] = [
 ];
 
 const router: Router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes: [...systemRoutes, ...pcRoutes],
+  scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        top: 0,
+        behavior: "smooth",
+      };
+    }
+  },
 });
 
 export default router;

@@ -2,7 +2,7 @@
   <m-table :crud-options="crudOptions" :model="linkModel"></m-table>
 </template>
 
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import MTable from "@/components/table/index.vue";
 import { CrudOptions, dict } from "@fast-crud/fast-crud";
 import linkModel from "@/api/links";
@@ -58,7 +58,7 @@ const crudOptions: CrudOptions = {
     },
     menus: {
       title: "菜单",
-      type: "dict-select",
+      type: "dict-tree",
       valueBuilder(context) {
         // @ts-ignore
         context.row.menus = context.row.menus.map((item) => item.id);
@@ -71,16 +71,28 @@ const crudOptions: CrudOptions = {
         rules: [{ required: true, message: "菜单为必选项" }],
         component: {
           multiple: true,
-          // props: {
-          //   clearable: true,
-          //   filterable: true,
-          // },
+          filterable: false,
+          clearable: true,
+          "show-checkbox": true,
+          "check-strictly": true,
+          "node-key": "id",
+          "value-key": "id",
+          "highlight-current": true,
+          "check-on-click-node": true,
+
+          props: {
+            props: {
+              label: "title",
+              value: "id",
+            },
+          },
+
           // component: shallowRef(MSelectTree),
         },
       },
       dict: dict({
         // url: "/sys/authority/role/list",
-        getData: menuStore.getMenuList,
+        getData: menuStore.getMenuTree,
         value: "id",
         label: "title",
         isTree: true,

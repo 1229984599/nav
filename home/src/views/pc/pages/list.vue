@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LocationQueryValue, useRoute } from "vue-router";
-import { onMounted, watch } from "vue";
+import { nextTick, onMounted, watch } from "vue";
 import { useMenuStore } from "@/store/menu";
 import ItemCategory from "./components/ItemCategory.vue";
 
@@ -10,27 +10,29 @@ const menuStore = useMenuStore();
 function gotoCategory(cat: LocationQueryValue | LocationQueryValue[]) {
   const el = document.querySelector(`#${cat}`);
   if (el) {
-    el.scrollIntoView({
+    document.querySelector(".right-container").scroll({
+      top: el.offsetTop - 90,
       behavior: "smooth",
-      block: "center",
     });
-    // el.scrollTop = 60;
-    // el.offsetTop += 50;
+    // el.parentElement.parentElement.scrollTo(0, el.offsetTop);
+
+    // el.scrollIntoView({
+    //   behavior: "smooth",
+    //   block: "center",
+    // });
     // debugger;
   }
 }
+
 watch(
-  () => routes.query,
-  (item) => {
-    gotoCategory(item?.cat);
-  },
-  {
-    immediate: true,
+  () => routes.query?.cat,
+  (cat) => {
+    if (cat) {
+      gotoCategory(cat);
+    }
   },
 );
-onMounted(() => {
-  gotoCategory(routes.query?.cat);
-});
+onMounted(() => gotoCategory(routes.query?.cat));
 </script>
 
 <template>

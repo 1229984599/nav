@@ -35,9 +35,6 @@ const crudOptions: CrudOptions = {
       form: {
         order: 0,
       },
-      column: {
-        width: 251,
-      },
     },
     desc: {
       title: "描述",

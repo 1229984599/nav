@@ -40,13 +40,14 @@ const isMask = computed(() => {
       </el-aside>
     </div>
     <!--    右侧内容-->
-    <div class="h-screen right-container w-full overflow-y-auto">
+    <div class="right-container">
       <m-navbar class="navbar border-b border-b-gray-100" />
       <m-search />
       <div class="p-2 md:p-6">
         <app-main />
         <m-footer />
       </div>
+
       <m-mask :is-mask="isMask" />
     </div>
   </div>
@@ -60,6 +61,7 @@ const isMask = computed(() => {
 
   .left-container {
     z-index: 60;
+
     ul {
       height: calc(100% - #{$navHeaderHeight});
       border-right: none;
@@ -81,8 +83,11 @@ const isMask = computed(() => {
   }
 
   .right-container {
+    height: 100vh;
+    width: 100%;
+    overflow-y: auto;
     .navbar {
-      height: 60px;
+      height: #{$navHeaderHeight};
       width: 100%;
       font-size: 1rem;
       font-weight: 400;
