@@ -21,9 +21,9 @@ defineProps({
     <a
       :href="item?.href"
       :target="item?.is_self ? '_self' : '_blank'"
-      class="cursor-pointer bg-white box rounded-md p-2 md:p-4 flex space-x-2 items-center"
+      class="box space-x-2"
     >
-      <div class="shrink-0">
+      <div class="left-icon">
         <m-icon
           :style="{ color: item?.color }"
           :icon="item?.icon"
@@ -32,8 +32,8 @@ defineProps({
         />
       </div>
 
-      <div class="truncate md:pl-1.5">
-        <div class="text-sm md:text-base font-bold">{{ item.title }}</div>
+      <div class="md:pl-1.5 right-content">
+        <span class="title">{{ item.title }}</span>
         <p class="desc">
           {{ item?.desc || "暂无描述信息" }}
         </p>
@@ -46,31 +46,68 @@ defineProps({
 </template>
 
 <style lang="scss" scoped>
-.desc {
-  @apply text-ellipsis text-xs block h-[30px] mt-1 whitespace-normal text-gray-400 w-full;
-  //text-indent: 10px;
-}
-
-img {
-  @apply shadow;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
+//img {
+//  @apply shadow;
+//}
 
 .box {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  background-color: white;
+  padding: 8px;
+  border-radius: 8px;
   transition:
     box-shadow 0.3s,
     transform 0.3s,
     color 0.3s;
-}
 
-/* 鼠标放上去时的样式 */
-.box:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加底部阴影 */
-  transform: translateY(-2px); /* 向上移动一点的动画效果 */
-  color: #cc2b2b;
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加底部阴影 */
+    transform: translateY(-2px); /* 向上移动一点的动画效果 */
+    color: #cc2b2b;
+  }
+
+  & > .left-icon {
+    flex-shrink: 0;
+    flex-basis: 13%;
+  }
+
+  & > .right-content {
+    flex-basis: 87%;
+    overflow: hidden;
+
+    & > .title {
+      font-size: 1rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: inline-block;
+      @media screen and (max-width: 768px) {
+        font-size: 0.875rem;
+      }
+    }
+
+    & > .desc {
+      text-overflow: ellipsis;
+      word-break: break-all;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      --tw-text-opacity: 1;
+      color: rgb(156 163 175 / var(--tw-text-opacity));
+      font-size: 0.75rem;
+    }
+  }
+
+  @media screen and (min-width: 769px) {
+    padding: 16px;
+  }
 }
 </style>
