@@ -11,6 +11,7 @@ import { useSiteStore } from "@/store/site";
 import { useTitle } from "@vueuse/core";
 import MSearch from "@/components/m-search/index.vue";
 import MMask from "@/components/m-mask.vue";
+import style from "@/styles/variables.module.scss";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -25,16 +26,18 @@ onMounted(async () => {
 const isMask = computed(() => {
   return isMobile.value ? !appStore.isCollapse : false;
 });
+
+// 左侧菜单宽带
+const menuWidth = computed(() => {
+  return appStore.isCollapse ? style.hideSideBarWidth : style.sideBarWidth;
+});
 </script>
 
 <template>
   <div class="common-layout flex">
     <!--    左侧菜单-->
-    <div class="h-screen left-container">
-      <el-aside
-        class="h-full relative"
-        :class="appStore.isCollapse ? 'hide-menu-side' : 'menu-side'"
-      >
+    <div class="left-container">
+      <el-aside class="menu-side">
         <m-logo class="bg-white" />
         <m-side-menu />
       </el-aside>
@@ -54,12 +57,13 @@ const isMask = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@import "@/styles/variables.scss";
+@import "@/styles/variables.module";
 
 .common-layout {
   background-color: #{$bg};
 
   .left-container {
+    height: 100vh;
     z-index: 60;
 
     ul {
@@ -68,13 +72,13 @@ const isMask = computed(() => {
     }
 
     .menu-side {
-      width: #{$sideBarWidth};
-      transition: width #{$sideBarDuration};
-    }
-
-    .hide-menu-side {
-      width: #{$hideSideBarWidth};
-      transition: width #{$sideBarDuration};
+      position: relative;
+      height: 100%;
+      width: v-bind(menuWidth);
+      transition: width #{$sideBarDuration} ease;
+      @media screen and (max-width: 768px) {
+        transition-duration: 0.15s;
+      }
     }
 
     :deep(.el-menu--collapse) {
@@ -86,6 +90,7 @@ const isMask = computed(() => {
     height: 100vh;
     width: 100%;
     overflow-y: auto;
+
     .navbar {
       height: #{$navHeaderHeight};
       width: 100%;

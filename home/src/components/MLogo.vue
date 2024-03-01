@@ -30,7 +30,7 @@ const siteStore = useSiteStore();
 </template>
 
 <style lang="scss" scoped>
-@import "@/styles/variables.scss";
+@import "@/styles/variables.module";
 
 .layout-logo-container {
   display: flex;

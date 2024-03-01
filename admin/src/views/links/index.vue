@@ -9,8 +9,6 @@ import linkModel from "@/api/links";
 import { useSpiderButtons } from "@/hooks/spider";
 import { UseIconForm } from "@/hooks/icon";
 import { useMenuStore } from "@/store";
-// import MSelectTree from "./select-tree.vue";
-// import { shallowRef } from "vue";
 
 const iconForm = UseIconForm(false);
 const { spider } = useSpiderButtons(linkModel);
@@ -71,23 +69,21 @@ const crudOptions: CrudOptions = {
         rules: [{ required: true, message: "菜单为必选项" }],
         component: {
           multiple: true,
-          filterable: false,
+          filterable: true,
           clearable: true,
           "show-checkbox": true,
           "check-strictly": true,
           "node-key": "id",
           "value-key": "id",
           "highlight-current": true,
-          "check-on-click-node": true,
-
+          "check-on-click-node": false,
+          color: "auto",
           props: {
             props: {
               label: "title",
               value: "id",
             },
           },
-
-          // component: shallowRef(MSelectTree),
         },
       },
       dict: dict({
@@ -100,7 +96,6 @@ const crudOptions: CrudOptions = {
       }),
       column: {
         width: 210,
-
         component: {
           color: "auto",
         },

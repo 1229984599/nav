@@ -5,7 +5,11 @@ export default {
 </script>
 <template>
   <fs-page>
-    <fs-crud ref="crudRef" v-bind="crudBinding" />
+    <fs-crud ref="crudRef" v-bind="crudBinding">
+      <template v-for="name in $slots" :key="name" #[name]="data">
+        <slot :name="name" v-bind="data" />
+      </template>
+    </fs-crud>
   </fs-page>
 </template>
 
