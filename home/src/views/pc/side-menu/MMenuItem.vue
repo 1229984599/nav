@@ -19,6 +19,7 @@ function gotoList(item: any) {
     query: {
       cat: item.title,
     },
+    replace: true,
   });
 }
 </script>

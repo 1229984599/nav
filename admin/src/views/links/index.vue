@@ -76,7 +76,7 @@ const crudOptions: CrudOptions = {
           "node-key": "id",
           "value-key": "id",
           "highlight-current": true,
-          "check-on-click-node": false,
+          "check-on-click-node": true,
           color: "auto",
           props: {
             props: {

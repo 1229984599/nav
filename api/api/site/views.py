@@ -1,3 +1,7 @@
+from fastapi_cache import FastAPICache
+
+from fastapi_cache.decorator import cache
+
 from starlette.responses import FileResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Request
 from fastapi_tortoise_crud import BaseApiOut
@@ -21,11 +25,14 @@ async def handle_update_site(site: SiteSchemaUpdate):
     # data = await Site.update_one(site.id, site.dict(exclude_unset=True, exclude={"id"}))
     # site_info = await Site.get_or_none(id=data)
     data = await SiteSchemaUpdate.from_tortoise_orm(first_model)
+    # 清除链接缓存
+    await FastAPICache.clear(namespace='site')
     return BaseApiOut(data=data)
 
 
 @site_router.get('/get', response_model=BaseApiOut)
-# @cache(expire=200)
+# 站点数据，几乎不会改变，缓存30天
+@cache(expire=60 * 60 * 24 * 30, namespace='site')
 async def handle_get_site():
     """
     获取数据站点
@@ -52,10 +59,10 @@ async def get_image(filename: str):
     return FileResponse(img_path)
 
 
-# @site_router.post('/clear_cache')
-# async def handle_clear_cache():
-#     """
-#     清除缓存
-#     """
-#     data = await FastAPICache.clear(namespace='menu')
-#     return BaseApiOut(message='缓存清除成功')
+@site_router.post('/clear_cache')
+async def handle_clear_cache():
+    """
+    清除缓存
+    """
+    data = await FastAPICache.clear()
+    return BaseApiOut(message='缓存清除成功')

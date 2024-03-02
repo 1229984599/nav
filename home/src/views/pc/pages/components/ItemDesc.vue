@@ -27,12 +27,12 @@ defineProps({
         <m-icon
           :style="{ color: item?.color }"
           :icon="item?.icon"
-          :size="50"
-          class="rounded-full w-8 md:w-full"
+          :size="45"
+          class="rounded-full"
         />
       </div>
 
-      <div class="md:pl-1.5 right-content">
+      <div class="right-content">
         <span class="title">{{ item.title }}</span>
         <p class="desc">
           {{ item?.desc || "暂无描述信息" }}
@@ -73,7 +73,7 @@ defineProps({
 
   & > .left-icon {
     flex-shrink: 0;
-    flex-basis: 13%;
+    //flex-basis: 13%;
   }
 
   & > .right-content {
@@ -88,8 +88,9 @@ defineProps({
       text-overflow: ellipsis;
       max-width: 100%;
       display: inline-block;
+      //移动样式
       @media screen and (max-width: 768px) {
-        font-size: 0.875rem;
+        font-size: 0.88rem;
       }
     }
 
@@ -105,9 +106,12 @@ defineProps({
       font-size: 0.75rem;
     }
   }
-
+  //pc样式
   @media screen and (min-width: 769px) {
     padding: 16px;
+    & > .right-content {
+      padding-left: 4px;
+    }
   }
 }
 </style>

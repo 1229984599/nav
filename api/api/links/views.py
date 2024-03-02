@@ -1,5 +1,7 @@
 from typing import Callable
 
+from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
 from fastapi import Depends, HTTPException
 
 from fastapi_pagination import Params
@@ -43,12 +45,15 @@ class LinkCrud(ModelCrud):
         schema_create = self.schema_create
 
         async def route(item: schema_create):
+            # 清除链接缓存
+            await FastAPICache.clear()
             data = item.dict(exclude_unset=True, exclude={'menus'})
             pass
             link = await self.model.create(**data)
             if item.menus:
                 menus = await Menu.filter(id__in=item.menus)
                 await link.menus.add(*menus)
+
             return BaseApiOut(data=data)
 
         return route
@@ -58,6 +63,8 @@ class LinkCrud(ModelCrud):
         schema_update = self.schema_update
 
         async def route(item_id: str, item: schema_update):
+            # 清除链接缓存
+            await FastAPICache.clear()
             link = await self.model.get_or_none(id=item_id)
             if not link:
                 return BaseApiOut(code=400, message='链接不存在')
@@ -71,7 +78,6 @@ class LinkCrud(ModelCrud):
                 # 删除关联
                 menus = await Menu.filter(id__in=item.menus)
                 await link.menus.add(*menus)
-
             return BaseApiOut()
 
         return route

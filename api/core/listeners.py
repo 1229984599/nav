@@ -1,7 +1,13 @@
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from redis import asyncio as aioredis
+from redis.asyncio.connection import ConnectionPool
+
 from fastapi import FastAPI
-from migrate import init_data
 from tortoise.contrib.fastapi import register_tortoise
 
+from migrate import init_data
 from settings import settings
 
 
@@ -26,7 +32,12 @@ def register_init(app: FastAPI) -> None:
         # 初始化 apscheduler
         # schedule.init_scheduler()
         # 初始化fastapi-cache2
-        # FastAPICache.init(InMemoryBackend(), prefix='fastapi-cache')
+        # pool = ConnectionPool.from_url(url="redis://localhost:6379/0")
+        # redis = aioredis.Redis(connection_pool=pool)
+        # redis = await aioredis.Redis(host='1.14.61.14', password='yuan090855')
+        # FastAPICache.init(RedisBackend(redis), prefix='fastapi-cache')
+        FastAPICache.init(InMemoryBackend(), prefix='fastapi-cache')
+        pass
 
     @app.on_event('shutdown')
     async def shutdown_connect():

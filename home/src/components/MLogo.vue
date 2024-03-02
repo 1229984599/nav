@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useSiteStore } from "@/store/site";
 import MIcon from "@/components/MIcon.vue";
+import { useRouter } from "vue-router";
+
 defineProps({
   fontSize: {
     type: String,
@@ -8,14 +10,28 @@ defineProps({
   },
 });
 const siteStore = useSiteStore();
+const router = useRouter();
+function handleClick() {
+  router
+    .push({
+      name: "List",
+    })
+    .then(() => {
+      // @ts-ignore
+      document.querySelector(".right-container").scroll({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
+}
 </script>
 
 <template>
   <div class="layout-logo-container px-5">
     <a
+      @click="handleClick"
       key="collapse"
-      class="flex decoration-none items-center justify-center"
-      href="/"
+      class="flex cursor-pointer decoration-none items-center justify-center"
     >
       <m-icon
         :icon="siteStore.siteInfo?.icon"
@@ -40,13 +56,6 @@ const siteStore = useSiteStore();
   text-align: center;
   height: #{$navHeaderHeight};
 
-  .layout-logo {
-    width: 32px;
-    height: 32px;
-    vertical-align: middle;
-    display: inline-block;
-  }
-
   .logo-title {
     display: block;
     font-family:
@@ -62,11 +71,6 @@ const siteStore = useSiteStore();
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .layout-logo-text {
-    height: 100%;
-    vertical-align: middle;
   }
 }
 </style>

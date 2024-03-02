@@ -1,32 +1,29 @@
 <script setup lang="ts">
 import { LocationQueryValue, useRoute } from "vue-router";
-import { nextTick, onMounted, watch } from "vue";
+import { onMounted, watch } from "vue";
 import { useMenuStore } from "@/store/menu";
 import ItemCategory from "./components/ItemCategory.vue";
+import { useTitle } from "@vueuse/core";
+import { useSiteStore } from "@/store/site";
 
 const routes = useRoute();
+const siteStore = useSiteStore();
 const menuStore = useMenuStore();
 
 function gotoCategory(cat: LocationQueryValue | LocationQueryValue[]) {
   const el = document.querySelector(`#${cat}`);
   if (el) {
-    document.querySelector(".right-container").scroll({
-      top: el.offsetTop - 90,
+    document.querySelector(".right-container")?.scroll({
+      top: el?.offsetTop - 90,
       behavior: "smooth",
     });
-    // el.parentElement.parentElement.scrollTo(0, el.offsetTop);
-
-    // el.scrollIntoView({
-    //   behavior: "smooth",
-    //   block: "center",
-    // });
-    // debugger;
   }
 }
 
 watch(
   () => routes.query?.cat,
   (cat) => {
+    useTitle(`${siteStore.siteInfo.title} - ${cat || "首页"}`);
     if (cat) {
       gotoCategory(cat);
     }

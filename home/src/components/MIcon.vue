@@ -22,7 +22,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="rounded-full flex items-center">
+  <div class="flex items-center">
     <img
       v-if="isUrl(<string>props.icon)"
       class="icon-size"

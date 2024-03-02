@@ -129,10 +129,10 @@ async function handleSubmit() {
             :render-after-expand="false"
             show-checkbox
             check-strictly
-            check-on-click-node
             highlight-current
             filterable
             clearable
+            check-on-click-node
             placeholder="请选择"
             class="w-full"
             :props="{

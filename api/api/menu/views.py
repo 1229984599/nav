@@ -1,3 +1,5 @@
+from fastapi_cache import FastAPICache
+
 from fastapi import Depends
 from tortoise.contrib.pydantic import PydanticModel
 
@@ -5,6 +7,7 @@ from fastapi_tortoise_crud import ModelCrud, BaseApiOut
 from models import Menu, User
 from .schemas import MenuSchemaList, MenuSchemaUpdate, MenuSchemaFilters
 from auth.auth import get_current_user, is_login
+from fastapi_cache.decorator import cache
 
 
 class MenuCrud(ModelCrud):
@@ -15,12 +18,16 @@ class MenuCrud(ModelCrud):
             search_item['parent_id'] = None
         return search_item
 
-    # @classmethod
-    # def pre_create(cls, item: PydanticModel) -> dict:
-    #     pass
+    @classmethod
+    async def pre_create(cls, item: PydanticModel) -> dict:
+        # 清除链接缓存
+        await FastAPICache.clear()
+        return await super().pre_create(item)
 
     @classmethod
     async def pre_update(cls, item: PydanticModel, item_id=None) -> dict:
+        # 清除链接缓存
+        await FastAPICache.clear()
         if not item.parent_id:
             item.parent_id = None
         return item.model_dump(exclude_unset=True)
@@ -61,6 +68,8 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
 
 
 @menu_router.get('/tree', description='返回菜单树', response_model=BaseApiOut)
+# 一天后过期
+@cache(expire=60*60*24,namespace='menu_tree')
 async def handle_get_menu_tree(user: User = Depends(is_login)):
     queryset = Menu.all()
     all_menu_items = await queryset.order_by('order').prefetch_related(
