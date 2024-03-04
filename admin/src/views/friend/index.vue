@@ -9,7 +9,7 @@ import friendModel from "@/api/friend";
 import { useSpiderButtons } from "@/hooks/spider";
 import { UseIconForm } from "@/hooks/icon";
 
-const iconForm = UseIconForm(false);
+const iconForm = UseIconForm(friendModel);
 const { spider } = useSpiderButtons(friendModel);
 const crudOptions: CrudOptions = {
   form: {
@@ -28,12 +28,25 @@ const crudOptions: CrudOptions = {
         width: 251,
       },
     },
+
     ...iconForm,
+
     href: {
       title: "链接",
       type: "text",
       form: {
         order: 0,
+      },
+    },
+    order: {
+      title: "排序",
+      type: "number",
+      form: {
+        col: { span: 6 },
+        order: 10,
+      },
+      column: {
+        sortable: "custom",
       },
     },
     desc: {

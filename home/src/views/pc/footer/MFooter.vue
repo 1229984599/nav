@@ -33,10 +33,10 @@ function handleScrollTop() {
     <!--    <h2 class="text-zinc-900 font-black py-2">友情链接</h2>-->
     <sub-menu-item :item="item" class="text-lg pb-2" :icon-size="37" />
     <div class="h-[70px] bg-white flex items-center">
-      <ul class="flex px-2 gap-4 flex-wrap text-sm">
+      <ul class="flex px-2 gap-x-2 flex-wrap text-sm">
         <li class="list-disc mx-4" v-for="friend in friendStore.friendList">
           <a
-            class="block max-w-[120px] text-sm whitespace-nowrap overflow-clip"
+            class="block max-w-[90px] text-sm whitespace-nowrap overflow-hidden text-ellipsis"
             :href="friend.href"
             target="_blank"
             >{{ friend.title }}</a
@@ -78,6 +78,9 @@ a {
 }
 
 .tool-item {
-  @apply hover:text-red-900;
+  transition: color 0.35s;
+  &:hover {
+    color: #a61111;
+  }
 }
 </style>

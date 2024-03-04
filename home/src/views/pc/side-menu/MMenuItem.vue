@@ -32,7 +32,7 @@ function gotoList(item: any) {
       v-if="item?.children && item.children.length > 0"
     >
       <template #title>
-        <div @click="gotoList(item)" class="flex">
+        <div @click="gotoList(item)">
           <sub-menu-item :item="item" :icon-size="iconSize" />
         </div>
       </template>

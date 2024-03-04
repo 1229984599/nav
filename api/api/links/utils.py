@@ -1,6 +1,5 @@
 import httpx
 from bs4 import BeautifulSoup
-import asyncio
 from urllib.parse import urlparse, urljoin
 
 from loguru import logger
@@ -106,12 +105,23 @@ class CdnImg:
             logger.success('上传成功')
             return data.get('data')
 
+    async def delete_img(self, _id: str):
+        await self.session.post('delete', data={
+            'id': _id
+        })
+
 
 async def main():
-    url = 'https://www.baidu.com/'
-    result = await get_site_info(url)
-    print(result)
+    # url = 'https://www.baidu.com/'
+    # result = await get_site_info(url)
+    # print(result)
+
+    img = CdnImg('9c18712f21048e4b4a3c46c804a7c9bf')
+    with open('favicon.png', 'rb') as f:
+        print(await img.upload_img(f.read(), 'favicon.png'))
 
 
 if __name__ == '__main__':
+    import asyncio
+
     asyncio.run(main())

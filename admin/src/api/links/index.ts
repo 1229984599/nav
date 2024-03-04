@@ -29,6 +29,17 @@ class Links extends Crud {
     });
   }
 
+  async syncCdn(url: string, link_id: any) {
+    return await request({
+      method: "post",
+      url: `${this.baseUrl}/sync_cdn`,
+      params: {
+        url,
+        link_id,
+      },
+    });
+  }
+
   async createWithMenu(data: CreateMenuSchema): Promise<any> {
     return await request({
       url: `${this.baseUrl}/menu/create`,

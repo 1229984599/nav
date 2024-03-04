@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { nextTick, ref } from "vue";
-import { dict, useColumns } from "@fast-crud/fast-crud";
+import { compute, dict, useColumns } from "@fast-crud/fast-crud";
 import { FormScopeContext } from "@fast-crud/fast-crud/dist/d/d/crud";
 import { UseIconForm } from "@/hooks/icon";
 import siteModel from "@/api/site";
@@ -10,7 +10,7 @@ import { isMobile } from "@/utils/window";
 const formRef = ref();
 const formOptions = ref();
 const { buildFormOptions } = useColumns();
-const iconForm = UseIconForm();
+const iconForm = UseIconForm(siteModel, false);
 const submitLoading = ref(false);
 formOptions.value = buildFormOptions({
   form: {
@@ -71,6 +71,15 @@ formOptions.value = buildFormOptions({
     },
     weather_key: {
       title: "天气key",
+      type: "text",
+      form: {
+        show: compute((context) => {
+          return context.form.weather;
+        }),
+      },
+    },
+    cdn_img_token: {
+      title: "图床token",
       type: "text",
     },
     ...iconForm,

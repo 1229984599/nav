@@ -10,7 +10,7 @@ import { useSpiderButtons } from "@/hooks/spider";
 import { UseIconForm } from "@/hooks/icon";
 import { useMenuStore } from "@/store";
 
-const iconForm = UseIconForm(false);
+const iconForm = UseIconForm(linkModel, true);
 const { spider } = useSpiderButtons(linkModel);
 const menuStore = useMenuStore();
 const crudOptions: CrudOptions = {

@@ -1,6 +1,5 @@
 from typing import Callable
 
-from fastapi_cache.decorator import cache
 from fastapi_cache import FastAPICache
 from fastapi import Depends, HTTPException
 
@@ -94,13 +93,26 @@ link_router = LinkCrud(Links,
 )
 
 
-@link_router.post('sync_cdn')
-async def handle_sync_cdn(url: str):
+@link_router.post('/sync_cdn')
+async def handle_sync_cdn(url: str, link_id):
     data = await Site.first()
     if not data.cdn_img_token:
-        return BaseApiOut(code=400, message='未配置CDN')
+        return BaseApiOut(code=400, message='未配置图床token')
     spider = CdnImg(data.cdn_img_token)
-    data = await spider.upload_img(url)
+    # 上传图片
+    cdn_data = await spider.upload_img(url)
+    # 通过id查找当前链接
+    link_model = await Links.find_one(id=link_id)
+    # 删除以前连接存在的图片
+    if link_model.cdn_img_id:
+        await spider.delete_img(link_model.cdn_img_id)
+    # 更新当前重新上传的cdn链接（防止有人上传后不保存）
+    link_model.update_from_dict({
+        'cdn_img_id': cdn_data.get('id'),
+        'icon': cdn_data.get('url'),
+    })
+    await link_model.save()
+    return BaseApiOut(data=cdn_data)
     pass
 
 

@@ -37,7 +37,7 @@ def register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(RouterCacheControlResetMiddleware)
+    # app.add_middleware(RouterCacheControlResetMiddleware)
     # 添加登录验证中间件
 
     # 添加Pagination

@@ -10,6 +10,9 @@ class Friend extends Crud {
     },
     filters: FriendSchemaFilters = {},
   ): Promise<PageFriendSchemaList> {
+    if (!query.order_by) {
+      query.order_by = "order";
+    }
     return await super.list(query, filters);
   }
 

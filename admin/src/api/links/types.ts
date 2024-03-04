@@ -141,3 +141,5 @@ export interface CreateMenuSchema {
    */
   title?: string;
 }
+
+export interface CdnImgSchema {}

@@ -39,4 +39,6 @@ def register_init(app: FastAPI) -> None:
         关闭
         :return:
         """
+        # await FastAPICache.clear()
         pass
+

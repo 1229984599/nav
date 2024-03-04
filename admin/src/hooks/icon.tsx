@@ -1,15 +1,29 @@
 import { ref } from "vue";
 import { CompositionColumns } from "@fast-crud/fast-crud/dist/d/d/crud";
 import MIcon from "@/components/icon.vue";
+import { isUrl } from "@/utils/window";
+import { ElMessage } from "element-plus";
 
-export function UseIconForm(showUrl: boolean = true): CompositionColumns {
+/**
+ *
+ * @param isShowValue 是否显示icon真实值
+ * @param model api请求模型
+ * @param isSyncIcon 是否需要同步到图床
+ * @constructor
+ */
+export function UseIconForm(
+  model: Object,
+  isSyncIcon: boolean = false,
+  isShowValue: boolean = false,
+): CompositionColumns {
   const iconColor = ref("");
+  const isLoading = ref(false);
   return {
     icon: {
       title: "图标",
       type: "text",
       column: {
-        width: showUrl ? 251 : 80,
+        width: isShowValue ? 251 : 80,
         cellRender(scope) {
           return (
             <div class="flex items-center gap-x-2">
@@ -18,7 +32,9 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
                 icon={scope.value}
                 size={30}
               ></MIcon>
-              <div>{showUrl ? <span>{scope.value}</span> : <span></span>}</div>
+              <div>
+                {isShowValue ? <span>{scope.value}</span> : <span></span>}
+              </div>
             </div>
           );
         },
@@ -37,7 +53,30 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
         },
         suffixRender(scope) {
           return (
-            <div class="flex items-center">
+            <div class="flex items-center ml-1 gap-x-1">
+              {isSyncIcon ? (
+                <el-button
+                  disabled={!isUrl(scope.value)}
+                  type="primary"
+                  size="small"
+                  icon="Refresh"
+                  circle={true}
+                  loading={isLoading.value}
+                  onClick={() => {
+                    isLoading.value = true;
+                    model
+                      .syncCdn(scope.value, scope.form.id)
+                      .then((res: any) => {
+                        scope.form.cdn_img_id = res.id;
+                        scope.form.icon = res.url;
+                        ElMessage.success("同步Cdn成功");
+                      })
+                      .finally(() => (isLoading.value = false));
+                  }}
+                ></el-button>
+              ) : (
+                ""
+              )}
               <MIcon
                 style={{ color: iconColor.value || scope.row.color }}
                 icon={scope.value}
@@ -58,7 +97,6 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
         component: {
           name: "el-color-picker",
           props: {
-            // value: "#ff4500",
             predefine: [
               "#ff4500",
               "#ff8c00",
@@ -70,11 +108,20 @@ export function UseIconForm(showUrl: boolean = true): CompositionColumns {
               "#c7158577",
             ],
           },
+          onActiveChange(color: string) {
+            iconColor.value = color;
+          },
         },
-        // @ts-ignore
-        valueChange({ value }) {
-          iconColor.value = value;
-        },
+      },
+    },
+    cdn_img_id: {
+      title: "cdn图片id",
+      type: "number",
+      column: {
+        show: false,
+      },
+      form: {
+        show: false,
       },
     },
   };

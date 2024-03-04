@@ -32,7 +32,7 @@ async def handle_update_site(site: SiteSchemaUpdate):
 
 @site_router.get('/get', response_model=BaseApiOut)
 # 站点数据，几乎不会改变，缓存30天
-@cache(expire=60 * 60 * 24 * 30, namespace='site')
+# @cache(expire=60 * 60 * 24 * 30, namespace='site')
 async def handle_get_site():
     """
     获取数据站点
