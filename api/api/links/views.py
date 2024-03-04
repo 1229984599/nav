@@ -8,8 +8,8 @@ from fastapi_pagination import Params
 from fastapi_pagination.ext.tortoise import paginate
 
 from fastapi_tortoise_crud import ModelCrud, BaseApiOut
-from models import Links, Menu, User
-from .utils import get_site_info
+from models import Links, Menu, User, Site
+from .utils import get_site_info, CdnImg
 from .schemas import CreateMenuSchema, LinkSchemaList, FilterSchemaList
 from auth.auth import get_current_user, is_login
 
@@ -92,6 +92,16 @@ link_router = LinkCrud(Links,
     depends_create=[Depends(get_current_user)],
     depends_update=[Depends(get_current_user)]
 )
+
+
+@link_router.post('sync_cdn')
+async def handle_sync_cdn(url: str):
+    data = await Site.first()
+    if not data.cdn_img_token:
+        return BaseApiOut(code=400, message='未配置CDN')
+    spider = CdnImg(data.cdn_img_token)
+    data = await spider.upload_img(url)
+    pass
 
 
 @link_router.post('/siteinfo')
