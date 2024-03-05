@@ -1,14 +1,15 @@
 from typing import Callable
 
 from fastapi_cache import FastAPICache
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, UploadFile, File
+from fastapi.responses import JSONResponse
 
 from fastapi_pagination import Params
 from fastapi_pagination.ext.tortoise import paginate
 
 from fastapi_tortoise_crud import ModelCrud, BaseApiOut
 from models import Links, Menu, User, Site
-from .utils import get_site_info, CdnImg
+from .utils import get_site_info, CdnImg, ignore_async_errors
 from .schemas import CreateMenuSchema, LinkSchemaList, FilterSchemaList
 from auth.auth import get_current_user, is_login
 
@@ -93,8 +94,14 @@ link_router = LinkCrud(Links,
 )
 
 
-@link_router.post('/sync_cdn')
-async def handle_sync_cdn(url: str, link_id):
+@ignore_async_errors
+async def handle_link_sync(link_id, url: str | bytes):
+    """
+    处理链接同步
+    :param url: url地址或者file对象
+    :param link_id: 链接id（存储于数据库中）
+    :return:
+    """
     data = await Site.first()
     if not data.cdn_img_token:
         return BaseApiOut(code=400, message='未配置图床token')
@@ -112,6 +119,23 @@ async def handle_sync_cdn(url: str, link_id):
         'icon': cdn_data.get('url'),
     })
     await link_model.save()
+    return cdn_data
+
+
+@link_router.post('/sync_cdn')
+async def handle_sync_cdn(link_id, url: str):
+    cdn_data = await handle_link_sync(link_id, url)
+    if not cdn_data:
+        return JSONResponse(status_code=400, content='同步CDN失败')
+    return BaseApiOut(data=cdn_data)
+    pass
+
+
+@link_router.post('/sync_cdn_file', description='同步上传的文件')
+async def handle_sync_cdn_file(link_id, file: UploadFile = File(...)):
+    cdn_data = await handle_link_sync(link_id, file.file.read())
+    if not cdn_data:
+        return JSONResponse(status_code=400, content='同步CDN失败')
     return BaseApiOut(data=cdn_data)
     pass
 

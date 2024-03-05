@@ -97,6 +97,7 @@ class CdnImg:
         return await self._upload_img_by_file(img_content, filename)
 
     async def _upload_img_by_file(self, file: bytes, filename=''):
+        filename = filename or 'icon.png'
         resp = await self.session.post('upload', files={'image': (filename, file)}, data={
             'folder': 'navicon'
         })
@@ -104,6 +105,7 @@ class CdnImg:
         if data.get('code') == 200:
             logger.success('上传成功')
             return data.get('data')
+        raise AttributeError('上传图片失败')
 
     async def delete_img(self, _id: str):
         await self.session.post('delete', data={

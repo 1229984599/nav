@@ -7,7 +7,7 @@ export interface QueryParams {
 }
 
 class Crud {
-  protected readonly baseUrl: string;
+  public readonly baseUrl: string;
   protected defaultQueryParams: QueryParams;
 
   constructor(baseUrl: string = "") {

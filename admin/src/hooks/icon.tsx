@@ -3,6 +3,8 @@ import { CompositionColumns } from "@fast-crud/fast-crud/dist/d/d/crud";
 import MIcon from "@/components/icon.vue";
 import { isUrl } from "@/utils/window";
 import { ElMessage } from "element-plus";
+import type Crud from "@/api/crud";
+import { compute } from "@fast-crud/fast-crud";
 
 /**
  *
@@ -12,7 +14,7 @@ import { ElMessage } from "element-plus";
  * @constructor
  */
 export function UseIconForm(
-  model: Object,
+  model: Crud,
   isSyncIcon: boolean = false,
   isShowValue: boolean = false,
 ): CompositionColumns {
@@ -55,25 +57,27 @@ export function UseIconForm(
           return (
             <div class="flex items-center ml-1 gap-x-1">
               {isSyncIcon ? (
-                <el-button
-                  disabled={!isUrl(scope.value)}
-                  type="primary"
-                  size="small"
-                  icon="Refresh"
-                  circle={true}
-                  loading={isLoading.value}
-                  onClick={() => {
-                    isLoading.value = true;
-                    model
-                      .syncCdn(scope.value, scope.form.id)
-                      .then((res: any) => {
-                        scope.form.cdn_img_id = res.id;
-                        scope.form.icon = res.url;
-                        ElMessage.success("同步Cdn成功");
-                      })
-                      .finally(() => (isLoading.value = false));
-                  }}
-                ></el-button>
+                <>
+                  <el-button
+                    disabled={!isUrl(scope.value)}
+                    type="primary"
+                    size="small"
+                    icon="Refresh"
+                    circle={true}
+                    loading={isLoading.value}
+                    onClick={() => {
+                      isLoading.value = true;
+                      model
+                        .syncCdn(scope.value, scope.form.id)
+                        .then((res: any) => {
+                          scope.form.cdn_img_id = res.id;
+                          scope.form.icon = res.url;
+                          ElMessage.success("同步Cdn成功");
+                        })
+                        .finally(() => (isLoading.value = false));
+                    }}
+                  ></el-button>
+                </>
               ) : (
                 ""
               )}
@@ -112,6 +116,40 @@ export function UseIconForm(
             iconColor.value = color;
           },
         },
+      },
+    },
+    img_upload: {
+      title: "本地图片",
+      form: {
+        show: isSyncIcon,
+        submit: false,
+        render(scope) {
+          return (
+            <el-upload
+              action={`${import.meta.env.VITE_BASE_API}${
+                model.baseUrl
+              }/sync_cdn_file?link_id=${scope.form.id}`}
+              drag={true}
+              on-success={({ data }) => {
+                scope.form.cdn_img_id = data.id;
+                scope.form.icon = data.url;
+                ElMessage.success("同步Cdn成功");
+              }}
+              on-error={(error: { message: any }) => {
+                ElMessage.error(error.message || "同步Cdn失败");
+              }}
+            >
+              <div>
+                <el-icon size={22}>
+                  <upload-filled />
+                </el-icon>
+              </div>
+            </el-upload>
+          );
+        },
+      },
+      column: {
+        show: false,
       },
     },
     cdn_img_id: {
