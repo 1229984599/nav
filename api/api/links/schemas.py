@@ -11,7 +11,7 @@ class CreateMenuSchema(Links.schema_create('CreateMenu', )):
     menus: list[int] | None = None
 
 
-class FilterSchemaList(Links.schema_filters(include=('title', 'menus', 'status'))):
+class FilterSchemaList(Links.schema_filters(include=('title', 'menus', 'status', 'href'))):
     menus: list[int] | None = None
 
 

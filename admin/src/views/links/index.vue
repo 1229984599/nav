@@ -4,6 +4,7 @@
 
 <script lang="tsx" setup>
 import MTable from "@/components/table/index.vue";
+import { Icon } from "@iconify/vue";
 import { CrudOptions, dict } from "@fast-crud/fast-crud";
 import linkModel from "@/api/links";
 import { useSpiderButtons } from "@/hooks/spider";
@@ -13,6 +14,7 @@ import { useMenuStore } from "@/store";
 const iconForm = UseIconForm(linkModel, true);
 const { spider } = useSpiderButtons(linkModel);
 const menuStore = useMenuStore();
+
 const crudOptions: CrudOptions = {
   form: {
     wrapper: {
@@ -53,6 +55,15 @@ const crudOptions: CrudOptions = {
       column: {
         width: 251,
       },
+      search: {
+        show: true,
+        component: {
+          props: {
+            placeholder: "请输入链接",
+            clearable: true,
+          },
+        },
+      },
     },
     menus: {
       title: "菜单",
@@ -67,23 +78,41 @@ const crudOptions: CrudOptions = {
       form: {
         col: { span: 14 },
         rules: [{ required: true, message: "菜单为必选项" }],
-        component: {
-          multiple: true,
-          filterable: true,
-          clearable: true,
-          "show-checkbox": true,
-          "check-strictly": true,
-          "node-key": "id",
-          "value-key": "id",
-          "highlight-current": true,
-          "check-on-click-node": true,
-          color: "auto",
-          props: {
-            props: {
-              label: "title",
-              value: "id",
-            },
-          },
+        render(scope) {
+          return (
+            <el-tree-select
+              v-model={scope.form.menus}
+              data={menuStore.menuTree}
+              multiple={true}
+              render-after-expand={false}
+              show-checkbox={true}
+              check-strictly={true}
+              highlight-current={true}
+              filterable={true}
+              clearable={true}
+              check-on-click-node={true}
+              placeholder="请选择"
+              class="w-full"
+              props={{
+                label: "title",
+                value: "id",
+              }}
+              node-key="id"
+              value-key="id"
+            >
+              {{
+                default: ({ data }) => {
+                  // debugger;
+                  return (
+                    <div class="flex gap-x-1">
+                      <Icon color={data?.color} icon={data?.icon} />
+                      <span>{data.title}</span>
+                    </div>
+                  );
+                },
+              }}
+            </el-tree-select>
+          );
         },
       },
       dict: dict({

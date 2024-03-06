@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
-import { PropType } from "vue";
+import { PropType, ref } from "vue";
 import { LinkSchemaList } from "@/api/links/types";
+import { useElementSize } from "@vueuse/core";
 
 defineProps({
   item: {
@@ -9,16 +10,23 @@ defineProps({
     required: true,
   },
 });
+const itemRef = ref<HTMLElement>();
+const { width } = useElementSize(itemRef);
+console.log(width.value);
+// onMounted(() => {
+//   debugger;
+// });
 </script>
 
 <template>
   <el-tooltip
     v-if="item?.status"
     :disabled="!item?.desc"
-    :hide-after="100"
+    :hide-after="200"
     :enterable="false"
   >
     <a
+      ref="itemRef"
       :href="item?.href"
       :target="item?.is_self ? '_self' : '_blank'"
       class="box space-x-2"
@@ -40,16 +48,12 @@ defineProps({
       </div>
     </a>
     <template #content>
-      <div class="max-w-[280px]">{{ item.desc }}</div>
+      <div :style="{ maxWidth: width + 'px' }">{{ item.desc }}</div>
     </template>
   </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
-//img {
-//  @apply shadow;
-//}
-
 .box {
   display: inline-flex;
   width: 100%;
@@ -106,6 +110,7 @@ defineProps({
       font-size: 0.75rem;
     }
   }
+
   //pc样式
   @media screen and (min-width: 769px) {
     padding: 16px;

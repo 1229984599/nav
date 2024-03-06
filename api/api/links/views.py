@@ -94,7 +94,6 @@ link_router = LinkCrud(Links,
 )
 
 
-@ignore_async_errors
 async def handle_link_sync(link_id, url: str | bytes):
     """
     处理链接同步
@@ -103,11 +102,16 @@ async def handle_link_sync(link_id, url: str | bytes):
     :return:
     """
     data = await Site.first()
+    print(data.cdn_img_token)
     if not data.cdn_img_token:
-        return BaseApiOut(code=400, message='未配置图床token')
+        raise HTTPException(status_code=400, detail='未配置图床token')
+        # return BaseApiOut(code=400, message='未配置图床token')
     spider = CdnImg(data.cdn_img_token)
     # 上传图片
     cdn_data = await spider.upload_img(url)
+    # 如果当前link_id为空，表示新建链接
+    if not link_id:
+        return cdn_data
     # 通过id查找当前链接
     link_model = await Links.find_one(id=link_id)
     # 删除以前连接存在的图片
@@ -123,7 +127,7 @@ async def handle_link_sync(link_id, url: str | bytes):
 
 
 @link_router.post('/sync_cdn')
-async def handle_sync_cdn(link_id, url: str):
+async def handle_sync_cdn(link_id=None, url: str = ''):
     cdn_data = await handle_link_sync(link_id, url)
     if not cdn_data:
         return JSONResponse(status_code=400, content='同步CDN失败')
@@ -132,7 +136,7 @@ async def handle_sync_cdn(link_id, url: str):
 
 
 @link_router.post('/sync_cdn_file', description='同步上传的文件')
-async def handle_sync_cdn_file(link_id, file: UploadFile = File(...)):
+async def handle_sync_cdn_file(link_id=None, file: UploadFile = File(...)):
     cdn_data = await handle_link_sync(link_id, file.file.read())
     if not cdn_data:
         return JSONResponse(status_code=400, content='同步CDN失败')

@@ -18,10 +18,11 @@ import { ref, onMounted, PropType } from "vue";
 import { CrudOptions, useCrud, useExpose } from "@fast-crud/fast-crud";
 import createCrudOptions from "./crud";
 import { merge } from "lodash-es";
+import type Crud from "@/api/crud";
 
 const props = defineProps({
   model: {
-    type: Object,
+    type: Object as PropType<Crud>,
     require: true,
   },
   // 你的crud配置
@@ -52,4 +53,5 @@ onMounted(async () => {
   await crudExpose.doRefresh();
   // const resp = await permission.getPermissionTree();
 });
+defineExpose({ crudExpose });
 </script>

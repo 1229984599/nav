@@ -14,6 +14,8 @@ export function useActionButtons(
   return {
     save: {
       text: "保存",
+      icon: "material-symbols-light:save-sharp",
+      // circle: true,
       type: "success",
       click: () => {
         // @ts-ignore
@@ -38,6 +40,7 @@ export function useActionButtons(
     },
     deleteAll: {
       text: "批量删除",
+      icon: "material-symbols-light:delete",
       type: "danger",
       click: () => {
         ElMessageBox.confirm("确定要批量删除吗？").then(async () => {
