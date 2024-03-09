@@ -24,10 +24,10 @@ const siteStore = useSiteStore();
         class="cursor-pointer px-2"
         icon="ph:list-fill"
       />
-      <!--      天气-->
-      <m-weather v-if="!isMobile && siteStore.siteInfo?.weather" />
       <!--      今日热榜-->
       <m-hot />
+      <!--      天气-->
+      <m-weather v-if="!isMobile && siteStore.siteInfo?.weather" />
     </div>
 
     <div class="nav-right-container">
@@ -48,6 +48,7 @@ const siteStore = useSiteStore();
   .nav-left-container {
     display: flex;
     flex-shrink: 0;
+    column-gap: 3px;
   }
 
   .nav-right-container {

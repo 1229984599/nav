@@ -21,11 +21,6 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
       port: 3000,
       cors: true,
       proxy: {
-        "/hotapi": {
-          target: "https://api.gumengya.com/Api",
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/hotapi/, ""),
-        },
         "/api": {
           target: VITE_BASE_API,
           changeOrigin: true,
