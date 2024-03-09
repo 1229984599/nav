@@ -13,7 +13,9 @@ defineProps({
 </script>
 
 <template>
-  <div v-show="isMask" class="mask"></div>
+  <Transition name="fade">
+    <div v-show="isMask" class="mask"></div>
+  </Transition>
 </template>
 
 <style lang="scss" scoped>
@@ -26,6 +28,15 @@ defineProps({
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
   width: 100%;
-  transition: all 0.2s ease-in-out;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.35s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

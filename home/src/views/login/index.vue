@@ -70,6 +70,8 @@ onMounted(siteStore.getSiteInfo);
             <el-input
               v-model.trim="loginFormData.username"
               placeholder="用户名"
+              clearable
+              autofocus
               type="text"
               tabindex="1"
               size="large"
@@ -79,6 +81,7 @@ onMounted(siteStore.getSiteInfo);
             <el-input
               v-model.trim="loginFormData.password"
               placeholder="密码"
+              clearable
               type="password"
               tabindex="2"
               size="large"
@@ -106,30 +109,13 @@ onMounted(siteStore.getSiteInfo);
   width: 100%;
   min-height: 100%;
 
-  .theme-switch {
-    position: fixed;
-    top: 5%;
-    right: 5%;
-    cursor: pointer;
-  }
-
   .login-card {
     width: 480px;
+    max-width: 90%;
     border-radius: 20px;
     box-shadow: 0 0 10px #dcdfe6;
     background-color: #fff;
     overflow: hidden;
-
-    .title {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 150px;
-
-      img {
-        height: 100%;
-      }
-    }
 
     .content {
       padding: 20px 50px 50px 50px;
@@ -138,14 +124,14 @@ onMounted(siteStore.getSiteInfo);
         padding: 0;
         overflow: hidden;
 
-        .el-image {
-          width: 100px;
-          height: 40px;
-          border-left: 0px;
-          user-select: none;
-          cursor: pointer;
-          text-align: center;
-        }
+        //.el-image {
+        //  width: 100px;
+        //  height: 40px;
+        //  border-left: 0px;
+        //  user-select: none;
+        //  cursor: pointer;
+        //  text-align: center;
+        //}
       }
 
       .el-button {

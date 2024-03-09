@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MSideMenu from "@/views/pc/side-menu/MSideMenu.vue";
-import MNavbar from "@/views/pc/navbar/MNavbar.vue";
+import MNavbar from "@/views/pc/navbar/index.vue";
 import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "@/views/pc/footer/MFooter.vue";
@@ -34,7 +34,7 @@ const menuWidth = computed(() => {
 </script>
 
 <template>
-  <div class="common-layout flex">
+  <div class="common-layout">
     <!--    左侧菜单-->
     <div class="left-container">
       <el-aside class="menu-side">
@@ -44,15 +44,14 @@ const menuWidth = computed(() => {
     </div>
     <!--    右侧内容-->
     <div class="right-container">
-      <m-navbar class="navbar border-b border-b-gray-100" />
+      <m-navbar class="navbar" />
       <m-search />
       <div class="p-2 md:p-6">
         <app-main />
         <m-footer />
       </div>
-
-      <m-mask :is-mask="isMask" />
     </div>
+    <m-mask :is-mask="isMask" />
   </div>
 </template>
 
@@ -60,6 +59,7 @@ const menuWidth = computed(() => {
 @import "@/styles/variables.module";
 
 .common-layout {
+  display: flex;
   background-color: #{$bg};
 
   .left-container {
@@ -94,20 +94,21 @@ const menuWidth = computed(() => {
     .navbar {
       height: #{$navHeaderHeight};
       width: 100%;
+      position: sticky;
+      top: 0;
+      right: 0;
+      z-index: 1;
+      word-wrap: break-word;
+      box-sizing: border-box;
       font-size: 1rem;
       font-weight: 400;
       line-height: 1.5;
-      word-wrap: break-word;
-      box-sizing: border-box;
-      top: 0;
-      z-index: 1;
-      position: sticky;
-      right: 0;
       transition:
         color 0.3s,
         background-color 0.3s;
       box-shadow: none;
-      color: initial;
+      border-bottom-width: 1px;
+      border-bottom-color: rgba(0, 0, 0, 0.06);
       background: rgba(255, 255, 255, 1);
     }
   }

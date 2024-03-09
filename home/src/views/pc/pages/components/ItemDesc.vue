@@ -12,10 +12,6 @@ defineProps({
 });
 const itemRef = ref<HTMLElement>();
 const { width } = useElementSize(itemRef);
-console.log(width.value);
-// onMounted(() => {
-//   debugger;
-// });
 </script>
 
 <template>

@@ -25,3 +25,35 @@ export async function getBaiduSuggestions(query: string) {
     menus: [{ title: "百度" }],
   }));
 }
+
+export interface HotItemType {
+  hot: string;
+  title: string;
+  updatetime: string;
+  url: string;
+}
+
+export async function getHotList(
+  name: string = "BaiduHot",
+): Promise<HotItemType[]> {
+  return new Promise((resolve, reject) => {
+    axios({
+      method: "post",
+      url: `/hotapi/${name}`,
+      data: {
+        format: "json",
+      },
+    })
+      .then((res) => {
+        // 状态码 200 表示请求成功
+        if (res.data.code == 200) {
+          resolve(res.data.data);
+        } else {
+          reject(res.data?.msg || "请求失败");
+        }
+      })
+      .catch(() => {
+        reject("网络错误");
+      });
+  });
+}
