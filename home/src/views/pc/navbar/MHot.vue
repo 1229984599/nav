@@ -8,12 +8,13 @@ import { isMobile } from "@/utils/window";
 defineOptions({
   name: "MHot",
 });
-const activeName = ref("BaiduHot");
+
 const dataList = ref<HotItemType[]>([]);
 const targetRef = ref<HTMLElement>();
+const isLoading = ref(false);
 // 容器宽度
 const containerWidth = computed(() => {
-  return isMobile.value ? "260" : "350";
+  return isMobile.value ? "290" : "420";
 });
 // tabs列表
 const tabsList = [
@@ -21,19 +22,36 @@ const tabsList = [
   { label: "B站", name: "BiliBliHot" },
   { label: "微博", name: "WeiBoHot" },
   { label: "抖音", name: "DouYinHot" },
+  { label: "搜狗", name: "SoGouHot" },
+  { label: "360", name: "SoHot" },
+  { label: "头条", name: "TouTiaoHot" },
   { label: "知乎", name: "ZhiHuHot" },
   { label: "快手", name: "KuaiShouHot" },
 ];
-
+const activeName = ref(tabsList[0].name);
 async function handleChangeTabs(tab: TabsPaneContext, event: Event) {
+  isLoading.value = true;
   const { name } = tab.props;
-  document.querySelector(`#pane-${name} > .hot-container`)?.scrollTo(0, 0);
+  getHotList(String(name))
+    .then((res) => {
+      dataList.value = res;
 
-  dataList.value = await getHotList(String(name));
+      document.querySelector(`#pane-${name} > .hot-container`)?.scrollTo(0, 0);
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
 }
 
-onMounted(async () => {
-  dataList.value = await getHotList(tabsList[0].name);
+onMounted(() => {
+  isLoading.value = true;
+  getHotList(tabsList[0].name)
+    .then((res) => {
+      dataList.value = res;
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
 });
 </script>
 
@@ -41,7 +59,7 @@ onMounted(async () => {
   <el-popover
     placement="bottom-start"
     :width="containerWidth"
-    :offset="0"
+    :offset="5"
     trigger="hover"
   >
     <template #default>
@@ -51,9 +69,13 @@ onMounted(async () => {
           :name="tab.name"
           v-for="tab in tabsList"
         >
-          <div ref="targetRef" class="hot-container">
-            <div class="hot-item" v-for="(item, index) in dataList">
-              <div class="flex w-[76%] md:w-[85%] gap-x-2">
+          <div v-loading="isLoading" ref="targetRef" class="hot-container">
+            <div
+              class="hot-item"
+              :key="index"
+              v-for="(item, index) in dataList"
+            >
+              <div class="flex w-[80%] md:w-[85%] gap-x-2">
                 <!--              排行榜序号-->
                 <div class="hot-index">{{ index + 1 }}</div>
                 <a class="hot-item-title" :href="item.url" target="_blank">{{
@@ -79,6 +101,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .hot-container {
+  position: relative;
   max-height: 300px;
   overflow-y: auto;
   box-sizing: border-box;
@@ -89,15 +112,15 @@ onMounted(async () => {
   }
 
   & > .hot-item:first-child .hot-index {
-    background-color: #a61111;
+    background-color: #fe2d46;
   }
 
   & > .hot-item:nth-of-type(2) .hot-index {
-    background-color: #be2e2e;
+    background-color: #f60;
   }
 
   & > .hot-item:nth-of-type(3) .hot-index {
-    background-color: #c25656;
+    background-color: #faa90e;
   }
 
   .hot-item {
@@ -128,6 +151,7 @@ onMounted(async () => {
       text-align: start;
       font-weight: 500;
       font-size: 15px;
+      //width: 100%;
       //display: inline-block;
       @include overflow-ellipsis;
       transition: color 0.3s ease;
