@@ -6,7 +6,7 @@ import MYiyan from "./MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
 import { isMobile } from "@/utils/window";
-import MHot from "@/views/pc/navbar/MHot.vue";
+import MHot from "./hot/index.vue";
 defineOptions({
   name: "MNavbar",
 });
