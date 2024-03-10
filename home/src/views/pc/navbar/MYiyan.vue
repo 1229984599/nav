@@ -13,11 +13,7 @@ onMounted(refresh);
 </script>
 
 <template>
-  <span class="yiyan" @click="refresh"
-    >{{
-      yiyan
-    }}fdsddsfsdaf几点开始了几分道理的撒娇的的撒酒疯拉萨大家奥利弗就是大家了的撒酒疯绿豆沙逻辑上的了解多少了房间都是垃圾发来的数据临时搭建陆军第十六进来撒就爱上邓丽君fajdslfjasdlkjfd</span
-  >
+  <span class="yiyan" @click="refresh">{{ yiyan }}</span>
 </template>
 
 <style lang="scss" scoped>

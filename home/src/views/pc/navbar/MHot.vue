@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
 import { TabsPaneContext } from "element-plus";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { getHotList, HotItemType } from "@/api/spider";
 import { isMobile } from "@/utils/window";
+import { useDebounceFn } from "@vueuse/core";
 
 defineOptions({
   name: "MHot",
 });
 
 const dataList = ref<HotItemType[]>([]);
-const targetRef = ref<HTMLElement>();
 const isLoading = ref(false);
 // 容器宽度
 const containerWidth = computed(() => {
@@ -27,8 +27,19 @@ const tabsList = [
   { label: "头条", name: "TouTiaoHot" },
   { label: "知乎", name: "ZhiHuHot" },
   { label: "快手", name: "KuaiShouHot" },
+  { label: "贴吧", name: "BaiduTieBaHot" },
 ];
 const activeName = ref(tabsList[0].name);
+
+function handleBackTop() {
+  document
+    .querySelector(`#pane-${activeName.value} > .hot-container`)
+    ?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+}
+
 async function handleChangeTabs(tab: TabsPaneContext, event: Event) {
   isLoading.value = true;
   const { name } = tab.props;
@@ -36,13 +47,14 @@ async function handleChangeTabs(tab: TabsPaneContext, event: Event) {
     .then((res) => {
       dataList.value = res;
 
-      document.querySelector(`#pane-${name} > .hot-container`)?.scrollTo(0, 0);
+      handleBackTop();
     })
     .finally(() => {
       isLoading.value = false;
     });
 }
 
+const debounceHandleChangeTabs = useDebounceFn(handleChangeTabs, 300);
 onMounted(() => {
   isLoading.value = true;
   getHotList(tabsList[0].name)
@@ -63,32 +75,40 @@ onMounted(() => {
     trigger="hover"
   >
     <template #default>
-      <el-tabs v-model="activeName" @tab-click="handleChangeTabs">
-        <el-tab-pane
-          :label="tab.label"
-          :name="tab.name"
-          v-for="tab in tabsList"
-        >
-          <div v-loading="isLoading" ref="targetRef" class="hot-container">
-            <div
-              class="hot-item"
-              :key="index"
-              v-for="(item, index) in dataList"
-            >
-              <div class="flex w-[80%] md:w-[85%] gap-x-2">
-                <!--              排行榜序号-->
-                <div class="hot-index">{{ index + 1 }}</div>
-                <a class="hot-item-title" :href="item.url" target="_blank">{{
-                  item.title
-                }}</a>
-              </div>
+      <div class="relative">
+        <el-tabs v-model="activeName" @tab-click="debounceHandleChangeTabs">
+          <el-tab-pane
+            :label="tab.label"
+            :name="tab.name"
+            v-for="tab in tabsList"
+          >
+            <div v-loading="isLoading" class="hot-container">
+              <div
+                class="hot-item"
+                :key="index"
+                v-for="(item, index) in dataList"
+              >
+                <div class="flex w-[80%] md:w-[85%] gap-x-2">
+                  <!--              排行榜序号-->
+                  <div class="hot-index">{{ index + 1 }}</div>
+                  <a class="hot-item-title" :href="item.url" target="_blank">{{
+                    item.title
+                  }}</a>
+                </div>
 
-              <!--              点击数量-->
-              <span class="hot-num">{{ item.hot }}</span>
+                <!--              点击数量-->
+                <span class="hot-num">{{ item.hot }}</span>
+              </div>
             </div>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
+          </el-tab-pane>
+        </el-tabs>
+        <m-icon
+          @click="handleBackTop"
+          class="back-top"
+          :size="20"
+          icon="bi:rocket-fill"
+        />
+      </div>
     </template>
     <template #reference>
       <div class="flex items-center cursor-pointer">
@@ -130,7 +150,7 @@ onMounted(() => {
     //cursor: pointer;
     justify-content: space-between;
     align-items: center;
-    margin: 8px 0;
+    margin: 10px 0;
 
     & .hot-index {
       //box-sizing: content-box;
@@ -168,5 +188,19 @@ onMounted(() => {
       @include overflow-ellipsis;
     }
   }
+}
+
+.back-top {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: white;
+  background-color: #4091f7;
+  padding: 4px;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  border-radius: 999px;
 }
 </style>
