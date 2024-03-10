@@ -66,7 +66,9 @@ async function handleSubmit() {
     dialogFormVisible.value = false;
   });
 }
-
+function handleReset() {
+  ruleFormRef.value?.resetFields();
+}
 defineExpose({ form, formRef: ruleFormRef.value });
 </script>
 
@@ -143,6 +145,7 @@ defineExpose({ form, formRef: ruleFormRef.value });
           @click="handleSiteInfo"
           >采集
         </el-button>
+        <el-button type="warning" @click="handleReset">重置</el-button>
         <el-button type="primary" @click="handleSubmit">确定</el-button>
         <el-button type="danger" @click="handleCancel">取消</el-button>
       </div>

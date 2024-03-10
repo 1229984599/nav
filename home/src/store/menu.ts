@@ -46,6 +46,10 @@ export const useMenuStore = defineStore("menu", {
       }
       return;
     },
+    // 清空本地书签
+    resetLocalLink() {
+      this.localMenu.links = [];
+    },
   },
   persist: {
     paths: ["menuTree", "localMenu"],

@@ -5,7 +5,7 @@ import MIcon from "@/components/MIcon.vue";
 import MLocalAddLink from "./AddLink.vue";
 import { ref } from "vue";
 import { LinkSchemaList } from "@/api/links/types";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 defineOptions({
   name: "MLocalMenu",
@@ -16,8 +16,19 @@ const linkRef = ref<HTMLElement>();
 const isVisible = ref(false);
 
 function handleAddLink() {
-  linkRef.value.formRef?.resetFields();
+  linkRef.value?.formRef?.resetFields();
   isVisible.value = true;
+}
+
+function handleResetLink() {
+  ElMessageBox.confirm("确定要重置本地书签吗？", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(() => {
+    menuStore.resetLocalLink();
+    ElMessage.success("重置成功");
+  });
 }
 
 function handleEdit(item: LinkSchemaList) {
@@ -35,13 +46,24 @@ function handleDelete(item: LinkSchemaList) {
   <div>
     <item-category :menu="menuStore.localMenu">
       <template #title-action>
-        <m-icon
-          @click="handleAddLink"
-          class="cursor-pointer"
-          icon="subway:add"
-          size="24"
-          :color="menuStore.localMenu.color"
-        />
+        <el-tooltip content="添加本地书签">
+          <m-icon
+            @click.stop="handleAddLink"
+            class="cursor-pointer"
+            icon="subway:add"
+            size="24"
+            :color="menuStore.localMenu.color"
+          />
+        </el-tooltip>
+        <el-tooltip content="清空本地书签">
+          <m-icon
+            class="cursor-pointer"
+            icon="material-symbols:reset-wrench-rounded"
+            :color="menuStore.localMenu.color"
+            @click.stop="handleResetLink"
+            size="30"
+          />
+        </el-tooltip>
       </template>
       <template #local-action="{ item }">
         <div class="local-action">
@@ -83,9 +105,11 @@ function handleDelete(item: LinkSchemaList) {
   & > div {
     cursor: pointer;
     transition: all 0.23s ease-in-out;
+
     &:hover {
       box-shadow: rebeccapurple 0 0 10px 0;
     }
+
     //box-shadow: rebeccapurple 0 0 10px 0;
     //border-radius: 999px;
   }
