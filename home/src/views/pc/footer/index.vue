@@ -7,6 +7,7 @@ import { useFriendStore } from "@/store/friend";
 import { onMounted } from "vue";
 import SubMenuItem from "../side-menu/SubMenuItem.vue";
 import { useUserStore } from "@/store/user";
+import { useRouter } from "vue-router";
 
 defineOptions({
   name: "MFooter",
@@ -14,6 +15,7 @@ defineOptions({
 const siteStore = useSiteStore();
 const friendStore = useFriendStore();
 const userStore = useUserStore();
+const router = useRouter();
 onMounted(friendStore.getFriendList);
 const item = {
   title: "友情链接",
@@ -22,7 +24,10 @@ const item = {
 };
 
 function handleScrollTop() {
-  location.hash = "#/list";
+  router.push({
+    name: "List",
+    replace: true,
+  });
   scrollTop(".right-container");
 }
 </script>
@@ -79,6 +84,7 @@ a {
 
 .tool-item {
   transition: color 0.35s;
+
   &:hover {
     color: #a61111;
   }

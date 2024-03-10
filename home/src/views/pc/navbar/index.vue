@@ -20,7 +20,8 @@ const siteStore = useSiteStore();
     <div class="nav-left-container">
       <!--    菜单按钮-->
       <m-icon
-        @click="appStore.toggleSlide()"
+        size="50"
+        @click.stop="appStore.toggleSlide()"
         class="cursor-pointer px-2"
         icon="ph:list-fill"
       />

@@ -37,7 +37,7 @@ export interface MenuSchemaList {
   /**
    * Created，创建时间
    */
-  created?: Date;
+  create_time?: Date;
   /**
    * Icon，图标字符串
    */
@@ -65,7 +65,7 @@ export interface MenuSchemaList {
   /**
    * Updated，更新时间
    */
-  updated?: Date;
+  update_time?: Date;
 }
 
 export interface MenuSchemaTree {

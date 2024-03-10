@@ -6,6 +6,9 @@ import { onMounted, ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import { isMobile } from "@/utils/window";
 
+defineOptions({
+  name: "MSideMenu",
+});
 const appStore = useAppStore();
 const menuStore = useMenuStore();
 const loading = ref(false);
@@ -13,8 +16,8 @@ onMounted(() => {
   loading.value = true;
   menuStore.getMenuTree().finally(() => (loading.value = false));
 });
-const target = ref(null);
-onClickOutside(target, () => {
+const targetRef = ref(null);
+onClickOutside(targetRef, () => {
   if (isMobile.value) {
     appStore.isCollapse = true;
   }
@@ -24,11 +27,12 @@ onClickOutside(target, () => {
 <template>
   <el-menu
     v-loading.fullscreen.lock="loading"
-    ref="target"
+    ref="targetRef"
     :collapse-transition="false"
     :collapse="appStore.isCollapse"
     class="divide-y divide-gray-100"
   >
+    <m-menu-item :item="menuStore.localMenu" />
     <m-menu-item :item="item" v-for="item in menuStore.menuTree" />
   </el-menu>
 </template>

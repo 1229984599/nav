@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import MSideMenu from "@/views/pc/side-menu/MSideMenu.vue";
-import MNavbar from "@/views/pc/navbar/index.vue";
+import MSideMenu from "./side-menu/index.vue";
+import MNavbar from "./navbar/index.vue";
 import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
-import MFooter from "@/views/pc/footer/MFooter.vue";
-import AppMain from "@/views/pc/app-main/AppMain.vue";
+import MFooter from "./footer/index.vue";
+import AppMain from "./app-main/AppMain.vue";
 import { computed, onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
@@ -77,7 +77,7 @@ const menuWidth = computed(() => {
       width: v-bind(menuWidth);
       transition: width #{$sideBarDuration} ease;
       @media screen and (max-width: 768px) {
-        transition-duration: 0.15s;
+        transition-duration: 0.25s;
       }
     }
 

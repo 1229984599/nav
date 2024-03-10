@@ -9,6 +9,7 @@ export const useAppStore = defineStore("app", {
   }),
   actions: {
     toggleSlide() {
+      // debugger;
       this.isCollapse = !this.isCollapse;
     },
   },

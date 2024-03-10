@@ -15,44 +15,44 @@ const { width } = useElementSize(itemRef);
 </script>
 
 <template>
-  <el-tooltip
-    v-if="item?.status"
-    :disabled="!item?.desc"
-    :hide-after="200"
-    :enterable="false"
-  >
-    <a
-      ref="itemRef"
-      :href="item?.href"
-      :target="item?.is_self ? '_self' : '_blank'"
-      class="box space-x-2"
-    >
-      <div class="left-icon">
-        <m-icon
-          :style="{ color: item?.color }"
-          :icon="item?.icon"
-          :size="45"
-          class="rounded-full"
-        />
-      </div>
+  <div class="relative" v-if="item?.status">
+    <el-tooltip :disabled="!item?.desc" :hide-after="200" :enterable="false">
+      <a
+        ref="itemRef"
+        :href="item?.href"
+        :target="item?.is_self ? '_self' : '_blank'"
+        class="box space-x-2"
+      >
+        <div class="left-icon">
+          <m-icon
+            :color="item?.color"
+            :icon="item?.icon"
+            :size="45"
+            class="rounded-full"
+          />
+        </div>
 
-      <div class="right-content">
-        <span class="title">{{ item.title }}</span>
-        <p class="desc">
-          {{ item?.desc || "暂无描述信息" }}
-        </p>
-      </div>
-    </a>
-    <template #content>
-      <div :style="{ maxWidth: width + 'px' }">{{ item.desc }}</div>
-    </template>
-  </el-tooltip>
+        <div class="right-content">
+          <span class="title">{{ item.title }}</span>
+          <p class="desc">
+            {{ item?.desc || "暂无描述信息" }}
+          </p>
+        </div>
+      </a>
+      <template #content>
+        <div :style="{ maxWidth: width + 'px' }">{{ item.desc }}</div>
+      </template>
+    </el-tooltip>
+    <!--    本地书签操作按钮 编辑，删除-->
+    <slot :item="item" name="local-action"></slot>
+  </div>
 </template>
 
 <style lang="scss" scoped>
 .box {
   display: inline-flex;
   width: 100%;
+  height: 100%;
   align-items: center;
   text-decoration: none;
   color: inherit;
