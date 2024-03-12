@@ -5,8 +5,7 @@ import { getYiyan } from "@/api/spider";
 const yiyan = ref("");
 
 async function refresh() {
-  const { hitokoto, from } = await getYiyan();
-  yiyan.value = `${hitokoto}\t——${from}`;
+  yiyan.value = await getYiyan();
 }
 
 onMounted(refresh);

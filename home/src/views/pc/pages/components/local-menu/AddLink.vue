@@ -61,14 +61,16 @@ async function handleSubmit() {
     if (!valid) return;
     // 处理添加链接
     menuStore.addLocalLink(cloneDeep(form));
-    ElMessage.success("添加或修改成功");
+    ElMessage.success("操作成功");
     ruleFormRef.value?.resetFields();
     dialogFormVisible.value = false;
   });
 }
+
 function handleReset() {
   ruleFormRef.value?.resetFields();
 }
+
 defineExpose({ form, formRef: ruleFormRef.value });
 </script>
 

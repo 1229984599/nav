@@ -26,6 +26,11 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ""),
         },
+        "/hotapi": {
+          target: "https://api.gumengya.com/Api/",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/hotapi/, ""),
+        },
       },
     },
     plugins: [vue()],

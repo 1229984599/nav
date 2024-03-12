@@ -95,6 +95,7 @@ const { width } = useElementSize(itemRef);
     }
 
     & > .desc {
+      min-height: 36px;
       text-overflow: ellipsis;
       word-break: break-all;
       overflow: hidden;

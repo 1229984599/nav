@@ -21,13 +21,13 @@ function handleAddLink() {
 }
 
 function handleResetLink() {
-  ElMessageBox.confirm("确定要重置本地书签吗？", {
+  ElMessageBox.confirm("确定要清空本地书签吗？", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
   }).then(() => {
     menuStore.resetLocalLink();
-    ElMessage.success("重置成功");
+    ElMessage.success("清空成功");
   });
 }
 
@@ -105,7 +105,6 @@ function handleDelete(item: LinkSchemaList) {
   & > div {
     cursor: pointer;
     transition: all 0.23s ease-in-out;
-
     &:hover {
       box-shadow: rebeccapurple 0 0 10px 0;
     }

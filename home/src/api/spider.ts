@@ -1,11 +1,6 @@
 import axios from "axios";
 import { request } from "@/utils/request";
 
-export async function getYiyan() {
-  const resp = await axios.get("https://v1.hitokoto.cn/");
-  return resp.data;
-}
-
 /*
  */
 export async function getBaiduSuggestions(query: string) {
@@ -35,12 +30,24 @@ export interface HotItemType {
 
 export async function getHotList(
   name: string = "BaiduHot",
-): Promise<HotItemType[]> {
-  return await request({
+  hotParams = {},
+): Promise<any> {
+  const { data } = await axios({
     method: "post",
-    url: "/spider/hot",
+    url: `/hotapi/${name}`,
     params: {
-      name,
+      format: "json",
+      ...hotParams,
     },
   });
+  if (data.code === 200) {
+    return data.data;
+  }
+  new Error("获取数据失败");
+  // debugger;
+}
+
+export async function getYiyan(): Promise<string> {
+  const { text } = await getHotList("YiYan");
+  return text;
 }

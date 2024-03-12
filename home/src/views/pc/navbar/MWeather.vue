@@ -35,6 +35,16 @@ document.body.appendChild(script);
 </template>
 
 <style lang="scss">
+#he-plugin-simple {
+  & > div > div {
+    top: 45px !important;
+  }
+  & > a > div {
+    &:last-child {
+      width: unset !important;
+    }
+  }
+}
 #weather-view-he {
   height: auto !important;
 }

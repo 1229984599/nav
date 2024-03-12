@@ -20,9 +20,9 @@ const siteStore = useSiteStore();
     <div class="nav-left-container">
       <!--    菜单按钮-->
       <m-icon
-        size="50"
+        size="45"
         @click.stop="appStore.toggleSlide()"
-        class="cursor-pointer px-2"
+        class="cursor-pointer px-1 hover:text-sky-800 transition-colors"
         icon="ph:list-fill"
       />
       <!--      今日热榜-->
@@ -49,17 +49,18 @@ const siteStore = useSiteStore();
   .nav-left-container {
     display: flex;
     flex-shrink: 0;
-    column-gap: 3px;
+    column-gap: 2px;
+    align-items: center;
   }
 
   .nav-right-container {
     display: flex;
     align-items: center;
-    width: 70%;
+    width: 65%;
     justify-content: space-between;
 
     & > span:first-child {
-      flex-basis: 70%;
+      flex-basis: 80%;
     }
   }
 }
