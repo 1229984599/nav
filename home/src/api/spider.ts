@@ -1,4 +1,3 @@
-import axios from "axios";
 import { request } from "@/utils/request";
 
 /*
@@ -28,24 +27,35 @@ export interface HotItemType {
   url: string;
 }
 
-export async function getHotList(
-  name: string = "BaiduHot",
-  hotParams = {},
-): Promise<any> {
-  const { data } = await axios({
+export async function getHotList(name: string = "BaiduHot"): Promise<any> {
+  return await request({
     method: "post",
-    url: `/hotapi/${name}`,
+    url: "/spider/hot",
     params: {
-      format: "json",
-      ...hotParams,
+      name,
     },
   });
-  if (data.code === 200) {
-    return data.data;
-  }
-  new Error("获取数据失败");
-  // debugger;
 }
+
+// 不通过服务器代理转发
+// export async function getHotList(
+//   name: string = "BaiduHot",
+//   hotParams = {},
+// ): Promise<any> {
+//   const { data } = await axios({
+//     method: "post",
+//     url: `/hotapi/${name}`,
+//     params: {
+//       format: "json",
+//       ...hotParams,
+//     },
+//   });
+//   if (data.code === 200) {
+//     return data.data;
+//   }
+//   new Error("获取数据失败");
+//   // debugger;
+// }
 
 export async function getYiyan(): Promise<string> {
   const { text } = await getHotList("YiYan");
