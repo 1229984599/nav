@@ -16,7 +16,7 @@ const containerWidth = computed(() => {
 const tabsList = [
   { label: "百度", name: "BaiduHot" },
   { label: "掘金", name: "JueJinHot" },
-  { label: "吾爱", name: "52PoJieHot" },
+  // { label: "吾爱", name: "52PoJieHot" },
   { label: "B站", name: "BiliBliHot" },
   { label: "微博", name: "WeiBoHot" },
   { label: "抖音", name: "DouYinHot" },

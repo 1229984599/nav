@@ -29,10 +29,14 @@ function getDataList(
  * @param query
  */
 export async function getBaiduSuggestions(query: string) {
-  const data = await getDataList(`https://www.baidu.com/su?wd=${query}`, {
-    jsonpCallback: "cb",
-    jsonpCallbackFunction: "",
-  });
+  const encodedKeyword = encodeURIComponent(query);
+  const data = await getDataList(
+    `https://www.baidu.com/su?wd=${encodedKeyword}`,
+    {
+      jsonpCallback: "cb",
+      jsonpCallbackFunction: "",
+    },
+  );
   return data.s.map((item: any) => ({
     title: item,
     menus: [{ title: "百度" }],

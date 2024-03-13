@@ -19,5 +19,5 @@ async def handle_yiyan_spider():
 async def handle_hot_spider(name: str = 'BaiduHot'):
     data = await hot_spider.get_hot_list(name)
     if not data:
-        return BaseApiOut(code=400, message="未找到相关热搜")
+        return BaseApiOut(code=400, message=f"{name}获取热榜失败")
     return BaseApiOut(data=data)

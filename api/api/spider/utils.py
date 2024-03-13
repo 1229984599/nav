@@ -42,6 +42,10 @@ class HotSpider:
             return None
 
     async def _get_52pojie_hot(self):
+        """
+        获取吾爱破解热帖
+        :return:
+        """
         data_list = []
         resp = await self.session.get('https://www.52pojie.cn/forum.php?mod=guide&view=hot')
         soup = BeautifulSoup(resp.text, 'lxml')
