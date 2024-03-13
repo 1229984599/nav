@@ -72,7 +72,7 @@ export async function getYiyan(): Promise<string> {
 }
 
 /**
- * 获取掘金榜单
+ * 获取服务器榜单：（掘金、52pojie）
  */
 export async function getHotBySpider(name: string): Promise<any> {
   return await request({

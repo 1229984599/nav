@@ -14,7 +14,12 @@ async def get_yiyan():
 
 class HotSpider:
     def __init__(self):
-        self.session = httpx.AsyncClient()
+        self.session = httpx.AsyncClient(
+            headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }, verify=False
+
+        )
 
     @ignore_async_errors
     async def _get_juejin_hot_list(self):
@@ -36,27 +41,27 @@ class HotSpider:
         else:
             return None
 
-    @ignore_async_errors
     async def _get_52pojie_hot(self):
         data_list = []
         resp = await self.session.get('https://www.52pojie.cn/forum.php?mod=guide&view=hot')
         soup = BeautifulSoup(resp.text, 'lxml')
         item_list = soup.select('#threadlist table tbody')
         for item in item_list:
+            hot_item = item.select_one('.num em')
+            title_item = item.select_one('.common .xst')
             data_list.append({
-                'hot': item.select_one('.num em').text,
-                'title': item.select_one('.common .xst').text,
-                'url': f"https://www.52pojie.cn/{item.select_one('.common .xst').get('href')}",
+                'hot': hot_item.text if hot_item else '',
+                'title': title_item.text if title_item else '',
+                'url': f"https://www.52pojie.cn/{title_item.get('href')}" if title_item else '',
             })
         return data_list
 
-    @ignore_async_errors
     async def get_hot_list(self, name: str):
         if name == 'JueJinHot':
             return await self._get_juejin_hot_list()
         if name == '52PoJieHot':
             return await self._get_52pojie_hot()
-        return self._get_gumeng_hot(name)
+        return await self._get_gumeng_hot(name)
 
     async def _get_gumeng_hot(self, name):
         """

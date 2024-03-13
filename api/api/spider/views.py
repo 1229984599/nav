@@ -8,7 +8,7 @@ hot_spider = HotSpider()
 
 
 @spider_router.get("/yiyan", response_model=BaseApiOut)
-async def yiyan_spider():
+async def handle_yiyan_spider():
     data = await get_yiyan()
     if not data:
         return BaseApiOut(code=400, message="获取一言失败")
@@ -16,8 +16,8 @@ async def yiyan_spider():
 
 
 @spider_router.post("/hot", response_model=BaseApiOut)
-async def hot_spider(name: str = 'BaiduHot'):
-    data = await HotSpider().get_hot_list(name)
+async def handle_hot_spider(name: str = 'BaiduHot'):
+    data = await hot_spider.get_hot_list(name)
     if not data:
         return BaseApiOut(code=400, message="未找到相关热搜")
     return BaseApiOut(data=data)

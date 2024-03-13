@@ -12,4 +12,4 @@ python-multipart
 uvicorn~=0.23.2
 python-dotenv~=1.0.0
 fastapi-cache2~=0.2.1
-lxml~=5.1.0
+lxml
