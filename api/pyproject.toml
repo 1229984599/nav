@@ -26,6 +26,7 @@ dependencies = [
     "uvicorn",
     "python-dotenv",
     "fastapi-cache2[redis]>=0.2.1",
+    "lxml>=5.1.0",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}

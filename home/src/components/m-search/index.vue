@@ -34,6 +34,7 @@ async function fetchSuggestions(
 
 // 搜索功能
 function handleSuggestionClick(link: any) {
+  // 没有提供链接就跳转到百度搜索
   if (!link.href) {
     handleBaiduSearch(link.title);
     return;
@@ -46,7 +47,7 @@ function handleSuggestionClick(link: any) {
 function handleBaiduSearch(kw: string = "") {
   if (kw === "") {
     window.open("https://www.baidu.com/s?wd=" + searchQuery.value, "_blank");
-  } else {
+  } else if (typeof kw !== "object") {
     window.open("https://www.baidu.com/s?wd=" + kw, "_blank");
   }
   searchQuery.value = "";
@@ -84,7 +85,7 @@ function handleBaiduSearch(kw: string = "") {
           </template>
           <template #suffix>
             <m-icon
-              @click="handleBaiduSearch"
+              @click="handleBaiduSearch(searchQuery)"
               icon="mingcute:search-line"
               :size="28"
               class="cursor-pointer h-full"
@@ -104,6 +105,7 @@ function handleBaiduSearch(kw: string = "") {
   border-color: transparent !important;
   box-shadow: none !important;
 }
+
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;

@@ -15,14 +15,16 @@ const containerWidth = computed(() => {
 // tabs列表
 const tabsList = [
   { label: "百度", name: "BaiduHot" },
+  { label: "掘金", name: "JueJinHot" },
+  { label: "吾爱", name: "52PoJieHot" },
   { label: "B站", name: "BiliBliHot" },
   { label: "微博", name: "WeiBoHot" },
   { label: "抖音", name: "DouYinHot" },
-  { label: "搜狗", name: "SoGouHot" },
-  { label: "360", name: "SoHot" },
   { label: "头条", name: "TouTiaoHot" },
   { label: "知乎", name: "ZhiHuHot" },
   { label: "快手", name: "KuaiShouHot" },
+  { label: "搜狗", name: "SoGouHot" },
+  { label: "360", name: "SoHot" },
   { label: "贴吧", name: "BaiduTieBaHot" },
 ];
 const activeName = ref(tabsList[0].name);

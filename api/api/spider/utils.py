@@ -1,6 +1,6 @@
-import json
 import asyncio
 import httpx
+from bs4 import BeautifulSoup
 from utils.error import ignore_async_errors
 
 
@@ -12,24 +12,59 @@ async def get_yiyan():
     return response.json()
 
 
-@ignore_async_errors
-async def get_baidu_suggestions(query: str = ''):
-    url = "https://www.baidu.com/su"
-    params = {"wd": query, "cb": ""}
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-    # 提取JSON部分
-    # api_response = response.text.split("(")[1].split(")")[0]
-    # # 将JSON转换为对象
-    # data = json.loads(api_response.replace("'", '"'))
-    # 返回百度搜索结果
-    return response.text
+class HotSpider:
+    def __init__(self):
+        self.session = httpx.AsyncClient()
 
+    @ignore_async_errors
+    async def _get_juejin_hot_list(self):
+        """
+        获取掘金热门文章
+        :return:
+        """
+        res = await self.session.get('https://api.juejin.cn/content_api/v1/content/article_rank', params={
+            'category_id': '1',
+            'type': 'hot',
+        })
+        data = res.json()
+        if data['err_no'] == 0:
+            return map(lambda item: {
+                'hot': item['content_counter']['hot_rank'],
+                'title': item['content']['title'],
+                'url': f"https://juejin.cn/post/{item['content']['content_id']}",
+            }, data['data'])
+        else:
+            return None
 
-@ignore_async_errors
-async def get_hot_list(name: str):
-    async with httpx.AsyncClient(base_url='https://api.gumengya.com/Api/') as client:
-        res = await client.get(name, params={
+    @ignore_async_errors
+    async def _get_52pojie_hot(self):
+        data_list = []
+        resp = await self.session.get('https://www.52pojie.cn/forum.php?mod=guide&view=hot')
+        soup = BeautifulSoup(resp.text, 'lxml')
+        item_list = soup.select('#threadlist table tbody')
+        for item in item_list:
+            data_list.append({
+                'hot': item.select_one('.num em').text,
+                'title': item.select_one('.common .xst').text,
+                'url': f"https://www.52pojie.cn/{item.select_one('.common .xst').get('href')}",
+            })
+        return data_list
+
+    @ignore_async_errors
+    async def get_hot_list(self, name: str):
+        if name == 'JueJinHot':
+            return await self._get_juejin_hot_list()
+        if name == '52PoJieHot':
+            return await self._get_52pojie_hot()
+        return self._get_gumeng_hot(name)
+
+    async def _get_gumeng_hot(self, name):
+        """
+        通过故梦api获取热榜
+        :param name: 站点名称：如bilibili
+        :return:
+        """
+        res = await self.session.get(f"https://api.gumengya.com/Api/{name}", params={
             'format': 'json',
         })
         data = res.json()
