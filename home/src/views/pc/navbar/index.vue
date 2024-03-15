@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
 import MProfile from "@/views/pc/navbar/MProfile.vue";
-import MWeather from "./MWeather.vue";
+import MWeather from "./weather/index.vue";
 import MYiyan from "./MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";

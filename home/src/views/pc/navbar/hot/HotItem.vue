@@ -143,7 +143,7 @@ onMounted(() => {
     & .hot-index {
       //box-sizing: content-box;
       flex-shrink: 0;
-      width: 23px;
+      min-width: 2em;
       padding: 3px;
       font-size: 10px;
       background-color: #1f2d3d;

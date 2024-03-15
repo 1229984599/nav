@@ -81,9 +81,77 @@ export async function getYiyan(): Promise<string> {
 export async function getHotBySpider(name: string): Promise<any> {
   return await request({
     url: "/spider/hot",
-    method: "post",
+    method: "get",
     params: {
-      name: name,
+      name,
+    },
+  });
+}
+
+export interface WeatherType {
+  obsTime?: string;
+  temp?: string;
+  feelsLike?: string;
+  icon?: string;
+  text?: string;
+  wind360?: string;
+  windDir?: string;
+  windScale?: string;
+  windSpeed?: string;
+  humidity?: string;
+  precip?: string;
+  pressure?: string;
+  vis?: string;
+  cloud?: string;
+  dew?: string;
+}
+
+export interface FutureWeatherType {
+  fxDate?: string;
+  sunrise?: string;
+  sunset?: string;
+  moonrise?: string;
+  moonset?: string;
+  moonPhase?: string;
+  moonPhaseIcon?: string;
+  tempMax?: string;
+  tempMin?: string;
+  iconDay?: string;
+  textDay?: string;
+  iconNight?: string;
+  textNight?: string;
+  wind360Day?: string;
+  windDirDay?: string;
+  windScaleDay?: string;
+  windSpeedDay?: string;
+  wind360Night?: string;
+  windDirNight?: string;
+  windScaleNight?: string;
+  windSpeedNight?: string;
+  humidity?: string;
+  precip?: string;
+  pressure?: string;
+  vis?: string;
+  cloud?: string;
+  uvIndex?: string;
+}
+
+export interface WeatherRespType {
+  city: string;
+  weather: WeatherType;
+  future_weather: FutureWeatherType[];
+}
+
+/**
+ * 获取和风天气数据
+ * @param location
+ */
+export async function getWeather(location: string): Promise<WeatherRespType> {
+  return await request({
+    url: "/spider/weather",
+    method: "get",
+    params: {
+      location,
     },
   });
 }
