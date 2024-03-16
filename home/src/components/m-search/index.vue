@@ -77,10 +77,18 @@ function handleBaiduSearch(kw: string = "") {
         >
           <template #default="{ item }">
             <div class="flex justify-between">
-              <span class="px-2 w-3/4 text-truncate">{{ item.title }}</span>
-              <span class="text-zinc-600 font-bold text-truncate">{{
-                item.menus[0].title
-              }}</span>
+              <span class="px-2 w-[70%] text-truncate">{{ item.title }}</span>
+              <div class="flex items-center gap-x-1 overflow-hidden">
+                <m-icon
+                  :icon="item.menus[0].icon"
+                  :color="item.menus[0].color"
+                  :size="16"
+                />
+                <span
+                  class="text-zinc-600 min-w-[4em] text-sm font-bold text-truncate"
+                  >{{ item.menus[0].title }}</span
+                >
+              </div>
             </div>
           </template>
           <template #suffix>
@@ -102,8 +110,8 @@ function handleBaiduSearch(kw: string = "") {
 
 <style lang="scss" scoped>
 :deep(.el-input__wrapper) {
-  border-color: transparent !important;
-  box-shadow: none !important;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .text-truncate {

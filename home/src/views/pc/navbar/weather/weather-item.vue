@@ -38,7 +38,7 @@ const icon_url = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2px 10px;
+  //padding: 2px 10px;
   color: white;
   font-size: 12px;
 

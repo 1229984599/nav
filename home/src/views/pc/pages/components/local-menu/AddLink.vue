@@ -95,7 +95,9 @@ defineExpose({ form, formRef: ruleFormRef.value });
             <m-icon :color="form.color" :icon="form.icon" />
           </template>
           <template #suffix>
-            <a href="https://icon-sets.iconify.design/" target="_blank"
+            <a
+              href="https://icon-sets.iconify.design/?query=logo"
+              target="_blank"
               >查看图标
             </a>
           </template>

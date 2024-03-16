@@ -29,6 +29,7 @@ defineProps({
         <slot name="local-action" :item="item"></slot>
       </template>
     </item-desc>
+    <slot name="add-more"></slot>
   </div>
 </template>
 

@@ -5,7 +5,6 @@ import MWeather from "./weather/index.vue";
 import MYiyan from "./MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
-import { isMobile } from "@/utils/window";
 import MHot from "./hot/index.vue";
 defineOptions({
   name: "MNavbar",
@@ -22,13 +21,13 @@ const siteStore = useSiteStore();
       <m-icon
         size="45"
         @click.stop="appStore.toggleSlide()"
-        class="cursor-pointer px-1 hover:text-sky-800 transition-colors"
+        class="cursor-pointer hover:text-sky-800 transition-colors"
         icon="ph:list-fill"
       />
       <!--      今日热榜-->
       <m-hot />
       <!--      天气-->
-      <m-weather v-if="!isMobile && siteStore.siteInfo?.weather" />
+      <m-weather v-if="siteStore.siteInfo?.weather" />
     </div>
 
     <div class="nav-right-container">

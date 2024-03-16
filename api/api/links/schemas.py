@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 from models import Links, Menu
 
-MenuRelation = Menu.schema_list(name='Relation', include=('id', 'title'))
+MenuRelation = Menu.schema_list(name='Relation', include=('id', 'title', 'icon', 'color'))
 
 
 class CreateMenuSchema(Links.schema_create('CreateMenu', )):

@@ -48,77 +48,55 @@ navigator.geolocation.getCurrentPosition(
 </script>
 
 <template>
-  <div class="weather-container" v-show="weather?.temp">
-    <span>{{ city }}</span>
-    <span>{{ weather?.temp }}°C</span>
-    <i :class="`qi-${weather?.icon}`"></i>
-    <span>{{ weather?.text }}</span>
-    <div class="weather-item-container">
+  <el-popover
+    placement="bottom"
+    :width="270"
+    :offset="5"
+    trigger="hover"
+    :show-arrow="false"
+    :popper-style="{
+      backgroundImage: bgUrl,
+      'background-size': 'cover',
+      'background-position': 'center',
+    }"
+  >
+    <template #reference>
+      <div class="weather-container" v-show="weather?.temp">
+        <span>{{ city }}</span>
+        <span>{{ weather?.temp }}°C</span>
+        <i :class="`qi-${weather?.icon}`"></i>
+        <span>{{ weather?.text }}</span>
+      </div>
+    </template>
+    <template #default>
       <m-weather-item
         :item="futureWeather"
         :key="index"
         v-for="(futureWeather, index) in futureWeatherList"
       />
-    </div>
-  </div>
+    </template>
+  </el-popover>
 </template>
 
 <style scoped lang="scss">
 .weather-container {
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   column-gap: 4px;
-  margin-left: 10px;
-  line-height: 45px;
+  margin-left: 6px;
+  //line-height: 45px;
   font-size: 13px;
   font-weight: 600;
   color: #c4652b;
   cursor: pointer;
-  &:hover .weather-item-container {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0px);
+  @media screen and (min-width: 769px) {
+    margin-left: 15px;
   }
+
   & > i {
     padding: 0 2px;
     font-size: 18px;
-  }
-
-  & > .weather-item-container {
-    position: absolute;
-    //opacity: 1;
-    //visibility: visible;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    transform: translateY(20px);
-    left: 0;
-    top: 100%;
-    background-image: v-bind(bgUrl);
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    min-width: 270px;
-    line-height: 25px;
-    //min-height: 300px;
-    padding: 5px 8px;
-    border-radius: 6px;
-    // 在顶部露出一个三角形
-    &:after {
-      bottom: 100%;
-      left: 25%;
-      content: " ";
-      height: 0;
-      width: 0;
-      position: absolute;
-      pointer-events: none;
-      border-color: rgba(255, 255, 255, 0);
-      border-bottom-color: #27486e;
-      border-width: 6px;
-      margin-left: -6px;
-    }
   }
 }
 </style>

@@ -24,7 +24,7 @@ function handleResetLink() {
   ElMessageBox.confirm("确定要清空本地书签吗？", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
-    type: "warning",
+    type: "error",
   }).then(() => {
     menuStore.resetLocalLink();
     ElMessage.success("清空成功");
@@ -46,15 +46,6 @@ function handleDelete(item: LinkSchemaList) {
   <div>
     <item-category :menu="menuStore.localMenu">
       <template #title-action>
-        <el-tooltip content="添加本地书签">
-          <m-icon
-            @click.stop="handleAddLink"
-            class="cursor-pointer"
-            icon="subway:add"
-            size="24"
-            :color="menuStore.localMenu.color"
-          />
-        </el-tooltip>
         <el-tooltip content="清空本地书签">
           <m-icon
             class="cursor-pointer"
@@ -68,10 +59,11 @@ function handleDelete(item: LinkSchemaList) {
       <template #local-action="{ item }">
         <div class="local-action">
           <m-icon
+            class="edit-action"
             @click.stop="handleEdit(item)"
             size="23"
             color="#409eff"
-            icon="mingcute:edit-line"
+            icon="mdi:circle-edit-outline"
           />
           <el-popconfirm
             confirm-button-text="确定"
@@ -81,13 +73,24 @@ function handleDelete(item: LinkSchemaList) {
           >
             <template #reference>
               <m-icon
-                size="23"
+                class="delete-action"
+                size="30"
                 color="#f56c6c"
-                icon="material-symbols:delete-sharp"
+                icon="typcn:delete"
               />
             </template>
           </el-popconfirm>
         </div>
+      </template>
+      <template #add-more>
+        <el-tooltip content="添加本地书签">
+          <m-icon
+            @click.stop="handleAddLink"
+            class="add-more"
+            icon="ci:file-add"
+            size="60"
+          />
+        </el-tooltip>
       </template>
     </item-category>
     <m-local-add-link ref="linkRef" v-model="isVisible" />
@@ -96,21 +99,50 @@ function handleDelete(item: LinkSchemaList) {
 
 <style scoped lang="scss">
 .local-action {
-  position: absolute;
-  bottom: -3px;
-  left: 8px;
-  display: flex;
-  column-gap: 3px;
-  //background-color: ;
-  & > div {
-    cursor: pointer;
-    transition: all 0.23s ease-in-out;
+  cursor: pointer;
+  .edit-action {
+    position: absolute;
+    bottom: -5px;
+    left: 2px;
+    transition: all 0.3s ease;
     &:hover {
-      box-shadow: rebeccapurple 0 0 10px 0;
+      transform: scale(1.3);
+      box-shadow: rebeccapurple 0 0 2px 0;
+      border-radius: 999px;
     }
+  }
+  .delete-action {
+    position: absolute;
+    right: -0.5rem;
+    top: -15px;
+    transition: all 0.3s ease;
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: rebeccapurple 0 0 2px 0;
+      border-radius: 999px;
+    }
+  }
 
-    //box-shadow: rebeccapurple 0 0 10px 0;
-    //border-radius: 999px;
+  //box-shadow: rebeccapurple 0 0 10px 0;
+  //border-radius: 999px;
+}
+
+.add-more {
+  text-size-adjust: 100%;
+
+  background-color: var(--el-fill-color-lighter);
+  border: 1px dashed var(--el-border-color-darker);
+  border-radius: 6px;
+  box-sizing: border-box;
+  min-height: 79px;
+  cursor: pointer;
+  vertical-align: top;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  &:hover {
+    border-color: var(--el-color-primary);
   }
 }
 </style>

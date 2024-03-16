@@ -39,7 +39,7 @@ export async function getBaiduSuggestions(query: string) {
   );
   return data.s.map((item: any) => ({
     title: item,
-    menus: [{ title: "百度" }],
+    menus: [{ title: "百度一下", icon: "https://www.baidu.com/favicon.ico" }],
   }));
 }
 
