@@ -6,7 +6,6 @@ import { ref } from "vue";
 import { LinkSchemaList } from "@/api/links/types";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { VueDraggable } from "vue-draggable-plus";
-import ItemDesc from "@/views/pc/pages/components/ItemDesc.vue";
 
 defineOptions({
   name: "MLocalMenu",
@@ -134,7 +133,9 @@ defineExpose({ isVisible });
 <style scoped lang="scss">
 .item-container {
   position: relative;
-
+  display: flex;
+  justify-content: center;
+  align-items: center;
   &:hover > .local-action {
     visibility: visible;
     opacity: 1;
@@ -150,7 +151,7 @@ defineExpose({ isVisible });
       position: absolute;
       bottom: -5px;
       left: 2px;
-      background-color: rgba(255, 255, 255, 0.5);
+      background-color: rgba(255, 255, 255, 0.2);
       border-radius: 999px;
       transition: all 0.3s ease;
 
@@ -164,7 +165,7 @@ defineExpose({ isVisible });
       position: absolute;
       right: -0.5rem;
       top: -15px;
-      background-color: rgba(255, 255, 255, 0.5);
+      background-color: rgba(255, 255, 255, 0.2);
       border-radius: 999px;
       transition: all 0.3s ease;
 

@@ -1,6 +1,8 @@
 import fetchJsonp from "fetch-jsonp";
 import { ElMessage } from "element-plus";
 import { request } from "@/utils/request";
+import { WeatherRespType } from "@/api/spider/types";
+import { sample } from "lodash-es";
 
 // 通过fetchJsonp库来实现跨域请求
 function getDataList(
@@ -49,13 +51,6 @@ export async function getBaiduSuggestions(query: string) {
   }));
 }
 
-export interface HotItemType {
-  hot: string;
-  title: string;
-  updatetime: string;
-  url: string;
-}
-
 /**
  *  获取每日榜单（通过故梦api）
  * @param name
@@ -94,60 +89,6 @@ export async function getHotBySpider(name: string): Promise<any> {
   });
 }
 
-export interface WeatherType {
-  obsTime?: string;
-  temp?: string;
-  feelsLike?: string;
-  icon?: string;
-  text?: string;
-  wind360?: string;
-  windDir?: string;
-  windScale?: string;
-  windSpeed?: string;
-  humidity?: string;
-  precip?: string;
-  pressure?: string;
-  vis?: string;
-  cloud?: string;
-  dew?: string;
-}
-
-export interface FutureWeatherType {
-  fxDate?: string;
-  sunrise?: string;
-  sunset?: string;
-  moonrise?: string;
-  moonset?: string;
-  moonPhase?: string;
-  moonPhaseIcon?: string;
-  tempMax?: string;
-  tempMin?: string;
-  iconDay?: string;
-  textDay?: string;
-  iconNight?: string;
-  textNight?: string;
-  wind360Day?: string;
-  windDirDay?: string;
-  windScaleDay?: string;
-  windSpeedDay?: string;
-  wind360Night?: string;
-  windDirNight?: string;
-  windScaleNight?: string;
-  windSpeedNight?: string;
-  humidity?: string;
-  precip?: string;
-  pressure?: string;
-  vis?: string;
-  cloud?: string;
-  uvIndex?: string;
-}
-
-export interface WeatherRespType {
-  city: string;
-  weather: WeatherType;
-  future_weather: FutureWeatherType[];
-}
-
 /**
  * 获取和风天气数据
  * @param location
@@ -160,4 +101,19 @@ export async function getWeather(location: string): Promise<WeatherRespType> {
       location,
     },
   });
+}
+
+/**
+ * 获取每日随机背景图片
+ */
+const name_list = ["FjImg", "DmImgS", "DmImg", "QcImg", "McImg"];
+
+export async function getRandImg(name: string = "") {
+  const randName = name || sample(name_list);
+  const res = await getDataList(
+    `https://api.gumengya.com/Api/${randName}?format=jsonp`,
+  );
+  if (res.code === 200) {
+    return res.data.url;
+  }
 }

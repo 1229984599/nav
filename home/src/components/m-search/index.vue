@@ -58,7 +58,7 @@ function handleBaiduSearch(kw: string = "") {
       class="flex justify-center py-3"
       @keydown.enter="handleSuggestionClick"
     >
-      <div class="relative max-w-[900px] w-4/5 md:w-1/2">
+      <div class="max-w-[900px] input-container w-4/5 md:w-1/2">
         <el-autocomplete
           autofocus
           :highlight-first-item="true"
@@ -113,5 +113,10 @@ function handleBaiduSearch(kw: string = "") {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.input-container {
+  position: relative;
+  box-shadow: rgba(64, 145, 247, 0.2) 0 0 3px;
+  border-radius: 999px;
 }
 </style>

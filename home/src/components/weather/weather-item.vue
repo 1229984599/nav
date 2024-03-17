@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import { FutureWeatherType } from "@/api/spider";
+import { FutureWeatherType } from "@/api/spider/types";
 
 defineOptions({
   name: "MWeatherItem",

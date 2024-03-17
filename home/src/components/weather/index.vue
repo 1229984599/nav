@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { FutureWeatherType, getWeather, WeatherType } from "@/api/spider";
+import { getWeather } from "@/api/spider";
 import { computed, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import MWeatherItem from "./weather-item.vue";
+import { FutureWeatherType, WeatherType } from "@/api/spider/types";
 
 defineOptions({
   name: "MWeather",

@@ -12,7 +12,7 @@ const menuStore = useMenuStore();
 
 <template>
   <m-local-menu
-    class-name="w-full mx-auto md:w-[50%] grid grid-cols-4 md:grid-cols-7 gap-y-4 items-center"
+    class-name="w-full mx-auto md:w-[50%] min-h-[200px] max-h-[300px] md:max-h-[350px] overflow-hidden grid grid-cols-4 md:grid-cols-7 gap-y-4 items-center bg-black/20 py-2 md:py-4 rounded-md  backdrop-blur-[2px]"
   >
     <template #menu-title><div></div></template>
     <template #item-desc="{ item }">
@@ -51,7 +51,8 @@ const menuStore = useMenuStore();
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: stretch;
+    align-items: center;
+    //align-items: stretch;
     row-gap: 10px;
     text-decoration: none;
     color: inherit;

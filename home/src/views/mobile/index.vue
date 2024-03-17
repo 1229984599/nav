@@ -2,6 +2,13 @@
 import MMobileHeader from "./header/index.vue";
 import MMobileMain from "./main/index.vue";
 import MMobileFooter from "./footer/index.vue";
+import { computed } from "vue";
+import { useAppStore } from "@/store/app";
+
+const appStore = useAppStore();
+const bgUrl = computed(() => {
+  return `url(${appStore.bgUrl})`;
+});
 </script>
 
 <template>
@@ -17,7 +24,7 @@ import MMobileFooter from "./footer/index.vue";
   box-sizing: border-box;
   width: 100vw;
   height: 100vh;
-  background-image: url("https://api.nnxv.cn/api/Bing.php");
+  background-image: v-bind(bgUrl);
   background-size: cover;
   background-position: center;
 }

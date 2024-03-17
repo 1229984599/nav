@@ -15,7 +15,7 @@ const { width } = useElementSize(itemRef);
 </script>
 
 <template>
-  <div class="relative" v-if="item?.status">
+  <div class="relative w-full" v-if="item?.status">
     <el-tooltip :disabled="!item?.desc" :hide-after="200" :enterable="false">
       <a
         ref="itemRef"

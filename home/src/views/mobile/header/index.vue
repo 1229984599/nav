@@ -29,7 +29,7 @@ header {
   align-items: center;
   color: white;
   backdrop-filter: blur(20px);
-
+  background-color: rgba(0, 0, 0, 0.1);
   .yiyan {
     max-width: 60%;
 
