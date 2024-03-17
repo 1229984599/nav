@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { nextTick, ref } from "vue";
 import { compute, dict, useColumns } from "@fast-crud/fast-crud";
 import { FormScopeContext } from "@fast-crud/fast-crud/dist/d/d/crud";
@@ -76,11 +76,31 @@ formOptions.value = buildFormOptions({
         show: compute((context) => {
           return context.form.weather;
         }),
+        helper: {
+          render: () => {
+            return (
+              <a href="https://console.qweather.com/#/apps" target="_blank">
+                点我前往和风天气获取开发者key
+              </a>
+            );
+          },
+        },
       },
     },
     cdn_img_token: {
       title: "图床token",
       type: "text",
+      form: {
+        helper: {
+          render: () => {
+            return (
+              <a href="https://img.ink/user/settings.html" target="_blank">
+                点我前往水墨图床获取token
+              </a>
+            );
+          },
+        },
+      },
     },
     ...iconForm,
     copyright: {

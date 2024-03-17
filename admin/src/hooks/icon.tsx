@@ -4,7 +4,6 @@ import MIcon from "@/components/icon.vue";
 import { isUrl } from "@/utils/window";
 import { ElMessage } from "element-plus";
 import type Crud from "@/api/crud";
-import { compute } from "@fast-crud/fast-crud";
 
 /**
  *

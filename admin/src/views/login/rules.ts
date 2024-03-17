@@ -15,9 +15,9 @@ export const loginRules: FormRules = {
       trigger: "blur",
     },
     {
-      min: 6,
+      min: 5,
       max: 16,
-      message: "长度在 6 到 16 个字符",
+      message: "长度在 5 到 16 个字符",
       trigger: "blur",
     },
   ],

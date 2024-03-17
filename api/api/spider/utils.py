@@ -1,6 +1,9 @@
 import asyncio
 import httpx
 from bs4 import BeautifulSoup
+from fastapi import HTTPException
+from models import Site
+
 
 # from utils.error import ignore_async_errors
 
@@ -89,13 +92,23 @@ class HotSpider(BaseSpider):
 
 class WeatherSpider(BaseSpider):
 
-    def __init__(self, key: str = '71d961206049434b920fa4e600c06a61'):
+    def __init__(self, key: str = ''):
         super().__init__()
         # self.session.base_url = 'https://devapi.qweather.com/v7/'
         self.key = key
 
     # @ignore_async_errors
     async def get_weather(self, location):
+        """
+        获取天气
+        :param location: 经度,纬度坐标
+        :return:
+        """
+        if not self.key:
+            site_info = await Site.first()
+            if not site_info.weather_key:
+                raise HTTPException(status_code=400, detail='请先在网站设置中配置天气key')
+            self.key = site_info.weather_key
         city_name = await self._get_city_info(location)
         weather_data = await self._get_weather_data(location)
         future_weather = await self._get_future_weather(location)
