@@ -21,8 +21,8 @@ const props = defineProps({
   <div class="flex items-center">
     <img
       v-if="isUrl(<string>props.icon)"
-      :width="size"
-      height="auto"
+      :width="`${size}px`"
+      :height="`${size}px`"
       :src="icon"
       alt=""
     />

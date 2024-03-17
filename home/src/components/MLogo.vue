@@ -2,6 +2,7 @@
 import { useSiteStore } from "@/store/site";
 import MIcon from "@/components/MIcon.vue";
 import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 
 defineProps({
   fontSize: {
@@ -11,6 +12,7 @@ defineProps({
 });
 const siteStore = useSiteStore();
 const router = useRouter();
+
 function handleClick() {
   router
     .push({
@@ -24,6 +26,13 @@ function handleClick() {
       });
     });
 }
+
+onMounted(async () => {
+  // 如果没有siteinfo数据，就获取重新获取
+  if (!siteStore.siteInfo?.id) {
+    await siteStore.getSiteInfo();
+  }
+});
 </script>
 
 <template>

@@ -6,6 +6,10 @@ import { isMobile, isUrl } from "@/utils/window";
 import { ElMessage, type FormInstance, FormRules } from "element-plus";
 import { useMenuStore } from "@/store/menu";
 
+defineOptions({
+  name: "MAddLink",
+});
+
 const dialogFormVisible = ref(false);
 const menuStore = useMenuStore();
 const defaultForm = {

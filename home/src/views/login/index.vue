@@ -38,7 +38,8 @@ const handleLogin = () => {
         .then(() => {
           ElMessage.success("登录成功");
           userStore.getUserinfo();
-          router.push({ path: "/" });
+          router.go(-1);
+          // router.push({ path: "/" });
         })
         .catch(() => {
           loginFormData.password = "";

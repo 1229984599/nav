@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
 import { scrollTop } from "@/utils/window";
-import AddLink from "@/components/AddLink.vue";
+import AddLink from "@/components/add-link/remote.vue";
 import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
 import { onMounted } from "vue";
@@ -65,11 +65,19 @@ function handleScrollTop() {
     <div
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"
     >
-      <m-icon
-        class="tool-item"
-        @click="handleScrollTop"
-        icon="ph:rocket-fill"
-      />
+      <el-tooltip content="回到顶部" placement="left">
+        <m-icon
+          class="tool-item"
+          @click="handleScrollTop"
+          icon="ph:rocket-fill"
+        />
+      </el-tooltip>
+      <el-tooltip content="mini书签" placement="left">
+        <router-link :to="{ name: 'Mobile' }">
+          <m-icon class="tool-item" icon="mingcute:wechat-miniprogram-fill" />
+        </router-link>
+      </el-tooltip>
+
       <!--      添加链接-->
       <add-link v-if="userStore.token?.access_token" class="tool-item" />
     </div>
@@ -83,10 +91,10 @@ a {
 }
 
 .tool-item {
-  transition: color 0.35s;
+  transition: color 0.35s ease;
 
   &:hover {
-    color: #a61111;
+    color: #d32929;
   }
 }
 </style>

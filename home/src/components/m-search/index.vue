@@ -1,8 +1,3 @@
-<script lang="ts">
-export default {
-  name: "MSearch",
-};
-</script>
 <script setup lang="ts">
 import { ref } from "vue";
 import linkModel from "@/api/links";
@@ -56,14 +51,14 @@ function handleBaiduSearch(kw: string = "") {
 
 <template>
   <div class="mx-auto pt-8 pb-4 relative">
-    <m-logo font-size="22px" class="flex justify-center text-2xl" />
+    <m-logo v-bind="$attrs" class="flex justify-center text-2xl" />
 
     <!-- 第二栏：搜索框 -->
     <div
       class="flex justify-center py-3"
       @keydown.enter="handleSuggestionClick"
     >
-      <div class="relative w-4/5 md:w-1/2">
+      <div class="relative max-w-[900px] w-4/5 md:w-1/2">
         <el-autocomplete
           autofocus
           :highlight-first-item="true"

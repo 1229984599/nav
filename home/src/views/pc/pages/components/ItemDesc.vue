@@ -43,8 +43,6 @@ const { width } = useElementSize(itemRef);
         <div :style="{ maxWidth: width + 'px' }">{{ item.desc }}</div>
       </template>
     </el-tooltip>
-    <!--    本地书签操作按钮 编辑，删除-->
-    <slot :item="item" name="local-action"></slot>
   </div>
 </template>
 

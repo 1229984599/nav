@@ -7,7 +7,12 @@ import MHotItem from "./HotItem.vue";
 defineOptions({
   name: "MHot",
 });
-
+defineProps({
+  color: {
+    type: String,
+    default: "rgb(75 85 99 /)",
+  },
+});
 // 容器宽度
 const containerWidth = computed(() => {
   return isMobile.value ? "290" : "420";
@@ -50,7 +55,13 @@ const activeName = ref(tabsList[0].name);
     <template #reference>
       <div class="flex items-center cursor-pointer">
         <m-icon icon="ph:fire-fill" color="#bb0c0c" />
-        <span class="text-sm font-bold text-gray-600">今日热榜</span>
+        <span
+          class="text-sm font-bold"
+          :style="{
+            color,
+          }"
+          >今日热榜</span
+        >
       </div>
     </template>
   </el-popover>

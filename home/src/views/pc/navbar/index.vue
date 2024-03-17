@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
-import MProfile from "@/views/pc/navbar/MProfile.vue";
-import MWeather from "./weather/index.vue";
-import MYiyan from "./MYiyan.vue";
+import MProfile from "@/components/MProfile.vue";
+import MWeather from "@/components/weather/index.vue";
+import MYiyan from "@/components/MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
-import MHot from "./hot/index.vue";
+import MHot from "@/components/hot/index.vue";
 defineOptions({
   name: "MNavbar",
 });

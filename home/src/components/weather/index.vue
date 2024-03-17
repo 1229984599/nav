@@ -7,6 +7,14 @@ import MWeatherItem from "./weather-item.vue";
 defineOptions({
   name: "MWeather",
 });
+
+const props = defineProps({
+  color: {
+    type: String,
+    default: "#c4652b",
+  },
+});
+
 const city = ref("");
 const weather = reactive<WeatherType>({});
 const futureWeatherList = ref<FutureWeatherType[]>([]);
@@ -58,6 +66,7 @@ navigator.geolocation.getCurrentPosition(
       backgroundImage: bgUrl,
       'background-size': 'cover',
       'background-position': 'center',
+      border: 0,
     }"
   >
     <template #reference>
@@ -88,7 +97,7 @@ navigator.geolocation.getCurrentPosition(
   //line-height: 45px;
   font-size: 13px;
   font-weight: 600;
-  color: #c4652b;
+  color: v-bind(color);
   cursor: pointer;
   @media screen and (min-width: 769px) {
     margin-left: 15px;

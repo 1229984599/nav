@@ -1,11 +1,11 @@
 import {
   createRouter,
-  createWebHashHistory,
   createWebHistory,
   Router,
   RouteRecordRaw,
 } from "vue-router";
 import { pcRoutes } from "@/router/pc";
+import { mobileRoutes } from "@/router/mobile";
 
 export const systemRoutes: RouteRecordRaw[] = [
   {
@@ -17,7 +17,7 @@ export const systemRoutes: RouteRecordRaw[] = [
 
 const router: Router = createRouter({
   history: createWebHistory(),
-  routes: [...systemRoutes, ...pcRoutes],
+  routes: [...systemRoutes, ...pcRoutes, ...mobileRoutes],
   scrollBehavior(to, from, savedPosition) {
     if (to.hash) {
       return {

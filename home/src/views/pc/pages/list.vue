@@ -5,7 +5,8 @@ import { useMenuStore } from "@/store/menu";
 import ItemCategory from "./components/ItemCategory.vue";
 import { useTitle } from "@vueuse/core";
 import { useSiteStore } from "@/store/site";
-import MLocalMenu from "./components/local-menu/index.vue";
+import MLocalMenu from "@/components/local-menu/index.vue";
+import ItemDesc from "@/views/pc/pages/components/ItemDesc.vue";
 
 const routes = useRoute();
 const siteStore = useSiteStore();
@@ -34,7 +35,9 @@ onMounted(() => gotoCategory(routes.query?.cat));
 </script>
 
 <template>
-  <m-local-menu />
+  <m-local-menu #item-desc="{ item }">
+    <item-desc :item="item" />
+  </m-local-menu>
   <div v-for="menu in menuStore.menuTree">
     <!--    菜单启用-->
     <item-category :menu="menu" v-if="menu?.status" />

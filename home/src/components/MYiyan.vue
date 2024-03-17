@@ -3,7 +3,12 @@ import { onMounted, ref } from "vue";
 import { getYiyan } from "@/api/spider";
 
 const yiyan = ref("");
-
+const props = defineProps({
+  color: {
+    type: String,
+    default: "rgb(82 82 91 /1)",
+  },
+});
 async function refresh() {
   yiyan.value = await getYiyan();
 }
@@ -21,7 +26,7 @@ onMounted(refresh);
   cursor: pointer;
   font-size: 0.87rem;
   line-height: 1.25rem;
-  color: rgb(82 82 91 /1);
+  color: v-bind(color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
