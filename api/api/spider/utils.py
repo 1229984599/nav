@@ -107,7 +107,7 @@ class WeatherSpider(BaseSpider):
         if not self.key:
             site_info = await Site.first()
             if not site_info.weather_key:
-                raise HTTPException(status_code=400, detail='请先在网站设置中配置天气key')
+                raise HTTPException(status_code=400, detail='请先在站点设置中配置天气key')
             self.key = site_info.weather_key
         city_name = await self._get_city_info(location)
         weather_data = await self._get_weather_data(location)
