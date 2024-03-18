@@ -65,6 +65,9 @@ navigator.geolocation.getCurrentPosition(
     :show-arrow="false"
     :popper-style="{
       backgroundImage: bgUrl,
+      'background-color': 'rgba(23, 23, 23, 0.9)',
+      //       backdrop-filter: blur(2px);
+      // background-color: rgba(23, 23, 23, 0.2);
       'background-size': 'cover',
       'background-position': 'center',
       border: 0,
@@ -99,6 +102,7 @@ navigator.geolocation.getCurrentPosition(
   font-size: 13px;
   font-weight: 600;
   color: v-bind(color);
+
   cursor: pointer;
   @media screen and (min-width: 769px) {
     margin-left: 15px;

@@ -5,21 +5,13 @@ import MLocalAddLink from "@/components/add-link/local.vue";
 import { ref } from "vue";
 import { LinkSchemaList } from "@/api/links/types";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { VueDraggable } from "vue-draggable-plus";
 
 defineOptions({
   name: "MLocalMenu",
 });
-defineProps({
-  className: {
-    type: String,
-    default:
-      "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mt-3 mb-8 items-center",
-  },
-});
 
 const menuStore = useMenuStore();
-const linkRef = ref<HTMLElement>();
+const linkRef = ref();
 const isVisible = ref(false);
 
 // 拖拽排序
@@ -50,12 +42,19 @@ function handleDelete(item: LinkSchemaList) {
   ElMessage.success("删除成功");
 }
 
-defineExpose({ isVisible });
+defineExpose({
+  action: {
+    handleAddLink,
+    handleResetLink,
+    handleEdit,
+    handleDelete,
+  },
+});
 </script>
 
 <template>
   <div>
-    <slot name="menu-title">
+    <slot name="menu-title" :menu="menuStore.localMenu">
       <div :id="menuStore.localMenu.title" class="flex gap-x-2 items-center">
         <m-icon
           v-if="menuStore.localMenu.icon"
@@ -75,125 +74,10 @@ defineExpose({ isVisible });
         </el-tooltip>
       </div>
     </slot>
+    <slot name="item-list"></slot>
 
-    <VueDraggable
-      v-model="menuStore.localMenu.links"
-      filter=".add-more"
-      :class="className"
-    >
-      <div
-        class="item-container"
-        :key="item.href"
-        v-for="item in menuStore.localMenu.links"
-      >
-        <slot name="item-desc" :item="item"></slot>
-        <div class="local-action">
-          <m-icon
-            class="edit-action"
-            @click.stop="handleEdit(item)"
-            size="23"
-            color="#409eff"
-            icon="mdi:circle-edit-outline"
-          />
-          <el-popconfirm
-            confirm-button-text="确定"
-            cancel-button-text="取消"
-            @confirm="handleDelete(item)"
-            title="确定要删除吗？"
-          >
-            <template #reference>
-              <m-icon
-                class="delete-action"
-                size="30"
-                color="#f56c6c"
-                icon="typcn:delete"
-              />
-            </template>
-          </el-popconfirm>
-        </div>
-      </div>
-
-      <el-tooltip content="添加本地书签">
-        <div @click.stop="handleAddLink">
-          <slot name="add-more">
-            <m-icon
-              class="add-more w-full"
-              icon="ci:file-add"
-              size="60"
-              :color="menuStore.localMenu.color"
-            />
-          </slot>
-        </div>
-      </el-tooltip>
-    </VueDraggable>
     <m-local-add-link ref="linkRef" v-model="isVisible" />
   </div>
 </template>
 
-<style scoped lang="scss">
-.item-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  &:hover > .local-action {
-    visibility: visible;
-    opacity: 1;
-  }
-
-  .local-action {
-    visibility: hidden;
-    opacity: 0;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    .edit-action {
-      position: absolute;
-      bottom: -5px;
-      left: 2px;
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 999px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: scale(1.3);
-        box-shadow: rebeccapurple 0 0 2px 0;
-      }
-    }
-
-    .delete-action {
-      position: absolute;
-      right: -0.5rem;
-      top: -15px;
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 999px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: scale(1.2);
-        box-shadow: rebeccapurple 0 0 2px 0;
-      }
-    }
-  }
-}
-
-.add-more {
-  text-size-adjust: 100%;
-  min-width: 160px;
-  background-color: var(--el-fill-color-lighter);
-  border: 1px dashed var(--el-border-color-darker);
-  border-radius: 6px;
-  box-sizing: border-box;
-  min-height: 79px;
-  cursor: pointer;
-  vertical-align: top;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-
-  &:hover {
-    border-color: var(--el-color-primary);
-  }
-}
-</style>
+<style scoped lang="scss"></style>

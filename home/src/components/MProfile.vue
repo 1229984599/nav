@@ -39,7 +39,10 @@ const userStore = useUserStore();
   </el-dropdown>
   <router-link
     :to="{ name: 'Login' }"
-    class="text-gray-600 font-bold mr-2"
+    class="font-bold mr-2"
+    :style="{
+      color: props.color,
+    }"
     v-else
   >
     登录

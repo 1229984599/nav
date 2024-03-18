@@ -8,15 +8,15 @@ defineOptions({
 </script>
 
 <template>
-  <main>
-    <m-search font-size="30px" class="search" />
-    <m-mobile-local-item />
+  <main class="md:w-[90%] lg:w-[80%] xl:w-[70%] mx-auto">
+    <m-search font-size="30px" />
+    <m-mobile-local-item class="md:mt-4 lg:mt-5" />
   </main>
 </template>
 
 <style scoped lang="scss">
 main {
-  padding: 60px 60px;
+  padding: 7% 10% 0;
   @media screen and (max-width: 768px) {
     padding: 20px;
   }

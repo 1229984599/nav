@@ -67,12 +67,6 @@ onMounted(async () => {
 
   .logo-title {
     display: block;
-    font-family:
-      Avenir,
-      Helvetica Neue,
-      Arial,
-      Helvetica,
-      sans-serif;
     padding-left: 2px;
     font-size: v-bind(fontSize);
     font-weight: 700;
@@ -80,6 +74,7 @@ onMounted(async () => {
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 0 1px rgba(17, 117, 232, 0.5);
   }
 }
 </style>

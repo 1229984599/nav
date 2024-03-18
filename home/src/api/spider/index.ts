@@ -106,7 +106,15 @@ export async function getWeather(location: string): Promise<WeatherRespType> {
 /**
  * 获取每日随机背景图片
  */
-const name_list = ["FjImg", "DmImgS", "DmImg", "QcImg", "McImg"];
+const name_list = [
+  "FjImg",
+  "DmImgS",
+  "DmImg",
+  "MvImg",
+  "QcImg",
+  "McImg",
+  "BingImg",
+];
 
 export async function getRandImg(name: string = "") {
   const randName = name || sample(name_list);

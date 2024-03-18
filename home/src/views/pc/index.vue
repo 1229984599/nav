@@ -45,7 +45,7 @@ const menuWidth = computed(() => {
     <!--    右侧内容-->
     <div class="right-container">
       <m-navbar class="navbar" />
-      <m-search font-size="30px" />
+      <m-search class="w-[78%] md:w-[50%]" font-size="30px" />
       <div class="p-2 md:p-6">
         <app-main />
         <m-footer />

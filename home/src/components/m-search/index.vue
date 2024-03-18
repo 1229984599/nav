@@ -58,7 +58,7 @@ function handleBaiduSearch(kw: string = "") {
       class="flex justify-center py-3"
       @keydown.enter="handleSuggestionClick"
     >
-      <div class="max-w-[900px] input-container w-4/5 md:w-1/2">
+      <div class="input-container">
         <el-autocomplete
           autofocus
           :highlight-first-item="true"
@@ -68,7 +68,7 @@ function handleBaiduSearch(kw: string = "") {
           :fetch-suggestions="fetchSuggestions"
           @select="handleSuggestionClick"
           placeholder="请输入需要搜索的内容"
-          class="w-full px-2 py-2 bg-white rounded-full"
+          class="w-full px-2 py-2 md:py-3 bg-white rounded-full"
         >
           <template #default="{ item }">
             <div class="flex justify-between">
@@ -115,6 +115,7 @@ function handleBaiduSearch(kw: string = "") {
   text-overflow: ellipsis;
 }
 .input-container {
+  width: 100%;
   position: relative;
   box-shadow: rgba(64, 145, 247, 0.2) 0 0 3px;
   border-radius: 999px;
