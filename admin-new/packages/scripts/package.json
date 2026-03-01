@@ -1,0 +1,28 @@
+{
+  "name": "@sa/scripts",
+  "version": "2.0.2",
+  "bin": {
+    "sa": "./bin.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["./src/*"]
+    }
+  },
+  "devDependencies": {
+    "@soybeanjs/changelog": "0.4.3",
+    "bumpp": "10.4.0",
+    "c12": "3.3.3",
+    "cac": "6.7.14",
+    "consola": "3.4.2",
+    "enquirer": "2.4.1",
+    "execa": "9.6.1",
+    "kolorist": "1.8.0",
+    "npm-check-updates": "19.3.1",
+    "picomatch": "4.0.3",
+    "rimraf": "6.1.2"
+  }
+}

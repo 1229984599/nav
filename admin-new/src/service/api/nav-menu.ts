@@ -1,0 +1,31 @@
+import { request } from '../request';
+
+/** Paginated menu list */
+export function fetchMenuList(params: { page: number; size: number }, data: Api.NavMenu.MenuFilter = {}) {
+  return request<Api.NavMenu.PageResult>({
+    url: '/menu/list',
+    method: 'post',
+    params,
+    data
+  });
+}
+
+/** Get menu tree */
+export function fetchMenuTree() {
+  return request<Api.NavMenu.MenuTreeNode[]>({ url: '/menu/tree' });
+}
+
+/** Create a menu */
+export function fetchMenuCreate(data: Api.NavMenu.MenuCreate) {
+  return request({ url: '/menu/create', method: 'post', data });
+}
+
+/** Update a menu */
+export function fetchMenuUpdate(id: number, data: Api.NavMenu.MenuCreate) {
+  return request({ url: `/menu/${id}`, method: 'put', data });
+}
+
+/** Delete menus by ids */
+export function fetchMenuDelete(ids: string) {
+  return request({ url: `/menu/${ids}`, method: 'delete' });
+}
