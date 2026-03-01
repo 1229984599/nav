@@ -67,7 +67,7 @@ class HotSpider(BaseSpider):
         return data_list
 
     # @ignore_async_errors
-    async def get_hot_list(self, name: str):
+    async def get_hot_list(self, name: str = 'JueJinHot'):
         if name == 'JueJinHot':
             return await self._get_juejin_hot_list()
         if name == '52PoJieHot':
@@ -98,7 +98,7 @@ class WeatherSpider(BaseSpider):
         self.key = key
 
     # @ignore_async_errors
-    async def get_weather(self, location):
+    async def get_weather(self, location: str = '106.5518,29.5627'):
         """
         获取天气
         :param location: 经度,纬度坐标

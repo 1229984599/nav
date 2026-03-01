@@ -40,6 +40,20 @@ class Links extends Crud {
     });
   }
 
+  async syncCdnFile(file: File, link_id: any) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await request({
+      method: "post",
+      url: `${this.baseUrl}/sync_cdn_file`,
+      params: { link_id },
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      data: formData,
+    });
+  }
+
   async createWithMenu(data: CreateMenuSchema): Promise<any> {
     return await request({
       url: `${this.baseUrl}/menu/create`,

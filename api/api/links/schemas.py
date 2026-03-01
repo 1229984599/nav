@@ -1,28 +1,52 @@
-from typing import List
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-
-from models import Links, Menu
-
-MenuRelation = Menu.schema_list(name='Relation', include=('id', 'title', 'icon', 'color'))
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class CreateMenuSchema(Links.schema_create('CreateMenu', )):
+class MenuRelation(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str
+    icon: str
+    color: str | None = None
+
+
+class CreateMenuSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    title: str | None = None
+    href: str | None = None
+    icon: str | None = None
+    is_self: bool | None = None
+    is_vip: bool | None = None
+    desc: str | None = None
+    color: str | None = None
+    order: int | None = None
+    cdn_img_id: int | None = None
+    status: bool | None = None
     menus: list[int] | None = None
 
 
-class FilterSchemaList(Links.schema_filters(include=('title', 'menus', 'status', 'href'))):
+class FilterSchemaList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    title: str | None = None
+    href: str | None = None
+    status: bool | None = None
     menus: list[int] | None = None
 
 
-# class UpdateMenuSchema(Links.schema_update('UpdateMenu', )):
-#     menus: list[int] | None = None
-
-
-class LinkSchemaList(Links.schema_list(exclude='menus', )):
-    menus: List[MenuRelation] = Field(default=[])
-    pass
-
-# class SetMenuSchema(BaseModel):
-#     menus: list[int]
-#     link_id: int
+class LinkSchemaList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str
+    href: str
+    icon: str | None = None
+    is_self: bool
+    is_vip: bool
+    desc: str | None = None
+    color: str | None = None
+    order: int | None = 0
+    cdn_img_id: int | None = None
+    status: bool
+    create_time: datetime | None = None
+    update_time: datetime | None = None
+    menus: list[MenuRelation] = Field(default=[])

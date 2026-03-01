@@ -1,8 +1,8 @@
-from fastapi_tortoise_crud import BaseModel
+from .base import AppModel
 from tortoise import fields
 
 
-class Site(BaseModel):
+class Site(AppModel):
     title = fields.CharField(100, description='网站标题')
     desc = fields.TextField(null=True, description='站点描述')
     keywords = fields.CharField(256, null=True, description='站点关键字')

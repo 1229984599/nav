@@ -1,141 +1,87 @@
-<script lang="tsx" setup>
-import { nextTick, ref } from "vue";
-import { compute, dict, useColumns } from "@fast-crud/fast-crud";
-import { FormScopeContext } from "@fast-crud/fast-crud/dist/d/d/crud";
-import { UseIconForm } from "@/hooks/icon";
-import siteModel from "@/api/site";
-import { ElMessage } from "element-plus";
-import { isMobile } from "@/utils/window";
-
-const formRef = ref();
-const formOptions = ref();
-const { buildFormOptions } = useColumns();
-const iconForm = UseIconForm(siteModel, false);
-const submitLoading = ref(false);
-formOptions.value = buildFormOptions({
-  form: {
-    col: {
-      span: 24,
-    },
-    doSubmit: ({ form }: FormScopeContext) => {
-      submitLoading.value = true;
-      siteModel
-        .update(form)
-        .then(() => {
-          ElMessage.success("修改成功");
-        })
-        .finally(() => (submitLoading.value = false));
-    },
-  },
-  columns: {
-    title: {
-      title: "站点名称",
-      type: "text",
-      form: {
-        rules: [{ required: true, message: "此项必填" }],
-      },
-    },
-    keywords: {
-      title: "关键词",
-      type: "text",
-    },
-    desc: {
-      title: "描述",
-      type: "textarea",
-    },
-    yiyan: {
-      title: "开启一言",
-      type: "dict-switch",
-      form: {
-        col: { span: isMobile.value ? 24 : 6 },
-      },
-      dict: dict({
-        data: [
-          { value: true, label: "是" },
-          { value: false, label: "否" },
-        ],
-      }),
-    },
-    weather: {
-      title: "开启天气",
-      type: "dict-switch",
-      form: {
-        col: { span: isMobile.value ? 24 : 6 },
-      },
-      dict: dict({
-        data: [
-          { value: true, label: "是" },
-          { value: false, label: "否" },
-        ],
-      }),
-    },
-    weather_key: {
-      title: "天气key",
-      type: "text",
-      form: {
-        show: compute((context) => {
-          return context.form.weather;
-        }),
-        helper: {
-          render: () => {
-            return (
-              <a href="https://console.qweather.com/#/apps" target="_blank">
-                点我前往和风天气获取开发者key
-              </a>
-            );
-          },
-        },
-      },
-    },
-    cdn_img_token: {
-      title: "图床token",
-      type: "text",
-      form: {
-        helper: {
-          render: () => {
-            return (
-              <a href="https://img.ink/user/settings.html" target="_blank">
-                点我前往水墨图床获取token
-              </a>
-            );
-          },
-        },
-      },
-    },
-    ...iconForm,
-    copyright: {
-      title: "备案号",
-      type: "text",
-    },
-    footer: {
-      title: "尾部信息",
-      type: "textarea",
-    },
-  },
-});
-// nextTick
-nextTick(async () => {
-  // debugger;
-  const data = await siteModel.get();
-  Object.assign(formRef.value.form, data);
-});
-
-function reset() {
-  formRef.value.reset();
-}
-
-function handleSubmit() {
-  formRef.value.submit();
-}
-</script>
 <template>
-  <fs-page class="h-full mt-3 p-2 w-2/3">
-    <fs-form ref="formRef" v-bind="formOptions" />
-    <div style="margin-top: 10px">
-      <el-button :loading="submitLoading" type="primary" @click="handleSubmit"
-        >修改数据
-      </el-button>
-      <!--        <el-button @click="reset">重置表单</el-button>-->
-    </div>
-  </fs-page>
+  <el-card class="site-card">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" v-loading="loading">
+      <el-form-item label="站点名称" prop="title"><el-input v-model="form.title" /></el-form-item>
+      <el-form-item label="关键词"><el-input v-model="form.keywords" /></el-form-item>
+      <el-form-item label="描述"><el-input v-model="form.desc" type="textarea" :rows="3" /></el-form-item>
+      <el-form-item label="图标"><el-input v-model="form.icon" /></el-form-item>
+      <el-form-item label="颜色"><el-color-picker v-model="form.color" /></el-form-item>
+      <el-form-item label="开启一言"><el-switch v-model="form.yiyan" /></el-form-item>
+      <el-form-item label="开启天气"><el-switch v-model="form.weather" /></el-form-item>
+      <el-form-item label="天气 Key" v-if="form.weather"><el-input v-model="form.weather_key" /></el-form-item>
+      <el-form-item label="图床 Token"><el-input v-model="form.cdn_img_token" /></el-form-item>
+      <el-form-item label="备案号"><el-input v-model="form.copyright" /></el-form-item>
+      <el-form-item label="尾部信息"><el-input v-model="form.footer" type="textarea" :rows="3" /></el-form-item>
+      <el-form-item>
+        <el-button type="primary" :loading="saving" @click="onSubmit">保存</el-button>
+        <el-button @click="onClearCache">清理缓存</el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
 </template>
+
+<script setup lang="ts">
+import { onMounted, reactive, ref } from "vue";
+import { ElMessage } from "element-plus";
+import siteModel from "@/api/site";
+
+const loading = ref(false);
+const saving = ref(false);
+const formRef = ref();
+
+const form = reactive<any>({
+  id: undefined,
+  title: "",
+  keywords: "",
+  desc: "",
+  icon: "",
+  color: "",
+  yiyan: false,
+  weather: false,
+  weather_key: "",
+  cdn_img_token: "",
+  copyright: "",
+  footer: "",
+  status: true,
+});
+
+const rules = {
+  title: [{ required: true, message: "请输入站点名称", trigger: "blur" }],
+};
+
+async function fetchSite() {
+  loading.value = true;
+  try {
+    const data = await siteModel.get();
+    Object.assign(form, data || {});
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function onSubmit() {
+  await formRef.value.validate();
+  saving.value = true;
+  try {
+    await siteModel.update({ ...form });
+    ElMessage.success("保存成功");
+    await fetchSite();
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function onClearCache() {
+  await siteModel.clearCache();
+  ElMessage.success("缓存已清理");
+}
+
+onMounted(fetchSite);
+</script>
+
+<style scoped>
+.site-card {
+  max-width: 900px;
+}
+</style>
+

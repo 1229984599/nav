@@ -1,54 +1,54 @@
-<script lang="ts">
-export default {
-  name: "MIcon",
-};
-</script>
 <script setup lang="ts">
+import { computed } from "vue";
 import { Icon } from "@iconify/vue";
 import { isUrl } from "@/utils/window";
 
 defineOptions({
   name: "MIcon",
 });
-const props = defineProps({
-  icon: {
-    type: [String],
-    default: "",
+
+const props = withDefaults(
+  defineProps<{
+    icon?: string;
+    size?: string | number;
+    color?: string;
+  }>(),
+  {
+    icon: "",
+    size: 16,
+    color: "",
   },
-  size: {
-    typer: [String, Number],
-    default: 16,
-  },
-  color: {
-    type: String,
-    default: "",
-  },
-});
+);
+
+const isImageUrl = computed(() => isUrl(props.icon));
+const hasIcon = computed(() => Boolean(props.icon));
 </script>
 
 <template>
   <img
-    v-if="isUrl(<string>props.icon)"
+    v-if="hasIcon && isImageUrl"
     v-bind="$attrs"
     class="icon-size"
-    :width="size"
+    :width="props.size"
     height="auto"
-    :src="icon"
+    :src="props.icon"
     alt=""
   />
-  <icon
-    v-else
+  <Icon
+    v-else-if="hasIcon"
     v-bind="$attrs"
-    :icon="icon"
+    :icon="props.icon"
     class="icon-size"
-    :width="size"
-    :height="size"
+    :width="props.size"
+    :height="props.size"
   />
+  <span v-else class="icon-size" :style="{ width: `${props.size}px`, display: 'inline-block' }"></span>
 </template>
 
 <style lang="scss" scoped>
 .icon-size {
-  color: v-bind(color);
+  color: v-bind("props.color");
   object-fit: fill;
 }
 </style>
+

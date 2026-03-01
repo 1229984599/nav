@@ -1,4 +1,4 @@
-from fastapi_tortoise_crud import BaseModel
+from .base import AppModel
 from tortoise import fields
 
 __all__ = [
@@ -6,7 +6,7 @@ __all__ = [
 ]
 
 
-class User(BaseModel):
+class User(AppModel):
     username = fields.CharField(64, unique=True, description='用户名')
     password = fields.CharField(64, description='密码')
     nickname = fields.CharField(64, null=True, default='游客')
@@ -19,4 +19,4 @@ class User(BaseModel):
 
     @classmethod
     async def find_by_username(cls, username: str):
-        return await cls.find_one(username=username)
+        return await cls.filter(username=username).first()

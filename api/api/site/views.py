@@ -4,10 +4,10 @@ from fastapi_cache.decorator import cache
 
 from starlette.responses import FileResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-from fastapi_tortoise_crud import BaseApiOut
+from common.response import BaseApiOut
 
 from models import Site
-from .schemas import SiteSchemaUpdate
+from .schemas import SiteSchemaList, SiteSchemaUpdate
 from auth.auth import get_current_user
 from settings import settings
 
@@ -20,11 +20,11 @@ async def handle_update_site(site: SiteSchemaUpdate):
     创更新数据
     """
     first_model = await Site.first()
-    await first_model.update_from_dict(site.dict(exclude_unset=True, exclude={"id"}))
+    await first_model.update_from_dict(site.model_dump(exclude_unset=True, exclude={"id"}))
     await first_model.save()
     # data = await Site.update_one(site.id, site.dict(exclude_unset=True, exclude={"id"}))
     # site_info = await Site.get_or_none(id=data)
-    data = await SiteSchemaUpdate.from_tortoise_orm(first_model)
+    data = SiteSchemaUpdate.model_validate(first_model, from_attributes=True)
     # 清除链接缓存
     await FastAPICache.clear(namespace='site')
     return BaseApiOut(data=data)
@@ -38,8 +38,8 @@ async def handle_get_site():
     获取数据站点
     """
     data = await Site.first()
-    data = await Site.schema_list().from_tortoise_orm(data)
-    return BaseApiOut(data=data)
+    payload = SiteSchemaList.model_validate(data, from_attributes=True)
+    return BaseApiOut(data=payload)
 
 
 # 上传图片的路由和处理函数

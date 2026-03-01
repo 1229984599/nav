@@ -7,11 +7,6 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:D:\python\nav\api\data\data.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.36.0.3/sqlite-jdbc-3.36.0.3.jar</url>
-        </library>
-      </libraries>
     </data-source>
     <data-source source="LOCAL" name="0@localhost" uuid="0cc275cf-a033-44e6-b15e-a9c95c3775a3">
       <driver-ref>redis</driver-ref>

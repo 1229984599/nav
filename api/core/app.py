@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from .exception import register_exception
-from .listeners import register_init
+from .listeners import lifespan
 from .middleware import register_middleware
 from .router import register_router
 from settings import settings
@@ -18,10 +18,8 @@ def create_app() -> FastAPI:
         description=settings.DESCRIPTION,
         docs_url=settings.DOCS_URL,
         redoc_url=settings.REDOC_URL,
+        lifespan=lifespan,
     )
-
-    # 初始化
-    register_init(app)
 
     # 注册路由
     register_router(app)

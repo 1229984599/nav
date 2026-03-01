@@ -3,7 +3,7 @@ from typing import Optional, Dict
 from pathlib import Path
 from functools import lru_cache
 
-from pydantic.v1 import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class APISettings(BaseSettings):
@@ -35,7 +35,7 @@ class APISettings(BaseSettings):
     BASE_PATH: Path = Path(__file__).resolve().parent
 
     # 数据库连接配置
-    DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite://data/data.db')
+    DATABASE_URI: str = os.environ.get('DATABASE_URI', 'sqlite://data/data.db')
 
     # 数据库配置
     DATABASE_CONFIG: Dict = {

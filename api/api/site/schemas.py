@@ -1,10 +1,39 @@
-from models import Site
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
 
 
-class SiteSchemaList(Site.schema_list()):
-    pass
+class SiteSchemaList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str
+    desc: str | None = None
+    keywords: str | None = None
+    icon: str | None = None
+    color: str | None = None
+    footer: str | None = None
+    yiyan: bool
+    weather: bool
+    weather_key: str | None = None
+    copyright: str | None = None
+    cdn_img_token: str | None = None
+    status: bool
+    create_time: datetime | None = None
+    update_time: datetime | None = None
 
 
-class SiteSchemaUpdate(Site.schema_update()):
+class SiteSchemaUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int | str | None = None
-    pass
+    title: str | None = None
+    desc: str | None = None
+    keywords: str | None = None
+    icon: str | None = None
+    color: str | None = None
+    footer: str | None = None
+    yiyan: bool | None = None
+    weather: bool | None = None
+    weather_key: str | None = None
+    copyright: str | None = None
+    cdn_img_token: str | None = None
+    status: bool | None = None

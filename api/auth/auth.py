@@ -3,13 +3,10 @@ from datetime import timedelta
 from core.http_status import HttpStatus
 from fastapi import Security, HTTPException
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearer, JwtAuthorizationCredentials
+import bcrypt
 
 from settings import settings
 from models import User
-
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 access_security = JwtAccessBearerCookie(
     secret_key=settings.SECRET_KEY,
@@ -32,7 +29,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     :param hashed_password: hash后的密码
     :return:
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    plain_password_bytes = plain_password.encode("utf-8")
+    hashed_password_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(plain_password_bytes, hashed_password_bytes)
 
 
 def get_password_hash(password: str) -> str:
@@ -41,7 +40,9 @@ def get_password_hash(password: str) -> str:
     :param password:
     :return:
     """
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+    return hashed_password.decode("utf-8")
 
 
 async def get_current_user(credentials: JwtAuthorizationCredentials = Security(access_security)):

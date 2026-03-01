@@ -65,7 +65,7 @@ class Crud {
    */
   async createAll(data: Array<any>): Promise<any> {
     return await request({
-      url: `${this.baseUrl}/createAll`,
+      url: `${this.baseUrl}/create/all`,
       method: "post",
       data,
     });

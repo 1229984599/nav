@@ -6,12 +6,12 @@ authors = [
     { name = "moxiaoying", email = "768091671@qq.com" },
 ]
 dependencies = [
-    "fastapi-tortoise-crud>=0.1.20",
     "loguru>=0.7.0",
     "httpx>=0.24.1",
     "BeautifulSoup4>=4.12.2",
     "fastapi-jwt>=0.1.12",
-    "passlib>=1.7.4",
+    "pydantic-settings>=2.13.0",
+    "authlib>=1.6.8",
     "bcrypt>=4.0.1",
     "aiosqlite",
     "uvicorn",
@@ -19,6 +19,8 @@ dependencies = [
     "fastapi-cache2>=0.2.1",
     "lxml>=5.1.0",
     "python-multipart>=0.0.9",
+    "tortoise-orm>=1.1.4",
+    "fastapi-pagination>=0.15.10",
 ]
 requires-python = ">=3.10"
 license = { text = "MIT" }

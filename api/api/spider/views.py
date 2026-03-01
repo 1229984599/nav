@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from .utils import get_yiyan, HotSpider, WeatherSpider
-from fastapi_tortoise_crud import BaseApiOut
+from common.response import BaseApiOut
 from fastapi_cache.decorator import cache
 
 spider_router = APIRouter()
