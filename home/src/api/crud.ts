@@ -25,7 +25,7 @@ class Crud {
    * @param filters
    */
   async list(query: QueryParams = {}, filters = {}): Promise<any> {
-    const queryParams = Object.assign(this.defaultQueryParams, query);
+    const queryParams = { ...this.defaultQueryParams, ...query };
     return await request({
       method: "post",
       url: `${this.baseUrl}/list`,

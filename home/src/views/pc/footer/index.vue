@@ -37,7 +37,7 @@ function handleScrollTop() {
     <!--友情链接-->
     <!--    <h2 class="text-zinc-900 font-black py-2">友情链接</h2>-->
     <sub-menu-item :item="item" class="text-lg pb-2" :icon-size="37" />
-    <div class="h-[70px] bg-white flex items-center">
+    <div class="min-h-[70px] py-3 flex items-center" :style="{ backgroundColor: 'var(--nav-card-bg)' }">
       <ul class="flex px-2 gap-x-2 flex-wrap text-sm">
         <li class="list-disc mx-4" v-for="friend in friendStore.friendList">
           <a
@@ -52,13 +52,14 @@ function handleScrollTop() {
 
     <footer class="mt-5">
       <!-- 版权信息 -->
-      <span class="text-zinc-500 text-sm">
+      <span style="color: var(--nav-text-secondary)" class="text-sm">
         <a href="https://beian.miit.gov.cn" target="_blank">{{
           siteStore.siteInfo?.copyright
         }}</a>
       </span>
       <div
-        class="text-zinc-500 text-sm"
+        style="color: var(--nav-text-secondary)"
+        class="text-sm"
         v-html="siteStore.siteInfo?.footer"
       ></div>
     </footer>
@@ -94,7 +95,7 @@ a {
   transition: color 0.35s ease;
 
   &:hover {
-    color: #d32929;
+    color: var(--el-color-primary);
   }
 }
 </style>

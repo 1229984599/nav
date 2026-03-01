@@ -28,13 +28,11 @@ export const useMenuStore = defineStore("menu", {
       const index = this.localMenu.links?.findIndex(
         (item) => item.href === link.href,
       );
-      // 如果没有就添加
       if (index === -1) {
         this.localMenu.links?.push(link);
+      } else {
+        this.localMenu.links[index] = link;
       }
-      // 否则就覆盖
-      // @ts-ignore
-      this.localMenu.links[index] = link;
     },
     deleteLocalLink(link: LinkSchemaList) {
       const index = this.localMenu.links?.findIndex(
@@ -52,6 +50,6 @@ export const useMenuStore = defineStore("menu", {
     },
   },
   persist: {
-    paths: ["menuTree", "localMenu"],
+    paths: ["localMenu"],
   },
 });

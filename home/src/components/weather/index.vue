@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getWeather } from "@/api/spider";
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import MWeatherItem from "./weather-item.vue";
 import { FutureWeatherType, WeatherType } from "@/api/spider/types";
@@ -29,31 +29,31 @@ const bgUrl = computed(() => {
   return `url(https://cdn.qweather.com/img/plugin/190516/bg/view/${icon}.png)`;
 });
 
-navigator.geolocation.getCurrentPosition(
-  async ({ coords }) => {
-    const location = `${coords.longitude},${coords.latitude}`;
-    const data = await getWeather(location);
-    city.value = data.city?.adm2;
-    Object.assign(weather, data.weather);
-    futureWeatherList.value = data.future_weather;
-  },
-  (positionError) => {
-    switch (positionError.code) {
-      case positionError.PERMISSION_DENIED:
-        // 取消定位权限报错
-        // ElMessage.error("定位权限失败，无法获取天气信息");
-        break;
-      case positionError.POSITION_UNAVAILABLE:
-        ElMessage.error("定位失败");
-        break;
-      case positionError.TIMEOUT:
-        ElMessage.error("定位超时");
-        break;
-      default:
-        ElMessage.error("定位未知错误");
-    }
-  },
-);
+onMounted(() => {
+  navigator.geolocation.getCurrentPosition(
+    async ({ coords }) => {
+      const location = `${coords.longitude},${coords.latitude}`;
+      const data = await getWeather(location);
+      city.value = data.city?.adm2;
+      Object.assign(weather, data.weather);
+      futureWeatherList.value = data.future_weather;
+    },
+    (positionError) => {
+      switch (positionError.code) {
+        case positionError.PERMISSION_DENIED:
+          break;
+        case positionError.POSITION_UNAVAILABLE:
+          ElMessage.error("定位失败");
+          break;
+        case positionError.TIMEOUT:
+          ElMessage.error("定位超时");
+          break;
+        default:
+          ElMessage.error("定位未知错误");
+      }
+    },
+  );
+});
 </script>
 
 <template>

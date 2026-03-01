@@ -17,7 +17,16 @@ export const systemRoutes: RouteRecordRaw[] = [
 
 const router: Router = createRouter({
   history: createWebHistory(),
-  routes: [...systemRoutes, ...pcRoutes, ...mobileRoutes],
+  routes: [
+    ...systemRoutes,
+    ...pcRoutes,
+    ...mobileRoutes,
+    {
+      path: "/:pathMatch(.*)*",
+      name: "NotFound",
+      redirect: "/list",
+    },
+  ],
   scrollBehavior(to, from, savedPosition) {
     if (to.hash) {
       return {

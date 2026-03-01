@@ -9,16 +9,23 @@ import MLocalMenu from "@/components/local-menu/index.vue";
 import ItemDesc from "@/views/pc/pages/components/ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
 import { VueDraggable } from "vue-draggable-plus";
+import { useUserStore } from "@/store/user";
+import menu from "@/api/menu";
 
 const routes = useRoute();
 const siteStore = useSiteStore();
 const menuStore = useMenuStore();
+const userStore = useUserStore();
 const linkRef = ref();
+
+const isAdmin = ref(!!userStore.token?.access_token);
+
 function gotoCategory(cat: LocationQueryValue | LocationQueryValue[]) {
-  const el = document.querySelector(`#${cat}`);
+  if (!cat || typeof cat !== 'string') return;
+  const el = document.getElementById(cat);
   if (el) {
     document.querySelector(".right-container")?.scroll({
-      top: el?.offsetTop - 90,
+      top: el.offsetTop - 90,
       behavior: "smooth",
     });
   }
@@ -34,6 +41,24 @@ watch(
   },
 );
 onMounted(() => gotoCategory(routes.query?.cat));
+
+async function handleMenuDragEnd() {
+  // 收集所有菜单（父+子）的新排序
+  const updates: Array<{ id: number; order: number }> = [];
+  menuStore.menuTree.forEach((item, index) => {
+    if (item.id) {
+      updates.push({ id: item.id, order: index });
+    }
+    // 子菜单保持原有顺序不变，只排父级
+  });
+  if (updates.length === 0) return;
+  try {
+    await menu.batchUpdate(updates);
+    await menuStore.getMenuTree();
+  } catch (e) {
+    console.error("菜单排序保存失败", e);
+  }
+}
 </script>
 
 <template>
@@ -101,17 +126,40 @@ onMounted(() => gotoCategory(routes.query?.cat));
         </VueDraggable>
       </template>
     </m-local-menu>
-    <div v-for="menu in menuStore.menuTree">
-      <!--    菜单启用-->
-      <item-category :menu="menu" v-if="menu?.status" />
-      <!--    有子类并且菜单启用-->
-      <div
-        class="gap-y-6"
-        v-if="menu?.children && menu.children.length > 0 && menu?.status"
-      >
-        <item-category :menu="subCat" v-for="subCat in menu.children" />
+
+    <VueDraggable
+      v-if="isAdmin"
+      v-model="menuStore.menuTree"
+      handle=".menu-drag-handle"
+      :animation="150"
+      @end="handleMenuDragEnd"
+    >
+      <div v-for="menuItem in menuStore.menuTree" :key="menuItem.id">
+        <!--    菜单启用-->
+        <item-category :menu="menuItem" v-if="menuItem?.status" />
+        <!--    有子类并且菜单启用-->
+        <div
+          class="gap-y-6"
+          v-if="menuItem?.children && menuItem.children.length > 0 && menuItem?.status"
+        >
+          <item-category :menu="subCat" v-for="subCat in menuItem.children" :key="subCat.id" />
+        </div>
       </div>
-    </div>
+    </VueDraggable>
+
+    <template v-else>
+      <div v-for="menuItem in menuStore.menuTree">
+        <!--    菜单启用-->
+        <item-category :menu="menuItem" v-if="menuItem?.status" />
+        <!--    有子类并且菜单启用-->
+        <div
+          class="gap-y-6"
+          v-if="menuItem?.children && menuItem.children.length > 0 && menuItem?.status"
+        >
+          <item-category :menu="subCat" v-for="subCat in menuItem.children" />
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 

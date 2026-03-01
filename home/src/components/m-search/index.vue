@@ -64,16 +64,18 @@ function handleBaiduSearch(kw: string = "") {
           :highlight-first-item="true"
           :fit-input-width="true"
           :trigger-on-focus="false"
+          :debounce="300"
           v-model="searchQuery"
           :fetch-suggestions="fetchSuggestions"
           @select="handleSuggestionClick"
           placeholder="请输入需要搜索的内容"
-          class="w-full px-2 py-2 md:py-3 bg-white rounded-full"
+          class="w-full px-2 py-2 md:py-3 rounded-full"
+          :style="{ backgroundColor: 'var(--nav-card-bg)' }"
         >
           <template #default="{ item }">
             <div class="flex justify-between">
               <span class="px-2 w-[70%] text-truncate">{{ item.title }}</span>
-              <div class="flex items-center gap-x-1 overflow-hidden">
+              <div class="flex items-center gap-x-1 overflow-hidden" v-if="item.menus?.length">
                 <m-icon
                   :icon="item.menus[0].icon"
                   :color="item.menus[0].color"

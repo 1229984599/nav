@@ -37,6 +37,14 @@ class Links extends Crud {
             data,
         });
     }
+
+    async batchUpdate(data: Array<{ id: number; order: number }>): Promise<any> {
+        return await request({
+            method: "put",
+            url: "/links/update/all",
+            data,
+        });
+    }
 }
 
 export default new Links("/links");

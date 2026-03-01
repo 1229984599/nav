@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import MIcon from "@/components/MIcon.vue";
+import IconSelect from "@/components/icon-select/index.vue";
 import linksModel from "@/api/links";
 import { isMobile, isUrl } from "@/utils/window";
 import { ElMessage, type FormInstance, FormRules } from "element-plus";
@@ -14,26 +15,19 @@ const dialogFormVisible = ref(false);
 const menuStore = useMenuStore();
 const defaultForm = {
   title: "",
-  icon: "",
   href: "",
-  desc: "",
+  icon: "",
   color: "",
+  menus: [] as number[],
+  order: 0,
   is_self: false,
-  menus: [],
+  is_vip: false,
+  status: true,
+  desc: "",
 };
-const form = reactive({
-  title: "",
-  icon: "",
-  href: "",
-  desc: "",
-  color: "",
-  is_self: false,
-  menus: [],
-});
+const form = reactive({ ...defaultForm });
 const spiderLoading = ref(false);
-const isSpiderInfo = computed(() => {
-  return isUrl(form.href);
-});
+const isSpiderInfo = computed(() => isUrl(form.href));
 const ruleFormRef = ref<FormInstance>();
 
 const rules: FormRules = reactive<FormRules>({
@@ -43,36 +37,36 @@ const rules: FormRules = reactive<FormRules>({
   menus: [{ required: true, message: "分类必选", trigger: "blur" }],
 });
 
-/**
- * 根据url采集站点信息
- */
 async function handleSiteInfo() {
+  if (!form.href) {
+    ElMessage.warning("请先输入链接地址");
+    return;
+  }
   spiderLoading.value = true;
   linksModel
     .getSiteInfo(form.href)
     .then((data) => {
-      Object.assign(form, data);
+      if (data.title) form.title = data.title;
+      if (data.icon) form.icon = data.icon;
+      if (data.desc) form.desc = data.desc;
+      ElMessage.success("抓取成功");
     })
     .finally(() => (spiderLoading.value = false));
 }
 
 function handleCancel() {
-  Object.assign(form, defaultForm);
+  Object.assign(form, defaultForm, { menus: [] });
   dialogFormVisible.value = false;
 }
 
-/**
- * 处理提交数据
- */
 async function handleSubmit() {
-  ruleFormRef.value?.validate((valid: boolean) => {
+  ruleFormRef.value?.validate(async (valid: boolean) => {
     if (!valid) return;
-    linksModel.create(form).then(() => {
-      dialogFormVisible.value = false;
-      ElMessage.success("添加成功");
-      Object.assign(form, defaultForm);
-      location.reload();
-    });
+    await linksModel.create({ ...form });
+    dialogFormVisible.value = false;
+    ElMessage.success("添加成功");
+    Object.assign(form, defaultForm, { menus: [] });
+    await menuStore.getMenuTree();
   });
 }
 </script>
@@ -87,24 +81,30 @@ async function handleSubmit() {
 
     <el-dialog
       center
+      append-to-body
       :close-on-click-modal="false"
       v-model="dialogFormVisible"
       :fullscreen="isMobile"
       title="添加网站"
+      width="650px"
     >
-      <el-form :model="form" :rules="rules" ref="ruleFormRef">
-        <el-form-item label="链接" prop="href">
-          <el-input v-model="form.href" />
-        </el-form-item>
+      <el-form :model="form" :rules="rules" ref="ruleFormRef" label-width="80px">
         <el-form-item label="标题" prop="title">
-          <el-input v-model="form.title" />
+          <el-input v-model="form.title" placeholder="链接标题" />
+        </el-form-item>
+        <el-form-item label="链接" prop="href">
+          <div class="flex gap-2 w-full">
+            <el-input v-model="form.href" placeholder="https://" />
+            <el-button
+              type="success"
+              :disabled="!isSpiderInfo"
+              :loading="spiderLoading"
+              @click="handleSiteInfo"
+            >抓取</el-button>
+          </div>
         </el-form-item>
         <el-form-item label="图标" prop="icon">
-          <el-input v-model="form.icon">
-            <template #append>
-              <m-icon :color="form.color" :icon="form.icon" />
-            </template>
-          </el-input>
+          <icon-select v-model="form.icon" :color="form.color" />
         </el-form-item>
         <el-form-item label="颜色" prop="color">
           <el-color-picker
@@ -120,12 +120,9 @@ async function handleSubmit() {
               '#c71585',
               '#c7158577',
             ]"
-          ></el-color-picker>
+          />
         </el-form-item>
-        <el-form-item label="描述" prop="desc">
-          <el-input type="textarea" v-model="form.desc" />
-        </el-form-item>
-        <el-form-item label="分类" prop="menus">
+        <el-form-item label="菜单" prop="menus">
           <el-tree-select
             v-model="form.menus"
             :data="menuStore.menuTree"
@@ -137,7 +134,7 @@ async function handleSubmit() {
             filterable
             clearable
             check-on-click-node
-            placeholder="请选择"
+            placeholder="选择所属菜单"
             class="w-full"
             :props="{
               label: 'title',
@@ -154,37 +151,28 @@ async function handleSubmit() {
             </template>
           </el-tree-select>
         </el-form-item>
+        <el-form-item label="排序" prop="order">
+          <el-input-number v-model="form.order" :min="0" />
+        </el-form-item>
         <el-form-item label="站内打开" prop="is_self">
-          <el-switch
-            v-model="form.is_self"
-            active-text="是"
-            inactive-text="否"
-            inline-prompt
-          />
+          <el-switch v-model="form.is_self" />
+        </el-form-item>
+        <el-form-item label="VIP" prop="is_vip">
+          <el-switch v-model="form.is_vip" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-switch v-model="form.status" />
+        </el-form-item>
+        <el-form-item label="描述" prop="desc">
+          <el-input type="textarea" v-model="form.desc" placeholder="链接描述" />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="flex justify-center">
-          <el-button
-            :disabled="!isSpiderInfo"
-            :loading="spiderLoading"
-            type="success"
-            @click="handleSiteInfo"
-            >采集
-          </el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
-          <el-button type="danger" @click="handleCancel">取消</el-button>
+          <el-button @click="handleCancel">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">保存</el-button>
         </div>
       </template>
     </el-dialog>
   </div>
 </template>
-
-<style lang="scss" scoped>
-:deep(.el-input-group__append) {
-  //border-color: transparent;
-  box-shadow: none;
-  color: unset;
-  background-color: white;
-}
-</style>

@@ -23,6 +23,14 @@ class Menu extends Crud {
       url: "/menu/tree",
     });
   }
+
+  async batchUpdate(data: Array<{ id: number; order: number }>): Promise<any> {
+    return await request({
+      method: "put",
+      url: "/menu/update/all",
+      data,
+    });
+  }
 }
 
 export default new Menu("/menu");

@@ -19,6 +19,7 @@ onMounted(async () => {
   if (isMobile.value) {
     appStore.isCollapse = true;
   }
+  appStore.initDark();
   await siteStore.getSiteInfo();
   useTitle(siteStore.siteInfo.title);
 });
@@ -29,7 +30,8 @@ const isMask = computed(() => {
 
 // 左侧菜单宽带
 const menuWidth = computed(() => {
-  return appStore.isCollapse ? style.hideSideBarWidth : style.sideBarWidth;
+  if (!appStore.isCollapse) return style.sideBarWidth;
+  return isMobile.value ? style.hideSideBarWidth : style.sidebarHideWidth;
 });
 </script>
 
@@ -38,7 +40,7 @@ const menuWidth = computed(() => {
     <!--    左侧菜单-->
     <div class="left-container">
       <el-aside class="menu-side">
-        <m-logo class="bg-white" />
+        <m-logo :style="{ backgroundColor: 'var(--nav-logo-bg)' }" />
         <m-side-menu />
       </el-aside>
     </div>
@@ -60,7 +62,7 @@ const menuWidth = computed(() => {
 
 .common-layout {
   display: flex;
-  background-color: #{$bg};
+  background-color: var(--nav-bg);
 
   .left-container {
     height: 100vh;
@@ -108,8 +110,8 @@ const menuWidth = computed(() => {
         background-color 0.3s;
       box-shadow: none;
       border-bottom-width: 1px;
-      border-bottom-color: rgba(0, 0, 0, 0.06);
-      background: rgba(255, 255, 255, 1);
+      border-bottom-color: var(--nav-border);
+      background: var(--nav-navbar-bg);
     }
   }
 }

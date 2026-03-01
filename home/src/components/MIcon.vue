@@ -11,7 +11,7 @@ const props = defineProps({
     default: "",
   },
   size: {
-    typer: [String, Number],
+    type: [String, Number],
     default: 32,
   },
 });
@@ -25,6 +25,7 @@ const props = defineProps({
       :height="`${size}px`"
       :src="icon"
       alt=""
+      loading="lazy"
     />
     <icon v-else :icon="icon" v-bind="$attrs" :width="size" :height="size" />
   </div>

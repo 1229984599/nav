@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
-import { PropType, ref } from "vue";
+import { PropType } from "vue";
 import { LinkSchemaList } from "@/api/links/types";
-import { useElementSize } from "@vueuse/core";
 
-defineProps({
+const props = defineProps({
   item: {
     type: Object as PropType<LinkSchemaList>,
     required: true,
   },
+  showDragHandle: {
+    type: Boolean,
+    default: false,
+  },
 });
-const itemRef = ref<HTMLElement>();
-const { width } = useElementSize(itemRef);
+
+const emit = defineEmits<{
+  (e: "contextmenu", event: MouseEvent, item: LinkSchemaList): void;
+}>();
+
+function handleContextMenu(event: MouseEvent) {
+  emit("contextmenu", event, props.item);
+}
 </script>
 
 <template>
-  <div class="relative w-full" v-if="item?.status">
+  <div class="relative w-full" v-if="item?.status" @contextmenu="handleContextMenu">
+    <div v-if="showDragHandle" class="link-drag-handle">
+      <m-icon icon="mdi:drag" :size="16" color="#9ca3af" />
+    </div>
     <el-tooltip :disabled="!item?.desc" :hide-after="200" :enterable="false">
       <a
-        ref="itemRef"
         :href="item?.href"
         :target="item?.is_self ? '_self' : '_blank'"
         class="box space-x-2"
@@ -40,13 +51,37 @@ const { width } = useElementSize(itemRef);
         </div>
       </a>
       <template #content>
-        <div :style="{ maxWidth: width + 'px' }">{{ item.desc }}</div>
+        <div style="max-width: 300px">{{ item.desc }}</div>
       </template>
     </el-tooltip>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.link-drag-handle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 10;
+  cursor: move;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: var(--nav-card-bg);
+  border-radius: 4px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover :deep(svg) {
+    color: #4b5563 !important;
+  }
+}
+
+.relative:hover .link-drag-handle {
+  opacity: 1;
+}
+
 .box {
   display: inline-flex;
   width: 100%;
@@ -55,7 +90,7 @@ const { width } = useElementSize(itemRef);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  background-color: white;
+  background-color: var(--nav-card-bg);
   padding: 8px;
   border-radius: 8px;
   transition:
@@ -66,7 +101,7 @@ const { width } = useElementSize(itemRef);
   &:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加底部阴影 */
     transform: translateY(-2px); /* 向上移动一点的动画效果 */
-    color: #cc2b2b;
+    color: var(--el-color-primary);
   }
 
   & > .left-icon {
@@ -100,8 +135,7 @@ const { width } = useElementSize(itemRef);
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
-      --tw-text-opacity: 1;
-      color: rgb(156 163 175 / var(--tw-text-opacity));
+      color: var(--nav-text-secondary);
       font-size: 0.75rem;
     }
   }

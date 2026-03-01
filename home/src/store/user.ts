@@ -15,8 +15,8 @@ export const useUserStore = defineStore("user", {
   },
   actions: {
     async login(loginData: LoginRequestData) {
-      this.userInfo = loginData;
       this.token = await loginApi(loginData);
+      await this.getUserinfo();
     },
     async getUserinfo() {
       this.userInfo = await getUserinfoApi();

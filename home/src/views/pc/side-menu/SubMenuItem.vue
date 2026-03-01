@@ -24,7 +24,8 @@ const props = defineProps({
       :icon="item?.icon"
     />
     <span
-      class="text-zinc-800 font-bold text-ellipsis overflow-clip max-w-[130px]"
+      class="font-bold text-ellipsis overflow-clip max-w-[130px]"
+      style="color: var(--nav-text)"
     >
       {{ item.title }}
     </span>
