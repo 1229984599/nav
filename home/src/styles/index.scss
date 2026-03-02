@@ -38,34 +38,6 @@ $sidebar-hide-width: 64px;
   --nav-logo-bg: #ffffff;
 }
 
-html.dark {
-  --nav-bg: #1a1a2e;
-  --nav-card-bg: #16213e;
-  --nav-text: #e2e8f0;
-  --nav-text-secondary: #94a3b8;
-  --nav-border: rgba(255, 255, 255, 0.08);
-  --nav-navbar-bg: rgba(22, 33, 62, 0.95);
-  --nav-logo-bg: #16213e;
-
-  .el-menu {
-    background-color: var(--nav-card-bg);
-    border-right-color: var(--nav-border);
-  }
-
-  .el-menu-item,
-  .el-sub-menu__title {
-    color: var(--nav-text-secondary);
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-
-  .el-menu-item.is-active {
-    color: var(--el-color-primary);
-  }
-}
-
 html, body, #app {
   width: 100%;
   height: 100%;

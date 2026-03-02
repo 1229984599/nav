@@ -8,6 +8,7 @@ import AppMain from "./app-main/AppMain.vue";
 import { computed, onMounted } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
+import { useBookmarkStore } from "@/store/bookmark";
 import { useTitle } from "@vueuse/core";
 import MSearch from "@/components/m-search/index.vue";
 import MMask from "@/components/m-mask.vue";
@@ -15,11 +16,27 @@ import style from "@/styles/variables.module.scss";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
+const bookmarkStore = useBookmarkStore();
+
+/** 从旧版 localMenu 格式迁移书签数据 */
+function migrateOldBookmarks() {
+  try {
+    const raw = localStorage.getItem("menu");
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed?.localMenu?.links?.length > 0 && bookmarkStore.links.length === 0) {
+      bookmarkStore.migrateFromLegacy(parsed.localMenu.links);
+    }
+  } catch {
+    // 迁移失败不影响正常使用
+  }
+}
+
 onMounted(async () => {
   if (isMobile.value) {
     appStore.isCollapse = true;
   }
-  appStore.initDark();
+  migrateOldBookmarks();
   await siteStore.getSiteInfo();
   useTitle(siteStore.siteInfo.title);
 });

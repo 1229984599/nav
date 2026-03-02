@@ -34,12 +34,6 @@ const siteStore = useSiteStore();
       <m-yiyan v-if="siteStore.siteInfo?.yiyan" />
       <!--      占位，防止个人中心到最前面-->
       <div></div>
-      <m-icon
-        :icon="appStore.isDark ? 'ph:sun-bold' : 'ph:moon-bold'"
-        size="22"
-        class="cursor-pointer hover:text-sky-800 transition-colors mr-2"
-        @click="appStore.toggleDark()"
-      />
       <m-profile class="mr-1" />
     </div>
   </div>

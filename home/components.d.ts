@@ -12,6 +12,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BookmarkGroupDialog: typeof import('./src/components/local-menu/BookmarkGroupDialog.vue')['default']
+    BookmarkSection: typeof import('./src/components/local-menu/BookmarkSection.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -26,9 +28,13 @@ declare module 'vue' {
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
+    ElOption: typeof import('element-plus/es')['ElOption']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
     ElPopover: typeof import('element-plus/es')['ElPopover']
+    ElRadioButton: typeof import('element-plus/es')['ElRadioButton']
+    ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+    ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
@@ -40,7 +46,6 @@ declare module 'vue' {
     IconSelect: typeof import('./src/components/icon-select/index.vue')['default']
     LinkContextMenu: typeof import('./src/components/link-context-menu/index.vue')['default']
     Local: typeof import('./src/components/add-link/local.vue')['default']
-    LocalMenu: typeof import('./src/components/local-menu/index.vue')['default']
     MIcon: typeof import('./src/components/MIcon.vue')['default']
     MLogo: typeof import('./src/components/MLogo.vue')['default']
     MMask: typeof import('./src/components/m-mask.vue')['default']
@@ -60,6 +65,8 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const BookmarkGroupDialog: typeof import('./src/components/local-menu/BookmarkGroupDialog.vue')['default']
+  const BookmarkSection: typeof import('./src/components/local-menu/BookmarkSection.vue')['default']
   const ElAside: typeof import('element-plus/es')['ElAside']
   const ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
   const ElButton: typeof import('element-plus/es')['ElButton']
@@ -74,9 +81,13 @@ declare global {
   const ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
   const ElMenu: typeof import('element-plus/es')['ElMenu']
   const ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
+  const ElOption: typeof import('element-plus/es')['ElOption']
   const ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
   const ElPopover: typeof import('element-plus/es')['ElPopover']
+  const ElRadioButton: typeof import('element-plus/es')['ElRadioButton']
+  const ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
   const ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+  const ElSelect: typeof import('element-plus/es')['ElSelect']
   const ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
   const ElSwitch: typeof import('element-plus/es')['ElSwitch']
   const ElTabPane: typeof import('element-plus/es')['ElTabPane']
@@ -88,7 +99,6 @@ declare global {
   const IconSelect: typeof import('./src/components/icon-select/index.vue')['default']
   const LinkContextMenu: typeof import('./src/components/link-context-menu/index.vue')['default']
   const Local: typeof import('./src/components/add-link/local.vue')['default']
-  const LocalMenu: typeof import('./src/components/local-menu/index.vue')['default']
   const MIcon: typeof import('./src/components/MIcon.vue')['default']
   const MLogo: typeof import('./src/components/MLogo.vue')['default']
   const MMask: typeof import('./src/components/m-mask.vue')['default']

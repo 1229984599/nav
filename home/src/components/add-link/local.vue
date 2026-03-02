@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
-import MIcon from "@/components/MIcon.vue";
+import { computed, nextTick, reactive, ref } from "vue";
+import MIconSelect from "@/components/icon-select/index.vue";
 import linksModel from "@/api/links";
-import { isMobile, isUrl } from "@/utils/window";
-import { ElMessage, type FormInstance, FormRules } from "element-plus";
-import { useMenuStore } from "@/store/menu";
-import { cloneDeep } from "lodash-es";
+import { isUrl } from "@/utils/window";
+import { isMobile } from "@/utils/window";
+import { ElMessage, type FormInstance, type FormRules } from "element-plus";
+import { useBookmarkStore } from "@/store/bookmark";
+import { DEFAULT_GROUP_ID } from "@/types/bookmark";
 
-defineOptions({
-  name: "MLocalAddLink",
-});
+defineOptions({ name: "MLocalAddLink" });
 
-const menuStore = useMenuStore();
-const dialogFormVisible = defineModel();
+const bookmarkStore = useBookmarkStore();
+const dialogFormVisible = defineModel<boolean>();
+
+const editingId = ref("");
 
 const form = reactive({
   title: "",
@@ -20,49 +21,76 @@ const form = reactive({
   href: "",
   desc: "",
   color: "",
-  status: true,
   is_self: false,
+  groupIds: [DEFAULT_GROUP_ID] as string[],
 });
+
 const spiderLoading = ref(false);
-const isSpiderInfo = computed(() => {
-  return isUrl(form.href);
-});
+const isSpiderInfo = computed(() => isUrl(form.href));
 const ruleFormRef = ref<FormInstance>();
 
 const rules: FormRules = reactive<FormRules>({
   title: [{ required: true, message: "请输入标题", trigger: "blur" }],
-  // icon: [{ required: true, message: "请输入图标", trigger: "blur" }],
   href: [{ required: true, message: "请输入链接", trigger: "blur" }],
 });
 
-/**
- * 根据url采集站点信息
- */
+/** 根据url采集站点信息 */
 async function handleSiteInfo() {
   spiderLoading.value = true;
   linksModel
     .getSiteInfo(form.href)
-    .then((data) => {
-      Object.assign(form, data);
+    .then((data: any) => {
+      if (data.title) form.title = data.title;
+      if (data.icon) form.icon = data.icon;
+      if (data.desc) form.desc = data.desc;
+      if (data.color) form.color = data.color;
     })
     .finally(() => (spiderLoading.value = false));
 }
 
+/** 粘贴URL时自动采集 */
+function onHrefPaste() {
+  nextTick(() => {
+    if (isSpiderInfo.value && !form.title) {
+      handleSiteInfo();
+    }
+  });
+}
+
 function handleCancel() {
   ruleFormRef.value?.resetFields();
+  editingId.value = "";
   dialogFormVisible.value = false;
 }
 
-/**
- * 处理提交数据
- */
+/** 提交数据 */
 async function handleSubmit() {
   ruleFormRef.value?.validate((valid: boolean) => {
     if (!valid) return;
-    // 处理添加链接
-    menuStore.addLocalLink(cloneDeep(form));
+    if (editingId.value) {
+      bookmarkStore.updateLink(editingId.value, {
+        href: form.href,
+        title: form.title,
+        icon: form.icon,
+        color: form.color,
+        desc: form.desc,
+        is_self: form.is_self,
+        groupIds: form.groupIds.length > 0 ? form.groupIds : [DEFAULT_GROUP_ID],
+      });
+    } else {
+      bookmarkStore.addLink({
+        href: form.href,
+        title: form.title,
+        icon: form.icon,
+        color: form.color,
+        desc: form.desc,
+        is_self: form.is_self,
+        groupIds: form.groupIds.length > 0 ? form.groupIds : [DEFAULT_GROUP_ID],
+      });
+    }
     ElMessage.success("操作成功");
     ruleFormRef.value?.resetFields();
+    editingId.value = "";
     dialogFormVisible.value = false;
   });
 }
@@ -71,7 +99,22 @@ function handleReset() {
   ruleFormRef.value?.resetFields();
 }
 
-defineExpose({ form, formRef: ruleFormRef.value });
+function setEditData(data: any) {
+  editingId.value = data.id || "";
+  form.href = data.href || "";
+  form.title = data.title || "";
+  form.icon = data.icon || "";
+  form.color = data.color || "";
+  form.desc = data.desc || "";
+  form.is_self = data.is_self || false;
+  form.groupIds = data.groupIds && data.groupIds.length > 0
+    ? [...data.groupIds]
+    : data.groupId
+      ? [data.groupId]
+      : [DEFAULT_GROUP_ID];
+}
+
+defineExpose({ form, formRef: ruleFormRef, setEditData });
 </script>
 
 <template>
@@ -80,49 +123,43 @@ defineExpose({ form, formRef: ruleFormRef.value });
     :close-on-click-modal="false"
     v-model="dialogFormVisible"
     :fullscreen="isMobile"
-    title="网站信息"
+    :title="editingId ? '编辑书签' : '添加书签'"
+    width="500px"
   >
-    <el-form :model="form" :rules="rules" ref="ruleFormRef">
+    <el-form :model="form" :rules="rules" ref="ruleFormRef" label-width="80px">
       <el-form-item label="链接" prop="href">
-        <el-input placeholder="请输入链接" v-model="form.href" />
+        <el-input
+          placeholder="请输入链接"
+          v-model="form.href"
+          @paste="onHrefPaste"
+        />
       </el-form-item>
       <el-form-item label="标题" prop="title">
         <el-input placeholder="请输入标题" v-model="form.title" />
       </el-form-item>
       <el-form-item label="图标" prop="icon">
-        <el-input placeholder="请输入图标" v-model="form.icon">
-          <template #append>
-            <m-icon :color="form.color" :icon="form.icon" />
-          </template>
-          <template #suffix>
-            <a
-              href="https://icon-sets.iconify.design/?query=logo"
-              target="_blank"
-              >查看图标
-            </a>
-          </template>
-        </el-input>
+        <m-icon-select v-model="form.icon" :color="form.color" />
       </el-form-item>
       <el-form-item label="颜色" prop="color">
         <el-color-picker
           size="large"
           v-model="form.color"
-          @active-change="
-            (color: string) => {
-              form.color = color;
-            }
-          "
+          @active-change="(color: string) => (form.color = color)"
           :predefine="[
-            '#ff4500',
-            '#ff8c00',
-            '#ffd700',
-            '#90ee90',
-            '#00ced1',
-            '#1e90ff',
-            '#c71585',
-            '#c7158577',
+            '#ff4500', '#ff8c00', '#ffd700', '#90ee90',
+            '#00ced1', '#1e90ff', '#c71585', '#c7158577',
           ]"
-        ></el-color-picker>
+        />
+      </el-form-item>
+      <el-form-item label="分组" prop="groupIds">
+        <el-select v-model="form.groupIds" placeholder="选择分组" multiple collapse-tags collapse-tags-tooltip>
+          <el-option
+            v-for="g in bookmarkStore.sortedGroups"
+            :key="g.id"
+            :label="g.name"
+            :value="g.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="描述" prop="desc">
         <el-input
@@ -156,12 +193,3 @@ defineExpose({ form, formRef: ruleFormRef.value });
     </template>
   </el-dialog>
 </template>
-
-<style lang="scss" scoped>
-:deep(.el-input-group__append) {
-  //border-color: transparent;
-  box-shadow: none;
-  color: unset;
-  background-color: white;
-}
-</style>
