@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, h, reactive, ref } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import { NButton, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns } from 'naive-ui';
 import { Icon } from '@iconify/vue';
-import { fetchFriendList, fetchFriendCreate, fetchFriendUpdate, fetchFriendDelete, fetchFriendSiteInfo } from '@/service/api';
+import { useDraggable } from 'vue-draggable-plus';
+import { fetchFriendList, fetchFriendCreate, fetchFriendUpdate, fetchFriendDelete, fetchFriendSiteInfo, fetchFriendBatchUpdate } from '@/service/api';
 
 const loading = ref(false);
 const tableData = ref<Api.Friend.FriendItem[]>([]);
@@ -23,6 +24,44 @@ const statusOptions = [
   { label: '禁用', value: false }
 ];
 
+// Drag sort
+const tableRef = ref<InstanceType<typeof NDataTable> | null>(null);
+
+const sortable = useDraggable<Api.Friend.FriendItem>(ref(undefined), tableData, {
+  animation: 150,
+  handle: '.drag-handle',
+  immediate: false,
+  onEnd: handleDragEnd
+});
+
+function initSortable() {
+  nextTick(() => {
+    const el = tableRef.value?.$el as HTMLElement | undefined;
+    if (!el) return;
+    const tbody = el.querySelector('tbody') as HTMLElement | null;
+    if (tbody) {
+      try { sortable.destroy(); } catch { /* ignore */ }
+      sortable.start(tbody);
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  try { sortable.destroy(); } catch { /* ignore */ }
+});
+
+async function handleDragEnd() {
+  const updates = tableData.value.map((item, index) => ({
+    id: item.id,
+    order: index
+  }));
+  tableData.value.forEach((item, index) => {
+    item.order = index;
+  });
+  await fetchFriendBatchUpdate(updates);
+  window.$message?.success('排序已保存');
+}
+
 async function loadData() {
   loading.value = true;
   const filterData: any = {};
@@ -31,11 +70,13 @@ async function loadData() {
 
   const { data, error } = await fetchFriendList(
     { page: pagination.page, size: pagination.pageSize },
-    filterData
+    filterData,
+    'order'
   );
   if (!error && data) {
     tableData.value = data.items;
     pagination.total = data.total;
+    initSortable();
   }
   loading.value = false;
 }
@@ -100,6 +141,16 @@ async function handleFormSpider() {
 }
 
 const columns = computed<DataTableColumns<Api.Friend.FriendItem>>(() => [
+  {
+    title: '',
+    key: 'drag',
+    width: 40,
+    render() {
+      return h('div', { class: 'drag-handle cursor-move flex-center' }, [
+        h(Icon, { icon: 'mdi:drag', width: '1.2em', height: '1.2em', class: 'text-gray-400' })
+      ]);
+    }
+  },
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60 },
   { title: '标题', key: 'title', width: 150, ellipsis: { tooltip: true } },
@@ -164,6 +215,7 @@ loadData();
     </NSpace>
 
     <NDataTable
+      ref="tableRef"
       v-model:checked-row-keys="checkedRowKeys"
       :columns="columns"
       :data="tableData"

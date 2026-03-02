@@ -6,7 +6,7 @@ from tortoise.transactions import in_transaction
 from common.validation import parse_order_by as parse_order_by_with_whitelist
 from common.validation import validate_batch_size as validate_batch_size_with_limit
 from models import Links, Menu, Site
-from .schemas import CreateMenuSchema, LinkSchemaList
+from .schemas import CreateMenuSchema, LinkSchemaList, LinkUpdateAllSchema
 from .utils import CdnImg
 
 LINK_TEXT_FILTER_FIELDS = {"title", "href"}
@@ -80,7 +80,7 @@ async def create_links_batch(items: list[CreateMenuSchema]) -> None:
                     await link.menus.add(*menus)
 
 
-async def update_links_batch(items: list[LinkSchemaList]) -> None:
+async def update_links_batch(items: list[LinkUpdateAllSchema]) -> None:
     validate_batch_size(items, "批量更新")
     item_payloads: list[dict[str, Any]] = []
     link_ids: list[int] = []
@@ -94,7 +94,7 @@ async def update_links_batch(items: list[LinkSchemaList]) -> None:
         link_ids.append(item_id)
         menus = payload.get("menus")
         if isinstance(menus, list):
-            menu_id_set.update(menu.id for menu in menus)
+            menu_id_set.update(menus)
         item_payloads.append(payload)
 
     link_map = {link.id: link for link in await Links.filter(id__in=link_ids)}
@@ -109,7 +109,7 @@ async def update_links_batch(items: list[LinkSchemaList]) -> None:
             if isinstance(menus, list) and item_id in link_map:
                 link = link_map[item_id]
                 await link.menus.clear()
-                new_menus = [menu_map[menu.id] for menu in menus if menu.id in menu_map]
+                new_menus = [menu_map[mid] for mid in menus if mid in menu_map]
                 if new_menus:
                     await link.menus.add(*new_menus)
 

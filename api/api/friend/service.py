@@ -5,7 +5,7 @@ from tortoise.transactions import in_transaction
 from common.validation import parse_order_by as parse_order_by_with_whitelist
 from common.validation import validate_batch_size as validate_batch_size_with_limit
 from models import Friend
-from .schemas import FriendCreateSchema, FriendListSchema
+from .schemas import FriendCreateSchema, FriendUpdateAllSchema
 
 FRIEND_ORDER_FIELDS = {
     "id",
@@ -35,7 +35,7 @@ async def create_friends_batch(items: list[FriendCreateSchema]) -> None:
             await Friend.bulk_create(friends, ignore_conflicts=False)
 
 
-async def update_friends_batch(items: list[FriendListSchema]) -> None:
+async def update_friends_batch(items: list[FriendUpdateAllSchema]) -> None:
     validate_friend_batch_size(items, "批量更新")
     async with in_transaction():
         for item in items:

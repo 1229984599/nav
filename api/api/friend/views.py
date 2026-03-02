@@ -6,7 +6,7 @@ from auth.auth import get_current_user
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Friend
-from .schemas import FriendCreateSchema, FriendFilterSchema, FriendListSchema
+from .schemas import FriendCreateSchema, FriendFilterSchema, FriendListSchema, FriendUpdateAllSchema
 from .service import create_friends_batch, parse_friend_order_by, update_friends_batch
 from ..links.utils import get_site_info
 
@@ -59,7 +59,7 @@ async def handle_friend_update(item_id: str, item: FriendCreateSchema):
 
 
 @friend_router.put("/update/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
-async def handle_friend_update_all(items: list[FriendListSchema]):
+async def handle_friend_update_all(items: list[FriendUpdateAllSchema]):
     await update_friends_batch(items)
     return BaseApiOut(message="批量更新成功")
 

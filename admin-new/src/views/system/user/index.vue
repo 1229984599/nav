@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, h, reactive, ref } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import { NButton, NDataTable, NForm, NFormItem, NInput, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns } from 'naive-ui';
-import { fetchUserList, fetchUserCreate, fetchUserUpdate, fetchUserDelete } from '@/service/api';
+import { Icon } from '@iconify/vue';
+import { useDraggable } from 'vue-draggable-plus';
+import { fetchUserList, fetchUserCreate, fetchUserUpdate, fetchUserDelete, fetchUserBatchUpdate } from '@/service/api';
 
 const loading = ref(false);
 const tableData = ref<Api.SystemUser.UserItem[]>([]);
@@ -26,6 +28,44 @@ const statusOptions = [
   { label: '禁用', value: false }
 ];
 
+// Drag sort
+const tableRef = ref<InstanceType<typeof NDataTable> | null>(null);
+
+const sortable = useDraggable<Api.SystemUser.UserItem>(ref(undefined), tableData, {
+  animation: 150,
+  handle: '.drag-handle',
+  immediate: false,
+  onEnd: handleDragEnd
+});
+
+function initSortable() {
+  nextTick(() => {
+    const el = tableRef.value?.$el as HTMLElement | undefined;
+    if (!el) return;
+    const tbody = el.querySelector('tbody') as HTMLElement | null;
+    if (tbody) {
+      try { sortable.destroy(); } catch { /* ignore */ }
+      sortable.start(tbody);
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  try { sortable.destroy(); } catch { /* ignore */ }
+});
+
+async function handleDragEnd() {
+  const updates = tableData.value.map((item, index) => ({
+    id: item.id,
+    order: index
+  }));
+  tableData.value.forEach((item, index) => {
+    item.order = index;
+  });
+  await fetchUserBatchUpdate(updates);
+  window.$message?.success('排序已保存');
+}
+
 async function loadData() {
   loading.value = true;
   const filterData: any = {};
@@ -39,6 +79,7 @@ async function loadData() {
   if (!error && data) {
     tableData.value = data.items;
     pagination.total = data.total;
+    initSortable();
   }
   loading.value = false;
 }
@@ -97,6 +138,16 @@ async function handleBatchDelete() {
 }
 
 const columns = computed<DataTableColumns<Api.SystemUser.UserItem>>(() => [
+  {
+    title: '',
+    key: 'drag',
+    width: 40,
+    render() {
+      return h('div', { class: 'drag-handle cursor-move flex-center' }, [
+        h(Icon, { icon: 'mdi:drag', width: '1.2em', height: '1.2em', class: 'text-gray-400' })
+      ]);
+    }
+  },
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60 },
   { title: '用户名', key: 'username', width: 150 },
@@ -158,6 +209,7 @@ loadData();
     </NSpace>
 
     <NDataTable
+      ref="tableRef"
       v-model:checked-row-keys="checkedRowKeys"
       :columns="columns"
       :data="tableData"

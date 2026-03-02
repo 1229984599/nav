@@ -50,3 +50,19 @@ class LinkSchemaList(BaseModel):
     create_time: datetime | None = None
     update_time: datetime | None = None
     menus: list[MenuRelation] = Field(default=[])
+
+
+class LinkUpdateAllSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str | None = None
+    href: str | None = None
+    icon: str | None = None
+    is_self: bool | None = None
+    is_vip: bool | None = None
+    desc: str | None = None
+    color: str | None = None
+    order: int | None = None
+    cdn_img_id: int | None = None
+    status: bool | None = None
+    menus: list[int] | None = None

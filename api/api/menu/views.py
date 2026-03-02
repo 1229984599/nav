@@ -13,7 +13,7 @@ from .service import (
     parse_menu_order_by,
     update_menus_batch,
 )
-from .schemas import MenuSchemaFilters, MenuSchemaList, MenuSchemaUpdate
+from .schemas import MenuSchemaFilters, MenuSchemaList, MenuSchemaUpdate, MenuUpdateAllSchema
 
 menu_router = APIRouter()
 
@@ -73,7 +73,7 @@ async def handle_menu_update(item_id: str, item: MenuSchemaUpdate):
 
 
 @menu_router.put("/update/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
-async def handle_menu_update_all(items: list[MenuSchemaList]):
+async def handle_menu_update_all(items: list[MenuUpdateAllSchema]):
     await clear_menu_cache()
     await update_menus_batch(items)
     return BaseApiOut(message="批量更新成功")
@@ -109,7 +109,7 @@ async def get_menu_tree(menu_item: Menu, user) -> dict:
         "create_time": menu_item.create_time,
         "parent_id": menu_item.parent_id,
     }
-    children = await menu_item.children
+    children = await menu_item.children.all().order_by("order")
     if children:
         menu_tree["children"] = [await get_menu_tree(child, user) for child in children]
     return menu_tree

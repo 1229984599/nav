@@ -6,7 +6,7 @@ from tortoise.transactions import in_transaction
 from common.validation import parse_order_by as parse_order_by_with_whitelist
 from common.validation import validate_batch_size as validate_batch_size_with_limit
 from models import Menu
-from .schemas import MenuSchemaList, MenuSchemaUpdate
+from .schemas import MenuSchemaUpdate, MenuUpdateAllSchema
 
 MENU_ORDER_FIELDS = {
     "id",
@@ -52,7 +52,7 @@ async def create_menus_batch(items: list[MenuSchemaUpdate]) -> None:
             await Menu.bulk_create(menus, ignore_conflicts=False)
 
 
-async def update_menus_batch(items: list[MenuSchemaList]) -> None:
+async def update_menus_batch(items: list[MenuUpdateAllSchema]) -> None:
     validate_menu_batch_size(items, "批量更新")
     async with in_transaction():
         for item in items:

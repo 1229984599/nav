@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, h, reactive, ref } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import type { TreeSelectRenderPrefix } from 'naive-ui';
 import { NButton, NDataTable, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, NTreeSelect, NColorPicker, NUpload, type DataTableColumns, type UploadFileInfo } from 'naive-ui';
 import { Icon } from '@iconify/vue';
-import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchMenuTree } from '@/service/api';
+import { useDraggable } from 'vue-draggable-plus';
+import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchMenuTree } from '@/service/api';
 
 // State
 const loading = ref(false);
@@ -31,6 +32,44 @@ const statusOptions = [
   { label: '启用', value: true },
   { label: '禁用', value: false }
 ];
+
+// Drag sort
+const tableRef = ref<InstanceType<typeof NDataTable> | null>(null);
+
+const sortable = useDraggable<Api.Links.LinkItem>(ref(undefined), tableData, {
+  animation: 150,
+  handle: '.drag-handle',
+  immediate: false,
+  onEnd: handleDragEnd
+});
+
+function initSortable() {
+  nextTick(() => {
+    const el = tableRef.value?.$el as HTMLElement | undefined;
+    if (!el) return;
+    const tbody = el.querySelector('tbody') as HTMLElement | null;
+    if (tbody) {
+      try { sortable.destroy(); } catch { /* ignore */ }
+      sortable.start(tbody);
+    }
+  });
+}
+
+onBeforeUnmount(() => {
+  try { sortable.destroy(); } catch { /* ignore */ }
+});
+
+async function handleDragEnd() {
+  const updates = tableData.value.map((item, index) => ({
+    id: item.id,
+    order: index
+  }));
+  tableData.value.forEach((item, index) => {
+    item.order = index;
+  });
+  await fetchLinkBatchUpdate(updates);
+  window.$message?.success('排序已保存');
+}
 
 // Load menu tree
 async function loadMenuTree() {
@@ -69,11 +108,13 @@ async function loadData() {
 
   const { data, error } = await fetchLinkList(
     { page: pagination.page, size: pagination.pageSize },
-    filterData
+    filterData,
+    'order'
   );
   if (!error && data) {
     tableData.value = data.items;
     pagination.total = data.total;
+    initSortable();
   }
   loading.value = false;
 }
@@ -173,6 +214,16 @@ async function handleFormSpider() {
 
 // Columns
 const columns = computed<DataTableColumns<Api.Links.LinkItem>>(() => [
+  {
+    title: '',
+    key: 'drag',
+    width: 40,
+    render() {
+      return h('div', { class: 'drag-handle cursor-move flex-center' }, [
+        h(Icon, { icon: 'mdi:drag', width: '1.2em', height: '1.2em', class: 'text-gray-400' })
+      ]);
+    }
+  },
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 60 },
   { title: '标题', key: 'title', width: 150, ellipsis: { tooltip: true } },
@@ -289,6 +340,7 @@ loadMenuTree();
 
     <!-- Table -->
     <NDataTable
+      ref="tableRef"
       v-model:checked-row-keys="checkedRowKeys"
       :columns="columns"
       :data="tableData"

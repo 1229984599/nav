@@ -25,6 +25,11 @@ export function fetchMenuUpdate(id: number, data: Api.NavMenu.MenuCreate) {
   return request({ url: `/menu/${id}`, method: 'put', data });
 }
 
+/** Batch update menus (for drag sort) */
+export function fetchMenuBatchUpdate(data: Array<{ id: number; order: number }>) {
+  return request({ url: '/menu/update/all', method: 'put', data });
+}
+
 /** Delete menus by ids */
 export function fetchMenuDelete(ids: string) {
   return request({ url: `/menu/${ids}`, method: 'delete' });

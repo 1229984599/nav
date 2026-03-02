@@ -151,6 +151,7 @@ declare namespace Api {
       nickname?: string;
       status: boolean;
       is_super: boolean;
+      order?: number;
       create_time?: string;
       update_time?: string;
     }
@@ -167,6 +168,7 @@ declare namespace Api {
       nickname?: string;
       status?: boolean;
       password?: string;
+      order?: number;
     }
 
     interface UserFilter {

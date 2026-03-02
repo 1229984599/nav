@@ -11,6 +11,7 @@ class UserList(BaseModel):
     nickname: str | None = None
     status: bool
     is_super: bool
+    order: int | None = 0
     create_time: datetime | None = None
     update_time: datetime | None = None
 
@@ -20,6 +21,7 @@ class UserUpdate(BaseModel):
     nickname: str | None = None
     status: bool | None = None
     password: str | None = None
+    order: int | None = None
 
 
 class UserFilter(BaseModel):

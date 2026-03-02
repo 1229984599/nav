@@ -6,7 +6,7 @@ from auth.auth import get_current_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Links, User
-from .schemas import CreateMenuSchema, FilterSchemaList, LinkSchemaList
+from .schemas import CreateMenuSchema, FilterSchemaList, LinkSchemaList, LinkUpdateAllSchema
 from .service import (
     attach_link_menus,
     build_link_search_filters,
@@ -83,7 +83,7 @@ async def handle_link_update(item_id: str, item: CreateMenuSchema):
 
 
 @link_router.put("/update/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
-async def handle_link_update_all(items: list[LinkSchemaList]):
+async def handle_link_update_all(items: list[LinkUpdateAllSchema]):
     await clear_link_cache()
     await update_links_batch(items)
     return BaseApiOut(message="批量更新成功")

@@ -44,6 +44,11 @@ export function fetchLinkSyncCdn(url: string, linkId?: number) {
   return request({ url: '/links/sync_cdn', method: 'post', params: { url, link_id: linkId } });
 }
 
+/** Batch update links (for drag sort) */
+export function fetchLinkBatchUpdate(data: Array<{ id: number; order: number }>) {
+  return request({ url: '/links/update/all', method: 'put', data });
+}
+
 /** Sync uploaded file to CDN */
 export function fetchLinkSyncCdnFile(file: File, linkId?: number) {
   const formData = new FormData();

@@ -34,6 +34,11 @@ export function fetchFriendDelete(ids: string) {
   return request({ url: `/friend/${ids}`, method: 'delete' });
 }
 
+/** Batch update friends (for drag sort) */
+export function fetchFriendBatchUpdate(data: Array<{ id: number; order: number }>) {
+  return request({ url: '/friend/update/all', method: 'put', data });
+}
+
 /** Spider site info */
 export function fetchFriendSiteInfo(url: string) {
   return request<Api.Links.SiteInfo>({ url: '/friend/siteinfo', method: 'post', params: { url } });

@@ -29,3 +29,15 @@ class FriendFilterSchema(BaseModel):
     title: str | None = None
     status: bool | None = None
 
+
+class FriendUpdateAllSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    title: str | None = None
+    href: str | None = None
+    icon: str | None = None
+    desc: str | None = None
+    color: str | None = None
+    order: int | None = None
+    status: bool | None = None
+
