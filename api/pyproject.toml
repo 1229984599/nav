@@ -1,6 +1,6 @@
 [project]
-#name = "api"
-#version = "0.1.0"
+name = "api"
+version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
     { name = "moxiaoying", email = "768091671@qq.com" },
@@ -14,6 +14,8 @@ dependencies = [
     "authlib>=1.6.8",
     "bcrypt>=4.0.1",
     "aiosqlite",
+    "asyncmy>=0.2.9",
+    "asyncpg>=0.30.0",
     "uvicorn",
     "python-dotenv",
     "fastapi-cache2>=0.2.1",

@@ -34,7 +34,7 @@ services:
         restart: unless-stopped
 
 ```
-> 默认账号:admin 密码:admin
+> 默认账号:admin 密码:admina
 ### 项目截图
 #### 前端页面
 ![img.png](img/home.png)

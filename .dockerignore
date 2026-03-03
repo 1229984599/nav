@@ -1,3 +1,29 @@
-admin/node_modules
-home/node_modules
+# Node
+**/node_modules
+home/dist
+admin/dist
+
+# Python
+**/__pycache__
 api/__pypackages__
+api/data/*.db
+api/data/*.db-shm
+api/data/*.db-wal
+**/*.pyc
+
+# IDE & OS
+.idea
+.vscode
+**/.DS_Store
+nul
+
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose.yml
+Dockerfile
+
+# Misc
+*.md
