@@ -18,9 +18,9 @@ async def handle_yiyan_spider():
 
 # 每小时更新一次
 @spider_router.get("/hot", response_model=BaseApiOut)
-# 每60分钟更新一次热榜数据
-# @cache(expire=60 * 60)
-async def handle_hot_spider(data=Depends(hot_spider.get_hot_list)):
+@cache(expire=60 * 60, namespace='hot')
+async def handle_hot_spider(name: str = '百度'):
+    data = await hot_spider.get_hot_list(name)
     if not data:
         return BaseApiOut(code=400, message=f"获取热榜失败")
     return BaseApiOut(data=data)

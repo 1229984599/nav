@@ -1,6 +1,5 @@
 import asyncio
 import httpx
-from bs4 import BeautifulSoup
 from fastapi import HTTPException
 from models import Site
 
@@ -28,65 +27,36 @@ class BaseSpider:
 
 class HotSpider(BaseSpider):
 
-    async def _get_juejin_hot_list(self):
+    async def get_hot_list(self, name: str = '百度'):
         """
-        获取掘金热门文章
+        通过pearktrue API获取热榜
+        :param name: 平台中文名，如 百度、哔哩哔哩、微博 等
         :return:
         """
-        res = await self.session.get('https://api.juejin.cn/content_api/v1/content/article_rank', params={
-            'category_id': '1',
-            'type': 'hot',
-        })
-        data = res.json()
-        if data['err_no'] == 0:
-            return map(lambda item: {
-                'hot': item['content_counter']['hot_rank'],
-                'title': item['content']['title'],
-                'url': f"https://juejin.cn/post/{item['content']['content_id']}",
-            }, data['data'])
-        else:
+        try:
+            res = await self.session.get(
+                'https://api.pearktrue.cn/api/dailyhot/',
+                params={'title': name},
+                timeout=10,
+            )
+            data = res.json()
+            if data.get('code') == 200 and data.get('data'):
+                return {
+                    'name': data.get('name', ''),
+                    'updateTime': data.get('updateTime', ''),
+                    'data': [
+                        {
+                            'title': item.get('title', ''),
+                            'url': item.get('url', ''),
+                            'hot': item.get('hot', ''),
+                            'desc': item.get('desc', ''),
+                            'mobileUrl': item.get('mobileUrl', ''),
+                        }
+                        for item in data['data']
+                    ],
+                }
             return None
-
-    async def _get_52pojie_hot(self):
-        """
-        获取吾爱破解热帖
-        :return:
-        """
-        data_list = []
-        resp = await self.session.get('https://www.52pojie.cn/forum.php?mod=guide&view=hot')
-        soup = BeautifulSoup(resp.text, 'lxml')
-        item_list = soup.select('#threadlist table tbody')
-        for item in item_list:
-            hot_item = item.select_one('.num em')
-            title_item = item.select_one('.common .xst')
-            data_list.append({
-                'hot': hot_item.text if hot_item else '',
-                'title': title_item.text if title_item else '',
-                'url': f"https://www.52pojie.cn/{title_item.get('href')}" if title_item else '',
-            })
-        return data_list
-
-    # @ignore_async_errors
-    async def get_hot_list(self, name: str = 'JueJinHot'):
-        if name == 'JueJinHot':
-            return await self._get_juejin_hot_list()
-        if name == '52PoJieHot':
-            return await self._get_52pojie_hot()
-        return await self._get_gumeng_hot(name)
-
-    async def _get_gumeng_hot(self, name):
-        """
-        通过故梦api获取热榜
-        :param name: 站点名称：如bilibili
-        :return:
-        """
-        res = await self.session.get(f"https://api.gumengya.com/Api/{name}", params={
-            'format': 'json',
-        })
-        data = res.json()
-        if data['code'] == 200:
-            return data['data']
-        else:
+        except Exception:
             return None
 
 

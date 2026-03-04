@@ -1,7 +1,7 @@
 import fetchJsonp from "fetch-jsonp";
 import { ElMessage } from "element-plus";
 import { request } from "@/utils/request";
-import { WeatherRespType } from "@/api/spider/types";
+import { WeatherRespType, HotListResponse } from "@/api/spider/types";
 import { sample } from "lodash-es";
 
 // 通过fetchJsonp库来实现跨域请求
@@ -52,41 +52,26 @@ export async function getBaiduSuggestions(query: string) {
 }
 
 /**
- *  获取每日榜单（通过故梦api）
- * @param name
+ *  获取每日榜单（通过后端pearktrue API）
+ * @param name 平台中文名，如 百度、哔哩哔哩、微博
  */
-export async function getHotList(name: string = "BaiduHot"): Promise<any> {
-  if (["JueJinHot", "52PoJieHot"].includes(name)) {
-    return await getHotBySpider(name);
-  }
-  const res = await getDataList(
-    `https://api.gumengya.com/Api/${name}?format=jsonp`,
-  );
-  if (res.code === 200) {
-    return res.data;
-  }
-  ElMessage.error(`${name}\t获取热搜失败`);
-}
-
-/**
- * 获取每日一言
- */
-export async function getYiyan(): Promise<string> {
-  const { text } = await getHotList("YiYan");
-  return text;
-}
-
-/**
- * 获取服务器榜单：（掘金、52pojie）
- */
-export async function getHotBySpider(name: string): Promise<any> {
+export async function getHotList(name: string = "百度"): Promise<HotListResponse | null> {
   return await request({
     url: "/spider/hot",
     method: "get",
-    params: {
-      name,
-    },
+    params: { name },
   });
+}
+
+/**
+ * 获取每日一言（通过后端 hitokoto）
+ */
+export async function getYiyan(): Promise<string> {
+  const res: any = await request({
+    url: "/spider/yiyan",
+    method: "get",
+  });
+  return res?.hitokoto || '';
 }
 
 /**

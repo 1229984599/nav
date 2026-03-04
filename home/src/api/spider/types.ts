@@ -2,8 +2,16 @@
 export interface HotItemType {
   hot: string;
   title: string;
-  updatetime: string;
   url: string;
+  desc: string;
+  mobileUrl: string;
+}
+
+// 热榜响应
+export interface HotListResponse {
+  name: string;
+  updateTime: string;
+  data: HotItemType[];
 }
 
 // 和风天气现在数据

@@ -49,7 +49,7 @@ function getDataList() {
     isLoading.value = true;
     getHotList(props.activeName)
       .then((res) => {
-        dataList.value = res;
+        dataList.value = res?.data || [];
         resolve(res);
       })
       .finally(() => {
