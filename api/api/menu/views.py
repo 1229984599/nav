@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+import json
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
@@ -123,3 +126,80 @@ async def handle_get_menu_tree(user: User = Depends(is_login)):
         if not menu_item.parent:
             menu_tree.append(await get_menu_tree(menu_item, user))
     return BaseApiOut(data=menu_tree)
+
+
+def _serialize_menu(menu, parent_title=None):
+    return {
+        "title": menu.title,
+        "icon": menu.icon,
+        "color": menu.color,
+        "order": menu.order,
+        "is_vip": menu.is_vip,
+        "status": menu.status,
+        "parent_title": parent_title,
+    }
+
+
+@menu_router.get("/export", dependencies=[Depends(get_current_user)])
+async def handle_menu_export():
+    """导出所有菜单数据为JSON"""
+    menus = await Menu.all().order_by("order").select_related("parent")
+    data = []
+    for menu in menus:
+        parent_title = menu.parent.title if menu.parent else None
+        data.append(_serialize_menu(menu, parent_title))
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(
+        content=content,
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=menus.json"},
+    )
+
+
+@menu_router.post("/import", dependencies=[Depends(get_current_user)])
+async def handle_menu_import(file: UploadFile = File(...)):
+    """从JSON文件导入菜单数据"""
+    content = await file.read()
+    try:
+        items = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="JSON格式错误")
+    if not isinstance(items, list):
+        raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
+
+    created = 0
+    skipped = 0
+
+    # 第一遍：创建所有菜单（不设置parent）
+    for item in items:
+        title = item.get("title")
+        if not title:
+            skipped += 1
+            continue
+        exists = await Menu.filter(title=title).first()
+        if exists:
+            skipped += 1
+            continue
+        await Menu.create(
+            title=title,
+            icon=item.get("icon", "ic:round-menu"),
+            color=item.get("color"),
+            order=item.get("order", 0),
+            is_vip=item.get("is_vip", False),
+            status=item.get("status", True),
+        )
+        created += 1
+
+    # 第二遍：设置父级关系
+    for item in items:
+        parent_title = item.get("parent_title")
+        if not parent_title:
+            continue
+        menu = await Menu.filter(title=item.get("title")).first()
+        parent = await Menu.filter(title=parent_title).first()
+        if menu and parent:
+            menu.parent_id = parent.id
+            await menu.save()
+
+    await clear_menu_cache()
+    return BaseApiOut(data={"created": created, "skipped": skipped})

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import type { TreeSelectRenderPrefix } from 'naive-ui';
-import { NButton, NDataTable, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, NTreeSelect, NColorPicker, NUpload, type DataTableColumns, type UploadFileInfo } from 'naive-ui';
+import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, NTreeSelect, NUpload, type DataTableColumns, type UploadFileInfo } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
-import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchMenuTree } from '@/service/api';
+import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchLinkSyncCdnBatch, fetchLinkImport, fetchMenuTree } from '@/service/api';
+import { getServiceBaseURL } from '@/utils/service';
+import { getAuthorization } from '@/service/request/shared';
 
 // State
 const loading = ref(false);
@@ -194,6 +196,99 @@ async function handleBatchDelete() {
   loadData();
 }
 
+// Batch CDN sync
+const cdnSyncLoading = ref(false);
+function handleBatchCdnSync() {
+  if (!checkedRowKeys.value.length || cdnSyncLoading.value) return;
+  cdnSyncLoading.value = true;
+  fetchLinkSyncCdnBatch(checkedRowKeys.value).then(({ data, error }) => {
+    cdnSyncLoading.value = false;
+    if (!error && data) {
+      const msg = `同步完成：成功 ${data.success} 个，失败 ${data.fail} 个`;
+      if (data.fail > 0) {
+        const reasons = data.fail_items.map(item => `${item.title}: ${item.reason}`).join('\n');
+        window.$message?.warning(`${msg}\n${reasons}`, { duration: 5000 });
+      } else {
+        window.$message?.success(msg);
+      }
+      checkedRowKeys.value = [];
+      loadData();
+    }
+  });
+}
+
+// Export / Import
+const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
+const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
+
+function handleExport() {
+  const token = getAuthorization();
+  const url = `${baseURL}/links/export`;
+  fetch(url, { headers: { Authorization: token } })
+    .then(res => res.blob())
+    .then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'links.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+}
+
+const importFileRef = ref<HTMLInputElement | null>(null);
+const importLoading = ref(false);
+function handleImportClick() {
+  importFileRef.value?.click();
+}
+async function handleImportFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  importLoading.value = true;
+  const { data, error } = await fetchLinkImport(file);
+  importLoading.value = false;
+  if (!error && data) {
+    window.$message?.success(`导入完成：新增 ${data.created} 个，跳过 ${data.skipped} 个`);
+    loadData();
+  }
+  // 重置 input 以便可以重复选择同一文件
+  if (importFileRef.value) importFileRef.value.value = '';
+}
+
+// Batch edit
+const showBatchEdit = ref(false);
+const batchEditEnabled = reactive<Record<string, boolean>>({
+  color: false, menus: false, is_vip: false, status: false
+});
+const batchEditModel = reactive({
+  color: '', menus: [] as number[], is_vip: false, status: true
+});
+
+function handleBatchEditOpen() {
+  Object.keys(batchEditEnabled).forEach(k => (batchEditEnabled[k] = false));
+  Object.assign(batchEditModel, { color: '', menus: [], is_vip: false, status: true });
+  showBatchEdit.value = true;
+}
+
+async function handleBatchEditSave() {
+  const enabledFields = Object.keys(batchEditEnabled).filter(k => batchEditEnabled[k]);
+  if (!enabledFields.length) {
+    window.$message?.warning('请至少勾选一个要修改的字段');
+    return;
+  }
+  const updates = checkedRowKeys.value.map(id => {
+    const item: Record<string, any> = { id };
+    enabledFields.forEach(field => {
+      item[field] = (batchEditModel as any)[field];
+    });
+    return item;
+  });
+  await fetchLinkBatchUpdate(updates);
+  showBatchEdit.value = false;
+  checkedRowKeys.value = [];
+  window.$message?.success('批量修改成功');
+  loadData();
+}
+
 // Spider in form (fetch site info and fill form fields)
 const spiderLoading = ref(false);
 async function handleFormSpider() {
@@ -336,6 +431,16 @@ loadMenuTree();
         </template>
         确定删除选中的 {{ checkedRowKeys.length }} 项？
       </NPopconfirm>
+      <NPopconfirm @positive-click="handleBatchCdnSync">
+        <template #trigger>
+          <NButton type="warning" :disabled="!checkedRowKeys.length" :loading="cdnSyncLoading">同步图标到CDN</NButton>
+        </template>
+        确定将选中的 {{ checkedRowKeys.length }} 个链接的图标同步到CDN？
+      </NPopconfirm>
+      <NButton @click="handleExport">导出</NButton>
+      <NButton :loading="importLoading" @click="handleImportClick">导入</NButton>
+      <NButton type="info" :disabled="!checkedRowKeys.length" @click="handleBatchEditOpen">批量编辑</NButton>
+      <input ref="importFileRef" type="file" accept=".json" style="display:none" @change="handleImportFile">
     </NSpace>
 
     <!-- Table -->
@@ -411,6 +516,52 @@ loadMenuTree();
       <template #action>
         <NButton @click="showDialog = false">取消</NButton>
         <NButton type="primary" @click="handleSave">保存</NButton>
+      </template>
+    </NModal>
+
+    <!-- Batch Edit Dialog -->
+    <NModal v-model:show="showBatchEdit" preset="dialog" title="批量编辑" style="width: 550px">
+      <div class="mt-16px text-13px text-gray-400 mb-12px">
+        已选中 {{ checkedRowKeys.length }} 个链接，勾选要修改的字段：
+      </div>
+      <NForm label-placement="left" label-width="80px">
+        <NFormItem label="颜色">
+          <div class="flex items-center gap-12px w-full">
+            <NCheckbox v-model:checked="batchEditEnabled.color" />
+            <NColorPicker v-model:value="batchEditModel.color" :modes="['hex']" :show-alpha="false" :disabled="!batchEditEnabled.color" />
+          </div>
+        </NFormItem>
+        <NFormItem label="菜单">
+          <div class="flex items-center gap-12px w-full">
+            <NCheckbox v-model:checked="batchEditEnabled.menus" />
+            <NTreeSelect
+              v-model:value="batchEditModel.menus"
+              :options="menuTreeData"
+              multiple
+              clearable
+              placeholder="选择所属菜单"
+              :render-prefix="renderMenuPrefix"
+              :disabled="!batchEditEnabled.menus"
+              class="flex-1"
+            />
+          </div>
+        </NFormItem>
+        <NFormItem label="VIP">
+          <div class="flex items-center gap-12px">
+            <NCheckbox v-model:checked="batchEditEnabled.is_vip" />
+            <NSwitch v-model:value="batchEditModel.is_vip" :disabled="!batchEditEnabled.is_vip" />
+          </div>
+        </NFormItem>
+        <NFormItem label="状态">
+          <div class="flex items-center gap-12px">
+            <NCheckbox v-model:checked="batchEditEnabled.status" />
+            <NSwitch v-model:value="batchEditModel.status" :disabled="!batchEditEnabled.status" />
+          </div>
+        </NFormItem>
+      </NForm>
+      <template #action>
+        <NButton @click="showBatchEdit = false">取消</NButton>
+        <NButton type="primary" @click="handleBatchEditSave">保存</NButton>
       </template>
     </NModal>
   </div>

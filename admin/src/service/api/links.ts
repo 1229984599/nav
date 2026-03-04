@@ -49,6 +49,15 @@ export function fetchLinkBatchUpdate(data: Array<{ id: number; order: number }>)
   return request({ url: '/links/update/all', method: 'put', data });
 }
 
+/** Batch sync selected link icons to CDN */
+export function fetchLinkSyncCdnBatch(linkIds: number[]) {
+  return request<{ total: number; success: number; fail: number; fail_items: Array<{ id: number; title: string; reason: string }> }>({
+    url: '/links/sync_cdn_batch',
+    method: 'post',
+    data: linkIds
+  });
+}
+
 /** Sync uploaded file to CDN */
 export function fetchLinkSyncCdnFile(file: File, linkId?: number) {
   const formData = new FormData();
@@ -57,6 +66,18 @@ export function fetchLinkSyncCdnFile(file: File, linkId?: number) {
     url: '/links/sync_cdn_file',
     method: 'post',
     params: { link_id: linkId },
+    headers: { 'Content-Type': 'multipart/form-data' },
+    data: formData
+  });
+}
+
+/** Import links from JSON file */
+export function fetchLinkImport(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<{ created: number; skipped: number }>({
+    url: '/links/import',
+    method: 'post',
     headers: { 'Content-Type': 'multipart/form-data' },
     data: formData
   });

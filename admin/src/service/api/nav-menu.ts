@@ -34,3 +34,15 @@ export function fetchMenuBatchUpdate(data: Array<{ id: number; order: number }>)
 export function fetchMenuDelete(ids: string) {
   return request({ url: `/menu/${ids}`, method: 'delete' });
 }
+
+/** Import menus from JSON file */
+export function fetchMenuImport(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<{ created: number; skipped: number }>({
+    url: '/menu/import',
+    method: 'post',
+    headers: { 'Content-Type': 'multipart/form-data' },
+    data: formData
+  });
+}

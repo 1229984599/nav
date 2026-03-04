@@ -1,11 +1,14 @@
+import json
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
 from auth.auth import get_current_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
-from models import Links, User
+from models import Links, Menu, User
 from .schemas import CreateMenuSchema, FilterSchemaList, LinkSchemaList, LinkUpdateAllSchema
 from .service import (
     attach_link_menus,
@@ -14,6 +17,7 @@ from .service import (
     create_links_batch,
     parse_order_by,
     sync_link_cdn,
+    sync_links_cdn_batch,
     update_links_batch,
 )
 from .utils import get_site_info
@@ -126,3 +130,87 @@ async def handle_siteinfo(url: str):
     if not data:
         return BaseApiOut(code=400, message="获取信息失败，请检查链接是否可访问")
     return BaseApiOut(data=data)
+
+
+@link_router.post("/sync_cdn_batch", dependencies=[Depends(get_current_user)])
+async def handle_sync_cdn_batch(link_ids: list[int]):
+    """批量同步选中链接的图标到CDN"""
+    result = await sync_links_cdn_batch(link_ids)
+    return BaseApiOut(data=result)
+
+
+@link_router.get("/export", dependencies=[Depends(get_current_user)])
+async def handle_link_export():
+    """导出所有链接数据为JSON"""
+    links = await Links.all().order_by("order").prefetch_related("menus")
+    data = []
+    for link in links:
+        menus = await link.menus.all()
+        data.append({
+            "title": link.title,
+            "href": link.href,
+            "icon": link.icon,
+            "desc": link.desc,
+            "color": link.color,
+            "is_self": link.is_self,
+            "is_vip": link.is_vip,
+            "order": link.order,
+            "cdn_img_id": link.cdn_img_id,
+            "status": link.status,
+            "menus": [m.title for m in menus],
+        })
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(
+        content=content,
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=links.json"},
+    )
+
+
+@link_router.post("/import", dependencies=[Depends(get_current_user)])
+async def handle_link_import(file: UploadFile = File(...)):
+    """从JSON文件导入链接数据"""
+    content = await file.read()
+    try:
+        items = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="JSON格式错误")
+    if not isinstance(items, list):
+        raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
+
+    # 预加载菜单映射 title -> Menu
+    all_menus = await Menu.all()
+    menu_map = {m.title: m for m in all_menus}
+
+    created = 0
+    skipped = 0
+    for item in items:
+        title = item.get("title")
+        if not title:
+            skipped += 1
+            continue
+        exists = await Links.filter(title=title).first()
+        if exists:
+            skipped += 1
+            continue
+        menu_titles = item.pop("menus", []) or []
+        link = await Links.create(
+            title=title,
+            href=item.get("href", ""),
+            icon=item.get("icon"),
+            desc=item.get("desc"),
+            color=item.get("color"),
+            is_self=item.get("is_self", False),
+            is_vip=item.get("is_vip", False),
+            order=item.get("order", 0),
+            cdn_img_id=item.get("cdn_img_id"),
+            status=item.get("status", True),
+        )
+        # 关联菜单
+        menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+        if menus_to_add:
+            await link.menus.add(*menus_to_add)
+        created += 1
+
+    await clear_link_cache()
+    return BaseApiOut(data={"created": created, "skipped": skipped})
