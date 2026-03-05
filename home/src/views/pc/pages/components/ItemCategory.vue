@@ -2,16 +2,15 @@
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
 import { computed, PropType, ref, watch } from "vue";
+import { ElMessage } from "element-plus";
 import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
 import { VueDraggable } from "vue-draggable-plus";
 import { useUserStore } from "@/store/user";
 import links from "@/api/links";
-import { useMenuStore } from "@/store/menu";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
 
 const userStore = useUserStore();
-const menuStore = useMenuStore();
 
 const props = defineProps({
   menu: {
@@ -22,6 +21,8 @@ const props = defineProps({
 const isAdmin = computed(() => userStore.isAdminAuthorized);
 const linkList = ref<LinkSchemaList[]>([]);
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
+const orderSaving = ref(false);
+const dragSnapshot = ref<LinkSchemaList[]>([]);
 
 watch(
   () => props.menu?.links,
@@ -32,6 +33,7 @@ watch(
 );
 
 async function handleLinkDragEnd() {
+  if (orderSaving.value) return;
   const updates = linkList.value
     .filter((item) => item.id)
     .map((item, index) => ({
@@ -39,12 +41,22 @@ async function handleLinkDragEnd() {
       order: index,
     }));
   if (updates.length === 0) return;
+  orderSaving.value = true;
   try {
     await links.batchUpdate(updates);
-    await menuStore.getMenuTree();
+    ElMessage.success("链接排序已保存");
   } catch (e) {
+    linkList.value = dragSnapshot.value.map((item) => ({ ...item }));
+    ElMessage.error("链接排序保存失败，已恢复原顺序");
     console.error("链接排序保存失败", e);
+  } finally {
+    orderSaving.value = false;
+    dragSnapshot.value = [];
   }
+}
+
+function handleLinkDragStart() {
+  dragSnapshot.value = linkList.value.map((item) => ({ ...item }));
 }
 
 function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
@@ -65,9 +77,11 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
   <VueDraggable
     v-if="isAdmin"
     v-model="linkList"
+    :disabled="orderSaving"
     class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8 mt-3"
     :animation="200"
     ghost-class="drag-ghost"
+    @start="handleLinkDragStart"
     @end="handleLinkDragEnd"
   >
     <item-desc :item="item" v-for="item in linkList" :key="item.id" @contextmenu="handleItemContextMenu" />

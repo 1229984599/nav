@@ -1,5 +1,8 @@
 # 异步代码
 import functools
+import json
+
+from loguru import logger
 
 
 def ignore_async_errors(func):
@@ -9,7 +12,11 @@ def ignore_async_errors(func):
             # 调用被装饰的异步函数
             return await func(*args, **kwargs)
         except Exception as e:
-            # 忽略异常并打印错误信息
-            print(f"{func.__name__} 发生异常: {e}")
+            payload = {
+                "event": "ignore_async_errors",
+                "function": func.__name__,
+                "error": str(e),
+            }
+            logger.error(json.dumps(payload, ensure_ascii=False, default=str))
 
     return wrapper

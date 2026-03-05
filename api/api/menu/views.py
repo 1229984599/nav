@@ -8,7 +8,7 @@ from fastapi_pagination.ext.tortoise import paginate
 from auth.auth import get_current_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
-from models import Menu, User
+from models import Links, Menu, User
 from .service import (
     clear_menu_cache,
     create_menus_batch,
@@ -95,37 +95,61 @@ async def handle_menu_delete_all():
     return BaseApiOut(message="删除所有数据成功")
 
 
-async def get_menu_tree(menu_item: Menu, user) -> dict:
-    link_query = menu_item.links.order_by("order")
+def serialize_link(link: Links) -> dict:
+    return {
+        "id": link.id,
+        "title": link.title,
+        "href": link.href,
+        "icon": link.icon,
+        "is_self": link.is_self,
+        "is_vip": link.is_vip,
+        "desc": link.desc,
+        "color": link.color,
+        "order": link.order,
+        "cdn_img_id": link.cdn_img_id,
+        "status": link.status,
+        "create_time": link.create_time,
+        "update_time": link.update_time,
+    }
+
+
+def serialize_menu(menu_item: Menu, user: User | None) -> dict:
+    links = sorted(menu_item.links, key=lambda item: item.order or 0)
     if not user:
-        link_query = link_query.filter(is_vip=False)
-    links = await link_query.all().values()
-    menu_tree = {
+        links = [item for item in links if not item.is_vip]
+    return {
         "id": menu_item.id,
         "title": menu_item.title,
         "icon": menu_item.icon,
         "color": menu_item.color,
-        "links": links,
+        "links": [serialize_link(link) for link in links],
         "is_vip": menu_item.is_vip,
         "status": menu_item.status,
         "order": menu_item.order,
         "create_time": menu_item.create_time,
         "parent_id": menu_item.parent_id,
     }
-    children = await menu_item.children.all().order_by("order")
-    if children:
-        menu_tree["children"] = [await get_menu_tree(child, user) for child in children]
-    return menu_tree
 
 
 @menu_router.get("/tree", description="返回菜单树", response_model=BaseApiOut)
 async def handle_get_menu_tree(user: User = Depends(is_login)):
-    all_menu_items = await Menu.all().order_by("order").prefetch_related("links", "children__children")
-    menu_tree = []
+    all_menu_items = await Menu.all().order_by("order").prefetch_related("links")
+    menu_map: dict[int, dict] = {}
+    root_nodes: list[dict] = []
+
     for menu_item in all_menu_items:
-        if not menu_item.parent:
-            menu_tree.append(await get_menu_tree(menu_item, user))
-    return BaseApiOut(data=menu_tree)
+        menu_map[menu_item.id] = serialize_menu(menu_item, user)
+
+    for menu_item in all_menu_items:
+        current_node = menu_map[menu_item.id]
+        parent_id = menu_item.parent_id
+        if parent_id and parent_id in menu_map:
+            parent_node = menu_map[parent_id]
+            parent_node.setdefault("children", []).append(current_node)
+            continue
+        root_nodes.append(current_node)
+
+    return BaseApiOut(data=root_nodes)
 
 
 def _serialize_menu(menu, parent_title=None):

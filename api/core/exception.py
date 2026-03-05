@@ -1,4 +1,5 @@
 import traceback
+import json
 
 from tortoise.exceptions import IntegrityError
 
@@ -9,6 +10,18 @@ from fastapi import FastAPI, Request, HTTPException
 from loguru import logger
 from starlette.responses import JSONResponse
 from common.response import BaseApiOut
+
+
+def _log_exception_event(event: str, request: Request, exc: Exception) -> None:
+    payload = {
+        "event": event,
+        "method": request.method,
+        "url": str(request.url),
+        "error_type": exc.__class__.__name__,
+        "error": str(exc),
+        "traceback": traceback.format_exc(),
+    }
+    logger.error(json.dumps(payload, ensure_ascii=False, default=str))
 
 
 def register_exception(app: FastAPI) -> None:
@@ -49,8 +62,7 @@ def register_exception(app: FastAPI) -> None:
         :param exc:
         :return:
         """
-        logger.error(
-            f"内部参数验证错误\nURL:{request.method}{request.url}\nHeaders:{request.headers}\n{traceback.format_exc()}")
+        _log_exception_event("validation_error_internal", request, exc)
         return JSONResponse(
             content=BaseApiOut[str](code=421, message=str(exc)).model_dump())
 
@@ -62,8 +74,7 @@ def register_exception(app: FastAPI) -> None:
         :param exc:
         :return:
         """
-        logger.error(
-            f"请求参数格式错误\nURL:{request.method}{request.url}\nHeaders:{request.headers}\n{traceback.format_exc()}")
+        _log_exception_event("validation_error_request", request, exc)
         return JSONResponse(
             content=BaseApiOut[str](code=422,
                                     message=str(exc) or '请求参数校验异常').model_dump())
@@ -83,7 +94,6 @@ def register_exception(app: FastAPI) -> None:
         :param exc:
         :return:
         """
-        logger.error(
-            f"全局异常\n{request.method}URL:{request.url}\nHeaders:{request.headers}\n{traceback.format_exc()}")
+        _log_exception_event("unhandled_exception", request, exc)
         return JSONResponse(
             content=BaseApiOut[str](code=500, message=str(exc)).model_dump())

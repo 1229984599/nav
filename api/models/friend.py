@@ -8,5 +8,5 @@ class Friend(AppModel):
     icon = fields.CharField(128, null=True)
     desc = fields.TextField(null=True)
     color = fields.CharField(20, null=True, description='图标颜色hex')
-    order = fields.IntField(null=True, default=0, description='值越大越靠前')
+    order = fields.IntField(null=True, default=0, index=True, description='值越大越靠前')
     # menus: fields.ManyToManyRelation[Menu]
