@@ -80,7 +80,7 @@ function handleScrollTop() {
       </el-tooltip>
 
       <!--      添加链接-->
-      <add-link v-if="userStore.token?.access_token" class="tool-item" />
+      <add-link v-if="userStore.isAdminAuthorized" class="tool-item" />
     </div>
   </div>
 </template>

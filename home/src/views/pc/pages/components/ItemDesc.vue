@@ -8,10 +8,6 @@ const props = defineProps({
     type: Object as PropType<LinkSchemaList>,
     required: true,
   },
-  showDragHandle: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const emit = defineEmits<{
@@ -25,9 +21,6 @@ function handleContextMenu(event: MouseEvent) {
 
 <template>
   <div class="relative w-full" v-if="item?.status" @contextmenu="handleContextMenu">
-    <div v-if="showDragHandle" class="link-drag-handle">
-      <m-icon icon="mdi:drag" :size="16" color="#9ca3af" />
-    </div>
     <el-tooltip :disabled="!item?.desc" :hide-after="200" :enterable="false">
       <a
         :href="item?.href"
@@ -58,30 +51,6 @@ function handleContextMenu(event: MouseEvent) {
 </template>
 
 <style lang="scss" scoped>
-.link-drag-handle {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  z-index: 10;
-  cursor: move;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  background: var(--nav-card-bg);
-  border-radius: 4px;
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover :deep(svg) {
-    color: #4b5563 !important;
-  }
-}
-
-.relative:hover .link-drag-handle {
-  opacity: 1;
-}
-
 .box {
   display: inline-flex;
   width: 100%;

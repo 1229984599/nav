@@ -64,20 +64,20 @@ async def handle_friend_update_all(items: list[FriendUpdateAllSchema]):
     return BaseApiOut(message="批量更新成功")
 
 
-@friend_router.delete("/{item_ids}", response_model=BaseApiOut)
+@friend_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_friend_delete(item_ids: str):
     ids = item_ids.split(",")
     data = await Friend.filter(id__in=ids).delete()
     return BaseApiOut(data=data)
 
 
-@friend_router.delete("/delete/all", response_model=BaseApiOut)
+@friend_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_friend_delete_all():
     await Friend.all().delete()
     return BaseApiOut(message="删除所有数据成功")
 
 
-@friend_router.post('/siteinfo')
+@friend_router.post('/siteinfo', dependencies=[Depends(get_current_user)])
 async def handle_siteinfo(url: str):
     data = await get_site_info(url)
     return BaseApiOut(data=data)

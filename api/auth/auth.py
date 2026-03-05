@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from core.http_status import HttpStatus
-from fastapi import Security, HTTPException
+from fastapi import Depends, Security, HTTPException
 from fastapi_jwt import JwtAccessBearerCookie, JwtRefreshBearer, JwtAuthorizationCredentials
 import bcrypt
 
@@ -48,12 +48,20 @@ def get_password_hash(password: str) -> str:
 async def get_current_user(credentials: JwtAuthorizationCredentials = Security(access_security)):
     try:
         username = credentials['username']
-    except TypeError:
+    except (TypeError, KeyError):
         raise HTTPException(status_code=HttpStatus.HTTP_400_BAD_REQUEST, detail='非法请求，请重新登录')
     user = await User.find_by_username(username)
     # 当前用户是否存在
     if not user:
         raise HTTPException(status_code=HttpStatus.HTTP_419_USER_EXCEPT, detail='用户不存在，请检查是否登录')
+    if not user.status:
+        raise HTTPException(status_code=HttpStatus.HTTP_419_USER_EXCEPT, detail='用户已禁用，请联系管理员')
+    return user
+
+
+async def get_current_super_user(user: User = Depends(get_current_user)):
+    if not user.is_super:
+        raise HTTPException(status_code=HttpStatus.HTTP_407_AUTH_EXCEPT, detail='权限不足，需管理员权限')
     return user
 
 

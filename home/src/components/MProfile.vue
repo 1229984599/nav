@@ -13,7 +13,7 @@ const userStore = useUserStore();
 </script>
 
 <template>
-  <el-dropdown v-if="userStore.token?.access_token">
+  <el-dropdown v-if="userStore.isAdminAuthorized">
     <span class="flex items-center gap-x-1">
       <m-icon
         :size="26"

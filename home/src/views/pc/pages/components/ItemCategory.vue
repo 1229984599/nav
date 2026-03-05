@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
-import { PropType, ref, watch } from "vue";
+import { computed, PropType, ref, watch } from "vue";
 import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
 import { VueDraggable } from "vue-draggable-plus";
@@ -19,7 +19,7 @@ const props = defineProps({
   },
 });
 
-const isAdmin = ref(!!userStore.token?.access_token);
+const isAdmin = computed(() => userStore.isAdminAuthorized);
 const linkList = ref<LinkSchemaList[]>([]);
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
 
@@ -55,9 +55,6 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
 
 <template>
   <div :id="menu?.title" class="flex gap-x-2 items-center">
-    <div v-if="isAdmin" class="menu-drag-handle cursor-move flex items-center">
-      <m-icon icon="mdi:drag" :size="20" color="#9ca3af" />
-    </div>
     <m-icon
       v-if="menu?.icon"
       :style="{ color: menu?.color }"
@@ -69,11 +66,11 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
     v-if="isAdmin"
     v-model="linkList"
     class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8 mt-3"
-    handle=".link-drag-handle"
-    :animation="150"
+    :animation="200"
+    ghost-class="drag-ghost"
     @end="handleLinkDragEnd"
   >
-    <item-desc :item="item" v-for="item in linkList" :key="item.id" :show-drag-handle="true" @contextmenu="handleItemContextMenu" />
+    <item-desc :item="item" v-for="item in linkList" :key="item.id" @contextmenu="handleItemContextMenu" />
   </VueDraggable>
   <div
     v-else
@@ -83,9 +80,3 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
   </div>
   <link-context-menu v-if="isAdmin" ref="contextMenuRef" />
 </template>
-
-<style scoped>
-.menu-drag-handle:hover :deep(svg) {
-  color: #4b5563 !important;
-}
-</style>

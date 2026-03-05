@@ -35,7 +35,7 @@ async def handle_login(form_data: schemas.LoginSchema):
 
 
 @login_router.post("/register", name="Register", response_model=BaseApiOut)
-async def handle_register(form_data: schemas.RegisterSchema):
+async def handle_register(form_data: schemas.RegisterSchema, _: User = Depends(auth.get_current_super_user)):
     user = await User.find_by_username(form_data.username)
     if user:
         return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户已存在")

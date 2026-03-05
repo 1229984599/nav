@@ -65,7 +65,7 @@ async def get_image(filename: str):
     return FileResponse(img_path)
 
 
-@site_router.post('/clear_cache')
+@site_router.post('/clear_cache', dependencies=[Depends(get_current_user)])
 async def handle_clear_cache():
     """
     清除缓存

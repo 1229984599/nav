@@ -82,14 +82,14 @@ async def handle_menu_update_all(items: list[MenuUpdateAllSchema]):
     return BaseApiOut(message="批量更新成功")
 
 
-@menu_router.delete("/{item_ids}", response_model=BaseApiOut)
+@menu_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_menu_delete(item_ids: str):
     ids = item_ids.split(",")
     data = await Menu.filter(id__in=ids).delete()
     return BaseApiOut(data=data)
 
 
-@menu_router.delete("/delete/all", response_model=BaseApiOut)
+@menu_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_menu_delete_all():
     await Menu.all().delete()
     return BaseApiOut(message="删除所有数据成功")

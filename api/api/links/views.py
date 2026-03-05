@@ -93,7 +93,7 @@ async def handle_link_update_all(items: list[LinkUpdateAllSchema]):
     return BaseApiOut(message="批量更新成功")
 
 
-@link_router.delete("/{item_ids}", response_model=BaseApiOut)
+@link_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_link_delete(item_ids: str):
     ids = item_ids.split(",")
     await clear_link_cache()
@@ -101,14 +101,14 @@ async def handle_link_delete(item_ids: str):
     return BaseApiOut(data=data)
 
 
-@link_router.delete("/delete/all", response_model=BaseApiOut)
+@link_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_link_delete_all():
     await clear_link_cache()
     await Links.all().delete()
     return BaseApiOut(message="删除所有数据成功")
 
 
-@link_router.post("/sync_cdn")
+@link_router.post("/sync_cdn", dependencies=[Depends(get_current_user)])
 async def handle_sync_cdn(link_id=None, url: str = ""):
     cdn_data = await sync_link_cdn(link_id, url)
     if not cdn_data:
@@ -116,7 +116,7 @@ async def handle_sync_cdn(link_id=None, url: str = ""):
     return BaseApiOut(data=cdn_data)
 
 
-@link_router.post("/sync_cdn_file", description="同步上传的文件")
+@link_router.post("/sync_cdn_file", description="同步上传的文件", dependencies=[Depends(get_current_user)])
 async def handle_sync_cdn_file(link_id=None, file: UploadFile = File(...)):
     cdn_data = await sync_link_cdn(link_id, await file.read())
     if not cdn_data:
@@ -124,7 +124,7 @@ async def handle_sync_cdn_file(link_id=None, file: UploadFile = File(...)):
     return BaseApiOut(data=cdn_data)
 
 
-@link_router.post("/siteinfo")
+@link_router.post("/siteinfo", dependencies=[Depends(get_current_user)])
 async def handle_siteinfo(url: str):
     data = await get_site_info(url)
     if not data:

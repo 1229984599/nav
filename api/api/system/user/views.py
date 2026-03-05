@@ -10,7 +10,7 @@ from models import User
 user_router = APIRouter()
 
 
-@user_router.post("/list", response_model=BaseApiOut[Page[schemas.UserList]])
+@user_router.post("/list", response_model=BaseApiOut[Page[schemas.UserList]], dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_list(filters: schemas.UserFilter, params: Params = Depends(), order_by: str = "-create_time"):
     query = User.all()
     filter_data = filters.model_dump(exclude_unset=True)
@@ -24,7 +24,7 @@ async def handle_user_list(filters: schemas.UserFilter, params: Params = Depends
     return BaseApiOut(data=data)
 
 
-@user_router.get("/read/{item_id}", response_model=BaseApiOut[schemas.UserList])
+@user_router.get("/read/{item_id}", response_model=BaseApiOut[schemas.UserList], dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_read(item_id: str):
     item = await User.get_or_none(id=item_id)
     if not item:
@@ -33,7 +33,7 @@ async def handle_user_read(item_id: str):
     return BaseApiOut(data=data)
 
 
-@user_router.post("/create", response_model=BaseApiOut[schemas.UserList])
+@user_router.post("/create", response_model=BaseApiOut[schemas.UserList], dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_create(item: schemas.UserCreate):
     payload = item.model_dump(exclude_unset=True)
     if payload.get("password"):
@@ -43,7 +43,7 @@ async def handle_user_create(item: schemas.UserCreate):
     return BaseApiOut(data=data)
 
 
-@user_router.post("/create/all", response_model=BaseApiOut)
+@user_router.post("/create/all", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_create_all(items: list[schemas.UserCreate]):
     users = []
     for item in items:
@@ -56,7 +56,7 @@ async def handle_user_create_all(items: list[schemas.UserCreate]):
     return BaseApiOut(message="批量创建成功")
 
 
-@user_router.put("/{item_id}", response_model=BaseApiOut)
+@user_router.put("/{item_id}", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_update(item_id: str, item: schemas.UserUpdate):
     user = await User.get_or_none(id=item_id)
     if not user:
@@ -68,7 +68,7 @@ async def handle_user_update(item_id: str, item: schemas.UserUpdate):
     return BaseApiOut(data=data)
 
 
-@user_router.put("/update/all", response_model=BaseApiOut)
+@user_router.put("/update/all", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_update_all(items: list[schemas.UserUpdateAll]):
     for item in items:
         payload = item.model_dump(exclude_unset=True)
@@ -81,14 +81,14 @@ async def handle_user_update_all(items: list[schemas.UserUpdateAll]):
     return BaseApiOut(message="批量更新成功")
 
 
-@user_router.delete("/{item_ids}", response_model=BaseApiOut)
+@user_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_delete(item_ids: str):
     ids = item_ids.split(",")
     data = await User.filter(id__in=ids).delete()
     return BaseApiOut(data=data)
 
 
-@user_router.delete("/delete/all", response_model=BaseApiOut)
+@user_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_delete_all():
     await User.all().delete()
     return BaseApiOut(message="删除所有数据成功")
