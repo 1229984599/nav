@@ -332,8 +332,38 @@ const columns = computed<DataTableColumns<Api.NavMenu.MenuTreeNode>>(() => [
     }
   },
   { type: 'selection' },
-  { title: 'ID', key: 'id', width: 60 },
-  { title: '标题', key: 'title', width: 150 },
+  {
+    title: 'ID',
+    key: 'id',
+    width: 80,
+    render(row) {
+      if (row.parent_id) {
+        const parent = treeData.value.find(p => p.id === row.parent_id);
+        return h('div', { style: 'display:flex;align-items:center;gap:4px;' }, [
+          h('span', null, String(row.id)),
+          h(NTag, { size: 'tiny', type: 'info', bordered: false }, () => parent ? parent.title : '子')
+        ]);
+      }
+      return h('span', { style: 'font-weight:600;' }, String(row.id));
+    }
+  },
+  {
+    title: '标题',
+    key: 'title',
+    width: 200,
+    render(row) {
+      if (row.parent_id) {
+        return h('div', { style: 'display:flex;align-items:center;gap:6px;padding-left:20px;' }, [
+          h('span', { style: 'color:#18a058;font-size:14px;line-height:1;' }, '├─'),
+          h('span', null, row.title)
+        ]);
+      }
+      return h('div', { style: 'display:flex;align-items:center;gap:6px;' }, [
+        h(Icon, { icon: 'mdi:folder-outline', width: '16px', height: '16px', style: 'color:#f0a020;flex-shrink:0;' }),
+        h('span', { style: 'font-weight:600;' }, row.title)
+      ]);
+    }
+  },
   {
     title: '图标',
     key: 'icon',
@@ -409,6 +439,7 @@ loadData();
       :data="filteredData"
       :loading="loading"
       :row-key="(row: Api.NavMenu.MenuTreeNode) => row.id"
+      :row-class-name="(row: Api.NavMenu.MenuTreeNode) => row.parent_id ? 'child-row' : 'parent-row'"
       default-expand-all
       :scroll-x="600"
       flex-height
@@ -491,3 +522,13 @@ loadData();
     </NModal>
   </div>
 </template>
+
+<style scoped>
+:deep(.child-row td) {
+  background-color: rgba(24, 160, 88, 0.04) !important;
+}
+
+:deep(.parent-row td) {
+  font-weight: 500;
+}
+</style>
