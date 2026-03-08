@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -5,7 +6,7 @@ from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
-from auth.auth import get_current_user, is_login
+from auth.auth import get_current_user, get_current_super_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Links, Menu, User
@@ -145,7 +146,7 @@ async def handle_link_delete(item_ids: str):
     return BaseApiOut(data=data)
 
 
-@link_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
+@link_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_super_user)])
 async def handle_link_delete_all():
     await clear_link_cache()
     await Links.all().delete()
@@ -178,9 +179,27 @@ async def handle_siteinfo(url: str):
 
 @link_router.post("/sync_cdn_batch", dependencies=[Depends(get_current_user)])
 async def handle_sync_cdn_batch(link_ids: list[int]):
-    """批量同步选中链接的图标到CDN"""
-    result = await sync_links_cdn_batch(link_ids)
-    return BaseApiOut(data=result)
+    """批量同步选中链接的图标到CDN（后台任务）"""
+    if not link_ids:
+        raise HTTPException(status_code=400, detail="请选择要同步的链接")
+
+    from core.tasks import create_task_id, register_task, complete_task, fail_task
+
+    task_id = create_task_id()
+    register_task(task_id)
+
+    async def _run_sync():
+        try:
+            result = await sync_links_cdn_batch(link_ids)
+            await complete_task(task_id, result)
+        except HTTPException as e:
+            await fail_task(task_id, e.detail)
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_sync())
+
+    return BaseApiOut(data={"task_id": task_id})
 
 
 @link_router.get("/export", dependencies=[Depends(get_current_user)])

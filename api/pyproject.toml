@@ -17,6 +17,7 @@ dependencies = [
     "asyncmy>=0.2.9",
     "asyncpg>=0.30.0",
     "uvicorn",
+    "websockets",
     "python-dotenv",
     "fastapi-cache2>=0.2.1",
     "lxml>=5.1.0",
@@ -27,4 +28,3 @@ dependencies = [
 requires-python = ">=3.10"
 license = { text = "MIT" }
 readme = "README.md"
-

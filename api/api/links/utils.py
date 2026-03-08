@@ -307,7 +307,8 @@ class CdnImg:
                 'token': self.token
             },
             base_url=base_url,
-            verify=False
+            verify=False,
+            timeout=httpx.Timeout(30, connect=10),
         )
 
     async def login(self, username, password):

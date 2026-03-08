@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from fastapi import HTTPException
@@ -28,6 +29,8 @@ LINK_BATCH_MAX_SIZE = 1000
 
 async def clear_link_cache() -> None:
     await FastAPICache.clear()
+    from api.menu.views import invalidate_tree_cache
+    invalidate_tree_cache()
 
 
 def build_link_search_filters(item: dict[str, Any]) -> dict[str, Any]:
@@ -136,7 +139,7 @@ async def sync_link_cdn(link_id, url: str | bytes):
 
 
 async def sync_links_cdn_batch(link_ids: list[int]) -> dict:
-    """批量将选中链接的图标同步到CDN"""
+    """批量将选中链接的图标同步到CDN（并发处理）"""
     if not link_ids:
         raise HTTPException(status_code=400, detail="请选择要同步的链接")
 
@@ -152,32 +155,36 @@ async def sync_links_cdn_batch(link_ids: list[int]) -> dict:
     success_count = 0
     fail_count = 0
     fail_items = []
+    semaphore = asyncio.Semaphore(5)
 
-    for link in links:
+    async def _sync_one(link):
+        nonlocal success_count, fail_count
         if not link.icon:
             fail_count += 1
             fail_items.append({"id": link.id, "title": link.title, "reason": "没有图标地址"})
-            continue
-        try:
-            # 如果已有CDN图片，先删除旧的
-            if link.cdn_img_id:
-                try:
-                    await spider.delete_img(link.cdn_img_id)
-                except Exception:
-                    pass
+            return
+        async with semaphore:
+            try:
+                if link.cdn_img_id:
+                    try:
+                        await spider.delete_img(link.cdn_img_id)
+                    except Exception:
+                        pass
 
-            cdn_data = await spider.upload_img(link.icon)
-            if cdn_data:
-                link.update_from_dict({"cdn_img_id": cdn_data.get("id"), "icon": cdn_data.get("url")})
-                await link.save()
-                success_count += 1
-            else:
+                cdn_data = await spider.upload_img(link.icon)
+                if cdn_data:
+                    link.update_from_dict({"cdn_img_id": cdn_data.get("id"), "icon": cdn_data.get("url")})
+                    await link.save()
+                    success_count += 1
+                else:
+                    fail_count += 1
+                    fail_items.append({"id": link.id, "title": link.title, "reason": "上传失败"})
+            except Exception as e:
                 fail_count += 1
-                fail_items.append({"id": link.id, "title": link.title, "reason": "上传失败"})
-        except Exception as e:
-            fail_count += 1
-            fail_items.append({"id": link.id, "title": link.title, "reason": str(e)})
-            logger.warning(f"CDN同步失败 link_id={link.id}: {e}")
+                fail_items.append({"id": link.id, "title": link.title, "reason": str(e)})
+                logger.warning(f"CDN同步失败 link_id={link.id}: {e}")
+
+    await asyncio.gather(*[_sync_one(link) for link in links])
 
     if success_count > 0:
         await clear_link_cache()

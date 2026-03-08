@@ -1,8 +1,10 @@
 from fastapi import APIRouter, FastAPI
 from api import api_router
+from api.ws import ws_router
 
 router = APIRouter()
 router.include_router(api_router, prefix='/api')
+router.include_router(ws_router, prefix='/api/ws')
 
 
 def register_router(app: FastAPI) -> None:

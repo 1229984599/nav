@@ -18,10 +18,12 @@ class UserList(BaseModel):
 
 class UserUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    username: str | None = None
     nickname: str | None = None
     status: bool | None = None
     password: str | None = None
     order: int | None = None
+    is_super: bool | None = None
 
 
 class UserFilter(BaseModel):

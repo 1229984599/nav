@@ -1,11 +1,12 @@
 import json
+import time
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
-from auth.auth import get_current_user, is_login
+from auth.auth import get_current_user, get_current_super_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Links, Menu, User
@@ -128,7 +129,7 @@ async def handle_menu_delete(item_ids: str):
     return BaseApiOut(data=data)
 
 
-@menu_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
+@menu_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_super_user)])
 async def handle_menu_delete_all():
     await Menu.all().delete()
     return BaseApiOut(message="删除所有数据成功")
@@ -147,8 +148,8 @@ def serialize_link(link: Links) -> dict:
         "order": link.order,
         "cdn_img_id": link.cdn_img_id,
         "status": link.status,
-        "create_time": link.create_time,
-        "update_time": link.update_time,
+        "create_time": link.create_time.isoformat() if link.create_time else None,
+        "update_time": link.update_time.isoformat() if link.update_time else None,
     }
 
 
@@ -165,13 +166,22 @@ def serialize_menu(menu_item: Menu, user: User | None) -> dict:
         "is_vip": menu_item.is_vip,
         "status": menu_item.status,
         "order": menu_item.order,
-        "create_time": menu_item.create_time,
+        "create_time": menu_item.create_time.isoformat() if menu_item.create_time else None,
         "parent_id": menu_item.parent_id,
     }
 
 
-@menu_router.get("/tree", description="返回菜单树", response_model=BaseApiOut)
-async def handle_get_menu_tree(user: User = Depends(is_login)):
+# ---- In-memory cache for /tree ----
+_tree_cache: dict[str, dict] = {}
+# key: "guest" | "user", value: {"bytes": pre-serialized JSON bytes, "ts": timestamp}
+_TREE_CACHE_TTL = 3600 * 24  # 24 hours
+
+
+def invalidate_tree_cache():
+    _tree_cache.clear()
+
+
+async def _build_tree(user: User | None) -> list[dict]:
     all_menu_items = await Menu.all().order_by("order").prefetch_related("links")
     menu_map: dict[int, dict] = {}
     root_nodes: list[dict] = []
@@ -188,7 +198,22 @@ async def handle_get_menu_tree(user: User = Depends(is_login)):
             continue
         root_nodes.append(current_node)
 
-    return BaseApiOut(data=root_nodes)
+    return root_nodes
+
+
+@menu_router.get("/tree", description="返回菜单树")
+async def handle_get_menu_tree(user: User = Depends(is_login)):
+    cache_key = "user" if user else "guest"
+    now = time.time()
+    cached = _tree_cache.get(cache_key)
+    if cached and (now - cached["ts"]) < _TREE_CACHE_TTL:
+        return Response(content=cached["bytes"], media_type="application/json")
+
+    root_nodes = await _build_tree(user)
+    result = {"code": 200, "message": "请求成功", "msg": "请求成功", "data": root_nodes}
+    json_bytes = json.dumps(result, ensure_ascii=False).encode("utf-8")
+    _tree_cache[cache_key] = {"bytes": json_bytes, "ts": now}
+    return Response(content=json_bytes, media_type="application/json")
 
 
 def _serialize_menu(menu, parent_title=None):

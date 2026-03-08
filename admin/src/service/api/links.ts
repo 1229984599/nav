@@ -49,9 +49,9 @@ export function fetchLinkBatchUpdate(data: Array<{ id: number; order: number }>)
   return request({ url: '/links/update/all', method: 'put', data });
 }
 
-/** Batch sync selected link icons to CDN */
+/** Batch sync selected link icons to CDN (returns task_id, result via WebSocket) */
 export function fetchLinkSyncCdnBatch(linkIds: number[]) {
-  return request<{ total: number; success: number; fail: number; fail_items: Array<{ id: number; title: string; reason: string }> }>({
+  return request<{ task_id: string }>({
     url: '/links/sync_cdn_batch',
     method: 'post',
     data: linkIds

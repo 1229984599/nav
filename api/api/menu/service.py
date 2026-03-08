@@ -24,6 +24,8 @@ MENU_BATCH_MAX_SIZE = 1000
 
 async def clear_menu_cache() -> None:
     await FastAPICache.clear()
+    from .views import invalidate_tree_cache
+    invalidate_tree_cache()
 
 
 def parse_menu_order_by(order_by: str) -> list[str]:

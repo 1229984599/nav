@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
@@ -62,6 +62,19 @@ async def handle_user_update(item_id: str, item: schemas.UserUpdate):
     if not user:
         return not_found("用户")
     payload = item.model_dump(exclude_unset=True)
+
+    # Username uniqueness check
+    if "username" in payload and payload["username"]:
+        existing = await User.filter(username=payload["username"]).exclude(id=item_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="用户名已被占用")
+
+    # Last super user demotion protection
+    if "is_super" in payload and payload["is_super"] is False and user.is_super:
+        super_count = await User.filter(is_super=True).count()
+        if super_count <= 1:
+            raise HTTPException(status_code=400, detail="无法取消最后一个超级管理员的权限")
+
     if payload.get("password"):
         payload["password"] = auth.get_password_hash(payload["password"])
     data = await User.filter(id=item_id).update(**payload)
@@ -75,6 +88,21 @@ async def handle_user_update_all(items: list[schemas.UserUpdateAll]):
         item_id = payload.pop("id", None)
         if not item_id:
             continue
+
+        # Username uniqueness check
+        if "username" in payload and payload["username"]:
+            existing = await User.filter(username=payload["username"]).exclude(id=item_id).first()
+            if existing:
+                raise HTTPException(status_code=400, detail=f"用户名 '{payload['username']}' 已被占用")
+
+        # Last super user demotion protection
+        if "is_super" in payload and payload["is_super"] is False:
+            user = await User.get_or_none(id=item_id)
+            if user and user.is_super:
+                super_count = await User.filter(is_super=True).count()
+                if super_count <= 1:
+                    raise HTTPException(status_code=400, detail="无法取消最后一个超级管理员的权限")
+
         if payload.get("password"):
             payload["password"] = auth.get_password_hash(payload["password"])
         await User.filter(id=item_id).update(**payload)
@@ -84,6 +112,12 @@ async def handle_user_update_all(items: list[schemas.UserUpdateAll]):
 @user_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
 async def handle_user_delete(item_ids: str):
     ids = item_ids.split(",")
+    # Prevent deleting the last super user
+    super_users_being_deleted = await User.filter(id__in=ids, is_super=True).count()
+    if super_users_being_deleted > 0:
+        total_super_users = await User.filter(is_super=True).count()
+        if total_super_users - super_users_being_deleted < 1:
+            raise HTTPException(status_code=400, detail="无法删除最后一个超级管理员")
     data = await User.filter(id__in=ids).delete()
     return BaseApiOut(data=data)
 

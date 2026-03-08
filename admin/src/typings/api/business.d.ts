@@ -165,10 +165,12 @@ declare namespace Api {
     }
 
     interface UserUpdate {
+      username?: string;
       nickname?: string;
       status?: boolean;
       password?: string;
       order?: number;
+      is_super?: boolean;
     }
 
     interface UserFilter {

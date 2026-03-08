@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 
-from auth.auth import get_current_user
+from auth.auth import get_current_user, get_current_super_user
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Friend
@@ -71,7 +71,7 @@ async def handle_friend_delete(item_ids: str):
     return BaseApiOut(data=data)
 
 
-@friend_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
+@friend_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_super_user)])
 async def handle_friend_delete_all():
     await Friend.all().delete()
     return BaseApiOut(message="删除所有数据成功")

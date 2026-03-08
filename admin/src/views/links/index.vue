@@ -7,6 +7,7 @@ import { useDraggable } from 'vue-draggable-plus';
 import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchLinkSyncCdnBatch, fetchLinkImport, fetchLinkImportJson, fetchMenuTree } from '@/service/api';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization } from '@/service/request/shared';
+import { createTaskWebSocket } from '@/utils/websocket';
 
 // State
 const loading = ref(false);
@@ -201,19 +202,35 @@ const cdnSyncLoading = ref(false);
 function handleBatchCdnSync() {
   if (!checkedRowKeys.value.length || cdnSyncLoading.value) return;
   cdnSyncLoading.value = true;
+
   fetchLinkSyncCdnBatch(checkedRowKeys.value).then(({ data, error }) => {
-    cdnSyncLoading.value = false;
-    if (!error && data) {
-      const msg = `同步完成：成功 ${data.success} 个，失败 ${data.fail} 个`;
-      if (data.fail > 0) {
-        const reasons = data.fail_items.map(item => `${item.title}: ${item.reason}`).join('\n');
-        window.$message?.warning(`${msg}\n${reasons}`, { duration: 5000 });
-      } else {
-        window.$message?.success(msg);
-      }
-      checkedRowKeys.value = [];
-      loadData();
+    if (error || !data?.task_id) {
+      cdnSyncLoading.value = false;
+      window.$message?.error('启动同步任务失败');
+      return;
     }
+
+    window.$message?.info('CDN同步任务已启动，请等待完成通知...');
+
+    createTaskWebSocket(
+      data.task_id,
+      (result) => {
+        cdnSyncLoading.value = false;
+        const msg = `同步完成：成功 ${result.success} 个，失败 ${result.fail} 个`;
+        if (result.fail > 0) {
+          const reasons = result.fail_items.map((item: any) => `${item.title}: ${item.reason}`).join('\n');
+          window.$message?.warning(`${msg}\n${reasons}`, { duration: 5000 });
+        } else {
+          window.$message?.success(msg);
+        }
+        checkedRowKeys.value = [];
+        loadData();
+      },
+      (errMsg) => {
+        cdnSyncLoading.value = false;
+        window.$message?.error(errMsg || 'CDN同步失败');
+      }
+    );
   });
 }
 

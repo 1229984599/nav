@@ -13,8 +13,8 @@ from fastapi.responses import Response
 from common.response import BaseApiOut
 
 from models import Site, Menu, Links, Friend, User
-from .schemas import SiteSchemaList, SiteSchemaUpdate
-from auth.auth import get_current_user
+from .schemas import SiteSchemaList, SiteSchemaPublic, SiteSchemaUpdate
+from auth.auth import get_current_user, get_current_super_user
 from settings import settings
 
 site_router = APIRouter()
@@ -41,10 +41,10 @@ async def handle_update_site(site: SiteSchemaUpdate):
 # @cache(expire=60 * 60 * 24 * 30, namespace='site')
 async def handle_get_site():
     """
-    获取数据站点
+    获取数据站点（公开接口，不返回敏感字段）
     """
     data = await Site.first()
-    payload = SiteSchemaList.model_validate(data, from_attributes=True)
+    payload = SiteSchemaPublic.model_validate(data, from_attributes=True)
     return BaseApiOut(data=payload)
 
 
@@ -61,7 +61,13 @@ async def upload_image(request: Request, file: UploadFile = File(...)):
 # 访问图片的路由和处理函数
 @site_router.get("/get_image/{filename}")
 async def get_image(filename: str):
-    img_path = settings.BASE_PATH.joinpath('img').joinpath(filename)
+    # 防止路径遍历攻击
+    safe_name = Path(filename).name
+    if safe_name != filename or '..' in filename:
+        raise HTTPException(status_code=400, detail="非法文件名")
+    img_path = settings.BASE_PATH.joinpath('img').joinpath(safe_name)
+    if not img_path.exists():
+        raise HTTPException(status_code=404, detail="文件不存在")
     return FileResponse(img_path)
 
 
@@ -70,14 +76,16 @@ async def handle_clear_cache():
     """
     清除缓存
     """
-    data = await FastAPICache.clear()
+    await FastAPICache.clear()
+    from api.menu.views import invalidate_tree_cache
+    invalidate_tree_cache()
     return BaseApiOut(message='缓存清除成功')
 
 
 BACKUP_DIR = settings.BASE_PATH / "data" / "backups"
 
 
-@site_router.post('/backup', dependencies=[Depends(get_current_user)])
+@site_router.post('/backup', dependencies=[Depends(get_current_super_user)])
 async def handle_backup():
     """全站数据备份为JSON文件，保存到 api/data/backups/"""
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
@@ -150,7 +158,7 @@ async def handle_backup():
     return BaseApiOut(data={"filename": filename, "path": str(filepath)})
 
 
-@site_router.get('/backup/list', dependencies=[Depends(get_current_user)])
+@site_router.get('/backup/list', dependencies=[Depends(get_current_super_user)])
 async def handle_backup_list():
     """列出所有备份文件"""
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
@@ -166,7 +174,7 @@ async def handle_backup_list():
     return BaseApiOut(data=result)
 
 
-@site_router.get('/backup/download/{filename}', dependencies=[Depends(get_current_user)])
+@site_router.get('/backup/download/{filename}', dependencies=[Depends(get_current_super_user)])
 async def handle_backup_download(filename: str):
     """下载指定备份文件"""
     filepath = BACKUP_DIR / filename
@@ -175,7 +183,7 @@ async def handle_backup_download(filename: str):
     return FileResponse(filepath, filename=filename, media_type="application/json")
 
 
-@site_router.delete('/backup/{filename}', dependencies=[Depends(get_current_user)])
+@site_router.delete('/backup/{filename}', dependencies=[Depends(get_current_super_user)])
 async def handle_backup_delete(filename: str):
     """删除指定备份文件"""
     filepath = BACKUP_DIR / filename
@@ -185,7 +193,7 @@ async def handle_backup_delete(filename: str):
     return BaseApiOut(message="备份文件已删除")
 
 
-@site_router.post('/restore', dependencies=[Depends(get_current_user)])
+@site_router.post('/restore', dependencies=[Depends(get_current_super_user)])
 async def handle_restore(filename: str = "", file: UploadFile | None = File(None)):
     """从备份文件恢复全站数据。支持上传文件或指定已有备份文件名"""
     if file and file.filename:

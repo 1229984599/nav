@@ -19,7 +19,8 @@ const formModel = reactive({
   username: '',
   password: '',
   nickname: '',
-  status: false as boolean
+  status: false as boolean,
+  is_super: false as boolean
 });
 
 const statusOptions = [
@@ -92,7 +93,7 @@ function handlePageSizeChange(size: number) { pagination.pageSize = size; pagina
 function handleAdd() {
   isEdit.value = false;
   editId.value = null;
-  Object.assign(formModel, { username: '', password: '', nickname: '', status: false });
+  Object.assign(formModel, { username: '', password: '', nickname: '', status: false, is_super: false });
   showDialog.value = true;
 }
 
@@ -103,7 +104,8 @@ function handleEdit(row: Api.SystemUser.UserItem) {
     username: row.username,
     password: '',
     nickname: row.nickname || '',
-    status: row.status
+    status: row.status,
+    is_super: row.is_super
   });
   showDialog.value = true;
 }
@@ -111,8 +113,10 @@ function handleEdit(row: Api.SystemUser.UserItem) {
 async function handleSave() {
   if (isEdit.value && editId.value) {
     const payload: Api.SystemUser.UserUpdate = {
+      username: formModel.username,
       nickname: formModel.nickname,
-      status: formModel.status
+      status: formModel.status,
+      is_super: formModel.is_super
     };
     if (formModel.password) payload.password = formModel.password;
     await fetchUserUpdate(editId.value, payload);
@@ -121,7 +125,8 @@ async function handleSave() {
       username: formModel.username,
       password: formModel.password,
       nickname: formModel.nickname,
-      status: formModel.status
+      status: formModel.status,
+      is_super: formModel.is_super
     });
   }
   showDialog.value = false;
@@ -235,7 +240,7 @@ loadData();
     <NModal v-model:show="showDialog" preset="dialog" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 450px">
       <NForm label-placement="left" label-width="80px" class="mt-16px">
         <NFormItem label="用户名">
-          <NInput v-model:value="formModel.username" :disabled="isEdit" placeholder="用户名" />
+          <NInput v-model:value="formModel.username" placeholder="用户名" />
         </NFormItem>
         <NFormItem label="密码">
           <NInput v-model:value="formModel.password" type="password" show-password-on="click"
@@ -246,6 +251,9 @@ loadData();
         </NFormItem>
         <NFormItem label="状态">
           <NSwitch v-model:value="formModel.status" />
+        </NFormItem>
+        <NFormItem label-width="90" label="超级管理员">
+          <NSwitch v-model:value="formModel.is_super" />
         </NFormItem>
       </NForm>
       <template #action>
