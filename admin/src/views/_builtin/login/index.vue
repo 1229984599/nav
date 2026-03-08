@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { getPaletteColorByNumber, mixColor } from '@sa/color';
 import { useAppStore } from '@/store/modules/app';
 import { useThemeStore } from '@/store/modules/theme';
+import { useSiteStore } from '@/store/modules/site';
 import { $t } from '@/locales';
 import PwdLogin from './modules/pwd-login.vue';
 
 const appStore = useAppStore();
 const themeStore = useThemeStore();
+const siteStore = useSiteStore();
+
+onMounted(() => siteStore.fetchSiteTitle());
 
 const bgThemeColor = computed(() =>
   themeStore.darkMode ? getPaletteColorByNumber(themeStore.themeColor, 600) : themeStore.themeColor
@@ -27,7 +31,7 @@ const bgColor = computed(() => {
       <div class="w-400px lt-sm:w-300px">
         <header class="flex-y-center justify-between">
           <SystemLogo class="size-64px lt-sm:size-48px" />
-          <h3 class="text-28px text-primary font-500 lt-sm:text-22px">{{ $t('system.title') }}</h3>
+          <h3 class="text-28px text-primary font-500 lt-sm:text-22px">{{ siteStore.siteTitle || $t('system.title') }}</h3>
           <div class="i-flex-col">
             <ThemeSchemaSwitch
               :theme-schema="themeStore.themeScheme"

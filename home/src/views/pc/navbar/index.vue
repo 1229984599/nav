@@ -7,18 +7,17 @@ import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
 import MHot from "@/components/hot/index.vue";
 import { isMobile } from "@/utils/window";
-import { useRouter } from "vue-router";
 
 defineOptions({
   name: "MNavbar",
 });
+
+const emit = defineEmits<{
+  (e: "open-search"): void;
+}>();
+
 const appStore = useAppStore();
 const siteStore = useSiteStore();
-const router = useRouter();
-
-function gotoSearch() {
-  router.push({ path: "/search" });
-}
 </script>
 
 <template>
@@ -47,7 +46,7 @@ function gotoSearch() {
           icon="mingcute:search-line"
           :size="24"
           class="cursor-pointer hover:text-sky-800 transition-colors"
-          @click="gotoSearch"
+          @click="emit('open-search')"
         />
         <m-profile class="mr-1" />
       </div>

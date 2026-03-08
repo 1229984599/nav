@@ -4,7 +4,7 @@ import { scrollTop } from "@/utils/window";
 import AddLink from "@/components/add-link/remote.vue";
 import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
-import { onMounted, ref } from "vue";
+import { inject, onMounted, ref } from "vue";
 import SubMenuItem from "../side-menu/SubMenuItem.vue";
 import { useUserStore } from "@/store/user";
 import { useRouter } from "vue-router";
@@ -18,6 +18,8 @@ const friendStore = useFriendStore();
 const userStore = useUserStore();
 const router = useRouter();
 onMounted(friendStore.getFriendList);
+
+const openSearch = inject<() => void>("openSearch", () => {});
 
 // 滚动进度
 const scrollProgress = ref(0);
@@ -50,7 +52,6 @@ function handleScrollTop() {
 <template>
   <div>
     <!--友情链接-->
-    <!--    <h2 class="text-zinc-900 font-black py-2">友情链接</h2>-->
     <sub-menu-item :item="item" class="text-lg pb-2" :icon-size="32" />
     <div class="min-h-[70px] py-3 flex items-center" :style="{ backgroundColor: 'var(--nav-card-bg)' }">
       <ul v-if="friendStore.friendList.length > 0" class="flex px-2 gap-x-2 flex-wrap text-sm">
@@ -88,6 +89,9 @@ function handleScrollTop() {
     <div
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"
     >
+      <el-tooltip content="搜索 (Ctrl+K)" placement="left">
+        <m-icon class="tool-item" icon="mingcute:search-line" @click="openSearch" />
+      </el-tooltip>
       <el-tooltip content="回到顶部" placement="left">
         <div class="back-top-wrapper" @click="handleScrollTop">
           <svg class="progress-ring" width="36" height="36" viewBox="0 0 36 36">

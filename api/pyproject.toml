@@ -1,6 +1,6 @@
 [project]
 name = "api"
-version = "1.1.1"
+version = "1.1.2"
 description = "Default template for PDM package"
 authors = [
     { name = "moxiaoying", email = "768091671@qq.com" },

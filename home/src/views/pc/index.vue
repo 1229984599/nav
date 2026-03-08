@@ -5,18 +5,19 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "./footer/index.vue";
 import AppMain from "./app-main/AppMain.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, provide, ref } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useBookmarkStore } from "@/store/bookmark";
 import { useTitle } from "@vueuse/core";
-import MSearch from "@/components/m-search/index.vue";
+import SearchDialog from "@/components/m-search/SearchDialog.vue";
 import MMask from "@/components/m-mask.vue";
 import style from "@/styles/variables.module.scss";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
 const bookmarkStore = useBookmarkStore();
+const searchDialogRef = ref<InstanceType<typeof SearchDialog> | null>(null);
 
 /** 从旧版 localMenu 格式迁移书签数据 */
 function migrateOldBookmarks() {
@@ -31,6 +32,13 @@ function migrateOldBookmarks() {
     // 迁移失败不影响正常使用
   }
 }
+
+function openSearch() {
+  searchDialogRef.value?.open();
+}
+
+// Provide openSearch to child components (footer tool group)
+provide("openSearch", openSearch);
 
 onMounted(async () => {
   if (isMobile.value) {
@@ -79,14 +87,16 @@ onMounted(() => {
     <!--    右侧内容-->
     <div class="right-container">
       <div class="scroll-progress" :style="{ width: scrollPercent + '%' }" />
-      <m-navbar class="navbar" />
-      <m-search class="w-[78%] md:w-[50%]" font-size="30px" />
+      <m-navbar class="navbar" @open-search="openSearch" />
       <div class="p-2 md:p-6">
         <app-main />
         <m-footer />
       </div>
     </div>
     <m-mask :is-mask="isMask" />
+
+    <!-- 搜索对话框 -->
+    <search-dialog ref="searchDialogRef" />
   </div>
 </template>
 

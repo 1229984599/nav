@@ -47,7 +47,7 @@ export function setupLoading() {
       ${dot}
     </div>
   </div>
-  <h2 class="text-28px font-500 text-primary">${$t('system.title')}</h2>
+  <h2 class="text-28px font-500 text-primary">${localStorage.getItem('site_title') || $t('system.title')}</h2>
 </div>`;
 
   const app = document.getElementById('app');
