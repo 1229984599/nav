@@ -127,20 +127,22 @@ defineExpose({ show });
 <template>
   <!-- 右键菜单 -->
   <teleport to="body">
-    <div
-      v-show="menuVisible"
-      class="context-menu"
-      :style="menuStyle"
-    >
-      <div class="context-menu-item" @click="handleEdit">
-        <m-icon icon="mdi:pencil-outline" :size="16" />
-        <span>编辑</span>
+    <transition name="ctx-spring">
+      <div
+        v-show="menuVisible"
+        class="context-menu"
+        :style="menuStyle"
+      >
+        <div class="context-menu-item" @click="handleEdit">
+          <m-icon icon="mdi:pencil-outline" :size="16" />
+          <span>编辑</span>
+        </div>
+        <div class="context-menu-item context-menu-item--danger" @click="handleDelete">
+          <m-icon icon="mdi:delete-outline" :size="16" />
+          <span>删除</span>
+        </div>
       </div>
-      <div class="context-menu-item context-menu-item--danger" @click="handleDelete">
-        <m-icon icon="mdi:delete-outline" :size="16" />
-        <span>删除</span>
-      </div>
-    </div>
+    </transition>
   </teleport>
 
   <!-- 编辑弹窗 -->

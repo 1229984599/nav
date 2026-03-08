@@ -4,6 +4,8 @@ import { getHotList } from "@/api/spider";
 import { useScroll } from "@vueuse/core";
 import MIcon from "@/components/MIcon.vue";
 import { HotItemType } from "@/api/spider/types";
+import SkeletonCard from "@/components/SkeletonCard.vue";
+import EmptyState from "@/components/EmptyState.vue";
 
 defineOptions({
   name: "MHotItem",
@@ -83,19 +85,30 @@ onMounted(() => {
 
 <template>
   <el-tab-pane class="relative" :label="label" :name="name">
-    <div v-loading="isLoading" ref="targetRef" class="hot-container">
-      <div class="hot-item" :key="index" v-for="(item, index) in dataList">
-        <div class="flex w-[80%] md:w-[85%] gap-x-2">
-          <!--              排行榜序号-->
-          <div class="hot-index">{{ index + 1 }}</div>
-          <a class="hot-item-title" :href="item.url" target="_blank">{{
-            item.title
-          }}</a>
+    <div ref="targetRef" class="hot-container">
+      <!-- 骨架屏 -->
+      <template v-if="isLoading">
+        <skeleton-card type="weather" :count="8" />
+      </template>
+      <!-- 空状态 -->
+      <empty-state
+        v-else-if="dataList.length === 0"
+        icon="mdi:fire-off"
+        text="暂无热榜数据"
+        :size="36"
+      />
+      <!-- 真实数据 -->
+      <template v-else>
+        <div class="hot-item" :key="index" v-for="(item, index) in dataList">
+          <div class="flex w-[80%] md:w-[85%] gap-x-2">
+            <div class="hot-index">{{ index + 1 }}</div>
+            <a class="hot-item-title" :href="item.url" target="_blank">{{
+              item.title
+            }}</a>
+          </div>
+          <span class="hot-num">{{ item.hot }}</span>
         </div>
-
-        <!--              点击数量-->
-        <span class="hot-num">{{ item.hot }}</span>
-      </div>
+      </template>
     </div>
     <m-icon
       v-show="isShowBackTop"

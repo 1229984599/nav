@@ -5,7 +5,7 @@ import MLogo from "@/components/MLogo.vue";
 import { useAppStore } from "@/store/app";
 import MFooter from "./footer/index.vue";
 import AppMain from "./app-main/AppMain.vue";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { isMobile } from "@/utils/window";
 import { useSiteStore } from "@/store/site";
 import { useBookmarkStore } from "@/store/bookmark";
@@ -50,6 +50,21 @@ const menuWidth = computed(() => {
   if (!appStore.isCollapse) return style.sideBarWidth;
   return isMobile.value ? style.hideSideBarWidth : style.sidebarHideWidth;
 });
+
+// 滚动进度条
+const scrollPercent = ref(0);
+
+onMounted(() => {
+  setTimeout(() => {
+    const container = document.querySelector(".right-container");
+    if (container) {
+      container.addEventListener("scroll", () => {
+        const { scrollTop, scrollHeight, clientHeight } = container as HTMLElement;
+        scrollPercent.value = scrollHeight <= clientHeight ? 0 : (scrollTop / (scrollHeight - clientHeight)) * 100;
+      });
+    }
+  }, 100);
+});
 </script>
 
 <template>
@@ -63,6 +78,7 @@ const menuWidth = computed(() => {
     </div>
     <!--    右侧内容-->
     <div class="right-container">
+      <div class="scroll-progress" :style="{ width: scrollPercent + '%' }" />
       <m-navbar class="navbar" />
       <m-search class="w-[78%] md:w-[50%]" font-size="30px" />
       <div class="p-2 md:p-6">
@@ -84,6 +100,8 @@ const menuWidth = computed(() => {
   .left-container {
     height: 100vh;
     z-index: 60;
+    overflow: hidden;
+    flex-shrink: 0;
 
     ul {
       height: calc(100% - #{$navHeaderHeight});
@@ -94,7 +112,10 @@ const menuWidth = computed(() => {
       position: relative;
       height: 100%;
       width: v-bind(menuWidth);
-      transition: width #{$sideBarDuration} ease;
+      min-width: v-bind(menuWidth);
+      transition: width #{$sideBarDuration} cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  min-width #{$sideBarDuration} cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      overflow: hidden;
       @media screen and (max-width: 768px) {
         transition-duration: 0.25s;
       }

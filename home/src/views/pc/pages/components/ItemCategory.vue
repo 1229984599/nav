@@ -9,6 +9,7 @@ import { VueDraggable } from "vue-draggable-plus";
 import { useUserStore } from "@/store/user";
 import links from "@/api/links";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
+import EmptyState from "@/components/EmptyState.vue";
 
 const userStore = useUserStore();
 
@@ -78,7 +79,7 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
     v-if="isAdmin"
     v-model="linkList"
     :disabled="orderSaving"
-    class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8 mt-3"
+    class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8 mt-3"
     :animation="200"
     ghost-class="drag-ghost"
     @start="handleLinkDragStart"
@@ -88,9 +89,15 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
   </VueDraggable>
   <div
     v-else
-    class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8 mt-3"
+    class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8 mt-3"
   >
     <item-desc :item="item" v-for="item in menu?.links" />
   </div>
+  <empty-state
+    v-if="(!menu?.links || menu.links.length === 0)"
+    icon="mdi:link-off"
+    text="该分类暂无链接"
+    class="mb-8"
+  />
   <link-context-menu v-if="isAdmin" ref="contextMenuRef" />
 </template>

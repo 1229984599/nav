@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { LocationQueryValue, useRoute } from "vue-router";
-import { nextTick, watch } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useMenuStore } from "@/store/menu";
 import ItemCategory from "./components/ItemCategory.vue";
 import TabCategory from "./components/TabCategory.vue";
 import { useTitle } from "@vueuse/core";
 import { useSiteStore } from "@/store/site";
 import BookmarkSection from "@/components/local-menu/BookmarkSection.vue";
+import SkeletonCard from "@/components/SkeletonCard.vue";
 
 const routes = useRoute();
 const siteStore = useSiteStore();
@@ -62,11 +63,73 @@ watch(
     }
   },
 );
+
+// --- Intersection Observer: 滚动时自动高亮侧边栏 ---
+const observer = ref<IntersectionObserver | null>(null);
+const isUserScrolling = ref(true);
+
+onMounted(() => {
+  const container = document.querySelector(".right-container");
+  if (!container) return;
+
+  observer.value = new IntersectionObserver(
+    (entries) => {
+      if (!isUserScrolling.value) return;
+      for (const entry of entries) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
+          const id = entry.target.id;
+          if (id) {
+            menuStore.setActiveMenuIndex(id);
+          }
+        }
+      }
+    },
+    {
+      root: container,
+      rootMargin: "-80px 0px -60% 0px",
+      threshold: 0.3,
+    },
+  );
+});
+
+// 菜单加载后，观察各分类区块
+watch(
+  () => menuStore.menuTree.length,
+  (len) => {
+    if (len > 0 && observer.value) {
+      nextTick(() => {
+        for (const item of menuStore.menuTree) {
+          if (item.title) {
+            const el = document.getElementById(item.title);
+            if (el) observer.value!.observe(el);
+          }
+        }
+      });
+    }
+  },
+);
+
+onBeforeUnmount(() => {
+  observer.value?.disconnect();
+});
 </script>
 
 <template>
   <div>
     <bookmark-section />
+
+    <!-- 骨架屏：菜单数据加载中 -->
+    <template v-if="menuStore.menuTree.length === 0">
+      <div v-for="i in 2" :key="'sk-' + i" class="mb-8">
+        <div class="flex items-center gap-x-2 mb-3">
+          <div class="w-6 h-6 rounded bg-[#e9ecef] skeleton-pulse" />
+          <div class="w-24 h-6 rounded bg-[#e9ecef] skeleton-pulse" />
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <skeleton-card type="card" :count="8" />
+        </div>
+      </div>
+    </template>
 
     <div v-for="menuItem in menuStore.menuTree" :key="menuItem.id">
       <!-- 有子分类的菜单：使用 Tab 切换模式 -->

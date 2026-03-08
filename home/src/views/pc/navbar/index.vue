@@ -6,11 +6,19 @@ import MYiyan from "@/components/MYiyan.vue";
 import { useSiteStore } from "@/store/site";
 import { useAppStore } from "@/store/app";
 import MHot from "@/components/hot/index.vue";
+import { isMobile } from "@/utils/window";
+import { useRouter } from "vue-router";
+
 defineOptions({
   name: "MNavbar",
 });
 const appStore = useAppStore();
 const siteStore = useSiteStore();
+const router = useRouter();
+
+function gotoSearch() {
+  router.push({ path: "/search" });
+}
 </script>
 
 <template>
@@ -32,9 +40,17 @@ const siteStore = useSiteStore();
 
     <div class="nav-right-container">
       <m-yiyan v-if="siteStore.siteInfo?.yiyan" />
-      <!--      占位，防止个人中心到最前面-->
       <div></div>
-      <m-profile class="mr-1" />
+      <div class="flex items-center gap-x-2">
+        <m-icon
+          v-if="isMobile"
+          icon="mingcute:search-line"
+          :size="24"
+          class="cursor-pointer hover:text-sky-800 transition-colors"
+          @click="gotoSearch"
+        />
+        <m-profile class="mr-1" />
+      </div>
     </div>
   </div>
 </template>

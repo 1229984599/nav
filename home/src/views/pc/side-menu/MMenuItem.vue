@@ -9,7 +9,7 @@ defineProps({
   item: Object as PropType<MenuSchemaTree>,
   iconSize: {
     type: [String, Number],
-    default: 25,
+    default: 24,
   },
 });
 const router = useRouter();

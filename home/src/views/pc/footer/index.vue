@@ -4,10 +4,11 @@ import { scrollTop } from "@/utils/window";
 import AddLink from "@/components/add-link/remote.vue";
 import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import SubMenuItem from "../side-menu/SubMenuItem.vue";
 import { useUserStore } from "@/store/user";
 import { useRouter } from "vue-router";
+import EmptyState from "@/components/EmptyState.vue";
 
 defineOptions({
   name: "MFooter",
@@ -17,6 +18,20 @@ const friendStore = useFriendStore();
 const userStore = useUserStore();
 const router = useRouter();
 onMounted(friendStore.getFriendList);
+
+// 滚动进度
+const scrollProgress = ref(0);
+
+onMounted(() => {
+  const container = document.querySelector(".right-container");
+  if (container) {
+    container.addEventListener("scroll", () => {
+      const { scrollTop, scrollHeight, clientHeight } = container as HTMLElement;
+      scrollProgress.value = scrollHeight <= clientHeight ? 0 : scrollTop / (scrollHeight - clientHeight);
+    });
+  }
+});
+
 const item = {
   title: "友情链接",
   icon: "file-icons:freedos",
@@ -36,9 +51,9 @@ function handleScrollTop() {
   <div>
     <!--友情链接-->
     <!--    <h2 class="text-zinc-900 font-black py-2">友情链接</h2>-->
-    <sub-menu-item :item="item" class="text-lg pb-2" :icon-size="37" />
+    <sub-menu-item :item="item" class="text-lg pb-2" :icon-size="32" />
     <div class="min-h-[70px] py-3 flex items-center" :style="{ backgroundColor: 'var(--nav-card-bg)' }">
-      <ul class="flex px-2 gap-x-2 flex-wrap text-sm">
+      <ul v-if="friendStore.friendList.length > 0" class="flex px-2 gap-x-2 flex-wrap text-sm">
         <li class="list-disc mx-4" v-for="friend in friendStore.friendList">
           <a
             class="block max-w-[90px] text-sm whitespace-nowrap overflow-hidden text-ellipsis"
@@ -48,6 +63,13 @@ function handleScrollTop() {
           >
         </li>
       </ul>
+      <empty-state
+        v-else
+        icon="mdi:account-group-outline"
+        text="暂无友情链接"
+        :size="36"
+        class="w-full"
+      />
     </div>
 
     <footer class="mt-5">
@@ -67,11 +89,33 @@ function handleScrollTop() {
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"
     >
       <el-tooltip content="回到顶部" placement="left">
-        <m-icon
-          class="tool-item"
-          @click="handleScrollTop"
-          icon="ph:rocket-fill"
-        />
+        <div class="back-top-wrapper" @click="handleScrollTop">
+          <svg class="progress-ring" width="36" height="36" viewBox="0 0 36 36">
+            <circle
+              class="progress-ring-bg"
+              cx="18" cy="18" r="15"
+              fill="none"
+              stroke="#e5e7eb"
+              stroke-width="2"
+            />
+            <circle
+              class="progress-ring-fill"
+              cx="18" cy="18" r="15"
+              fill="none"
+              stroke="var(--el-color-primary, #409eff)"
+              stroke-width="2"
+              stroke-linecap="round"
+              :stroke-dasharray="94.25"
+              :stroke-dashoffset="94.25 * (1 - scrollProgress)"
+              transform="rotate(-90 18 18)"
+            />
+          </svg>
+          <m-icon
+            class="back-top-icon"
+            icon="ph:rocket-fill"
+            :size="16"
+          />
+        </div>
       </el-tooltip>
       <el-tooltip content="mini书签" placement="left">
         <router-link :to="{ name: 'Mobile' }">
@@ -96,6 +140,40 @@ a {
 
   &:hover {
     color: var(--el-color-primary);
+  }
+}
+
+.back-top-wrapper {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .progress-ring-bg {
+    opacity: 0.3;
+  }
+
+  .progress-ring-fill {
+    transition: stroke-dashoffset 0.1s linear;
+  }
+
+  .back-top-icon {
+    z-index: 1;
+    color: var(--el-color-primary, #409eff);
+    transition: color 0.2s;
+  }
+
+  &:hover .back-top-icon {
+    color: #fe2d46;
   }
 }
 </style>

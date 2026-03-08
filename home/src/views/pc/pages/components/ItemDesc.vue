@@ -60,17 +60,22 @@ function handleContextMenu(event: MouseEvent) {
   color: inherit;
   cursor: pointer;
   background-color: var(--nav-card-bg);
-  padding: 8px;
+  padding: var(--space-3, 12px);
   border-radius: 8px;
   transition:
     box-shadow 0.3s,
-    transform 0.3s,
+    transform 0.15s,
     color 0.3s;
 
   &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加底部阴影 */
-    transform: translateY(-2px); /* 向上移动一点的动画效果 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
     color: var(--el-color-primary);
+  }
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   }
 
   & > .left-icon {
@@ -109,9 +114,8 @@ function handleContextMenu(event: MouseEvent) {
     }
   }
 
-  //pc样式
   @media screen and (min-width: 769px) {
-    padding: 16px;
+    padding: var(--space-4, 16px);
     & > .right-content {
       padding-left: 4px;
     }

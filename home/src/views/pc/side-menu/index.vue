@@ -4,11 +4,12 @@ import MMenuItem from "./MMenuItem.vue";
 import SubMenuItem from "./SubMenuItem.vue";
 import { useMenuStore } from "@/store/menu";
 import { useBookmarkStore } from "@/store/bookmark";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, nextTick, ref, watch } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import { isMobile } from "@/utils/window";
 import { useRouter } from "vue-router";
 import MIcon from "@/components/MIcon.vue";
+import SkeletonCard from "@/components/SkeletonCard.vue";
 
 defineOptions({
   name: "MSideMenu",
@@ -25,7 +26,7 @@ onMounted(() => {
   menuStore.getMenuTree().finally(() => (loading.value = false));
 });
 
-// 监听 activeMenuIndex 变化，主动展开对应父菜单并高亮子项
+// 监听 activeMenuIndex 变化，主动展开对应父菜单并高亮子项，滚动到可视区域
 watch(
   () => menuStore.activeMenuIndex,
   (index) => {
@@ -40,6 +41,15 @@ watch(
         }
       }
     }
+    // 等待 DOM 更新后，将高亮菜单项滚动到可视区域
+    nextTick(() => {
+      const menuEl = menuRef.value?.$el as HTMLElement | undefined;
+      if (!menuEl) return;
+      const activeItem = menuEl.querySelector(".el-menu-item.is-active") as HTMLElement | null;
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    });
   },
 );
 
@@ -68,13 +78,18 @@ function scrollToBookmarks(groupId?: string) {
 
 <template>
   <el-menu
-    v-loading.fullscreen.lock="loading"
     ref="menuRef"
     :default-active="menuStore.activeMenuIndex"
     :collapse-transition="false"
     :collapse="appStore.isCollapse"
+    unique-opened
     class="divide-y divide-gray-100"
   >
+    <!-- 加载骨架 -->
+    <template v-if="loading">
+      <skeleton-card type="menu" :count="6" />
+    </template>
+    <template v-else>
     <!-- 书签分组 -->
     <el-sub-menu index="local-bookmarks">
       <template #title>
@@ -102,6 +117,7 @@ function scrollToBookmarks(groupId?: string) {
 
     <!-- 服务端菜单 -->
     <m-menu-item :item="item" v-for="item in menuStore.menuTree" />
+    </template>
   </el-menu>
 </template>
 

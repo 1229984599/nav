@@ -1,25 +1,48 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
 import MLogo from "@/components/MLogo.vue";
 import { getBaiduSuggestions } from "@/api/spider";
+import { useRouter } from "vue-router";
 
 defineOptions({
   name: "MSearch",
 });
+
+const router = useRouter();
 const searchQuery = ref("");
+const autocompleteRef = ref<any>(null);
+const HISTORY_KEY = "search-history";
+const MAX_HISTORY = 10;
+
+// 搜索历史
+function getHistory(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function addHistory(keyword: string) {
+  if (!keyword.trim()) return;
+  const history = getHistory().filter((h) => h !== keyword);
+  history.unshift(keyword);
+  localStorage.setItem(
+    HISTORY_KEY,
+    JSON.stringify(history.slice(0, MAX_HISTORY)),
+  );
+}
 
 async function fetchSuggestions(
   queryString: string,
   callback: (arg: any) => void,
 ) {
-  // 模拟根据搜索词过滤结果
   const { items } = await linkModel.list(
     { page: 1, pageSize: 10, order_by: "order" },
     { title: queryString },
   );
-  // 如果items长度为0，就调用百度搜索数据
   if (items.length === 0) {
     const baiduSuggestions = await getBaiduSuggestions(queryString);
     return callback(baiduSuggestions);
@@ -27,18 +50,16 @@ async function fetchSuggestions(
   callback(items);
 }
 
-// 搜索功能
 function handleSuggestionClick(link: any) {
-  // 没有提供链接就跳转到百度搜索
   if (!link.href) {
     handleBaiduSearch(link.title);
     return;
   }
+  addHistory(searchQuery.value || link.title);
   window.open(link.href, "_blank");
   searchQuery.value = "";
 }
 
-// 跳转到百度搜索
 function handleBaiduSearch(kw: string = "") {
   if (kw === "") {
     window.open("https://www.baidu.com/s?wd=" + searchQuery.value, "_blank");
@@ -47,19 +68,46 @@ function handleBaiduSearch(kw: string = "") {
   }
   searchQuery.value = "";
 }
+
+// Enter 跳转搜索结果页
+function handleEnterSearch() {
+  if (!searchQuery.value.trim()) return;
+  addHistory(searchQuery.value);
+  router.push({ path: "/search", query: { q: searchQuery.value } });
+}
+
+// Ctrl+K / Cmd+K 全局快捷键
+function handleGlobalKeydown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    e.preventDefault();
+    const inputEl = document.querySelector<HTMLInputElement>(
+      ".m-search-input .el-input__inner",
+    );
+    inputEl?.focus();
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("keydown", handleGlobalKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("keydown", handleGlobalKeydown);
+});
 </script>
 
 <template>
   <div class="mx-auto pt-8 pb-4 relative">
     <m-logo v-bind="$attrs" class="flex justify-center text-2xl" />
 
-    <!-- 第二栏：搜索框 -->
+    <!-- 搜索框 -->
     <div
       class="flex justify-center py-3"
-      @keydown.enter="handleSuggestionClick"
+      @keydown.enter.prevent="handleEnterSearch"
     >
       <div class="input-container">
         <el-autocomplete
+          ref="autocompleteRef"
           autofocus
           :highlight-first-item="true"
           :fit-input-width="true"
@@ -68,14 +116,17 @@ function handleBaiduSearch(kw: string = "") {
           v-model="searchQuery"
           :fetch-suggestions="fetchSuggestions"
           @select="handleSuggestionClick"
-          placeholder="请输入需要搜索的内容"
-          class="w-full px-2 py-2 md:py-3 rounded-full"
+          placeholder="搜索链接... (Ctrl+K)"
+          class="w-full px-2 py-2 rounded-full m-search-input"
           :style="{ backgroundColor: 'var(--nav-card-bg)' }"
         >
           <template #default="{ item }">
             <div class="flex justify-between">
               <span class="px-2 w-[70%] text-truncate">{{ item.title }}</span>
-              <div class="flex items-center gap-x-1 overflow-hidden" v-if="item.menus?.length">
+              <div
+                class="flex items-center gap-x-1 overflow-hidden"
+                v-if="item.menus?.length"
+              >
                 <m-icon
                   :icon="item.menus[0].icon"
                   :color="item.menus[0].color"
@@ -99,9 +150,6 @@ function handleBaiduSearch(kw: string = "") {
         </el-autocomplete>
       </div>
     </div>
-
-    <!--    搜索推荐-->
-    <!-- 第四栏：通知 -->
   </div>
 </template>
 

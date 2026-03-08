@@ -2,7 +2,7 @@
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
 import { computed, nextTick, PropType, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
@@ -13,10 +13,12 @@ import links from "@/api/links";
 import menuApi from "@/api/menu";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
 import MenuContextMenu from "@/components/menu-context-menu/index.vue";
+import EmptyState from "@/components/EmptyState.vue";
 
 const userStore = useUserStore();
 const menuStore = useMenuStore();
 const route = useRoute();
+const router = useRouter();
 
 const props = defineProps({
   menu: {
@@ -160,6 +162,17 @@ watch(activeTab, (key) => {
   }
 });
 
+// 用户点击 tab 时，切换 activeTab 并同步 URL
+function handleTabClick(tab: TabItem) {
+  activeTab.value = tab.key;
+  // 同步 URL sub 参数，刷新页面时恢复正确的 tab
+  const query: Record<string, string> = { cat: props.menu?.title || "" };
+  if (!tab.isParent) {
+    query.sub = tab.title;
+  }
+  router.replace({ path: "/list", query });
+}
+
 // Draggable link list for admin mode
 const linkList = ref<LinkSchemaList[]>([]);
 
@@ -295,7 +308,7 @@ function handleTabTouchEnd() {
             v-for="tab in tabList"
             :key="tab.key"
             :class="['tab-pill', { active: activeTab === tab.key }]"
-            @click="activeTab = tab.key"
+            @click="handleTabClick(tab)"
             @contextmenu="handleTabContextMenu($event, tab)"
             @touchstart.passive="handleTabTouchStart($event, tab)"
             @touchend="handleTabTouchEnd"
@@ -310,7 +323,7 @@ function handleTabTouchEnd() {
             v-for="tab in tabs"
             :key="tab.key"
             :class="['tab-pill', { active: activeTab === tab.key }]"
-            @click="activeTab = tab.key"
+            @click="handleTabClick(tab)"
           >
             {{ tab.title }}
           </button>
@@ -319,29 +332,39 @@ function handleTabTouchEnd() {
     </div>
 
     <!-- Link cards grid -->
-    <VueDraggable
-      v-if="isAdmin"
-      v-model="linkList"
-      :disabled="orderSaving"
-      class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8"
-      :animation="200"
-      ghost-class="drag-ghost"
-      @start="handleLinkDragStart"
-      @end="handleLinkDragEnd"
-    >
-      <item-desc
-        :item="item"
-        v-for="item in linkList"
-        :key="item.id"
-        @contextmenu="handleItemContextMenu"
-      />
-    </VueDraggable>
-    <div
-      v-else
-      class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-4 mb-8"
-    >
-      <item-desc :item="item" v-for="item in activeMenu?.links" :key="item.id" />
-    </div>
+    <transition name="fade-slide" mode="out-in">
+      <div :key="activeTab">
+        <VueDraggable
+          v-if="isAdmin && linkList.length > 0"
+          v-model="linkList"
+          :disabled="orderSaving"
+          class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8"
+          :animation="200"
+          ghost-class="drag-ghost"
+          @start="handleLinkDragStart"
+          @end="handleLinkDragEnd"
+        >
+          <item-desc
+            :item="item"
+            v-for="item in linkList"
+            :key="item.id"
+            @contextmenu="handleItemContextMenu"
+          />
+        </VueDraggable>
+        <div
+          v-else-if="activeMenu?.links && activeMenu.links.length > 0"
+          class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8"
+        >
+          <item-desc :item="item" v-for="item in activeMenu?.links" :key="item.id" />
+        </div>
+        <empty-state
+          v-else
+          icon="mdi:link-off"
+          text="该分类暂无链接"
+          class="mb-8"
+        />
+      </div>
+    </transition>
   </div>
   <link-context-menu v-if="isAdmin" ref="contextMenuRef" />
   <menu-context-menu v-if="isAdmin" ref="menuContextMenuRef" />
