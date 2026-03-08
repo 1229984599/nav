@@ -9,7 +9,7 @@ from auth.auth import get_current_user, is_login
 from common.errors import not_found
 from common.response import BaseApiOut
 from models import Links, Menu, User
-from .schemas import CreateMenuSchema, FilterSchemaList, LinkSchemaList, LinkUpdateAllSchema
+from .schemas import CreateMenuSchema, FilterSchemaList, LinkImportRequest, LinkSchemaList, LinkUpdateAllSchema
 from .service import (
     attach_link_menus,
     build_link_search_filters,
@@ -69,6 +69,50 @@ async def handle_link_create_all(items: list[CreateMenuSchema]):
     await clear_link_cache()
     await create_links_batch(items)
     return BaseApiOut(message="批量创建成功")
+
+
+@link_router.post("/import-json", dependencies=[Depends(get_current_user)])
+async def handle_link_import_json(payload: LinkImportRequest):
+    """从前端预览后的JSON数据导入链接（支持自动创建缺失菜单）"""
+    # 自动创建缺失的菜单
+    for menu_title in payload.create_menus:
+        exists = await Menu.filter(title=menu_title).first()
+        if not exists:
+            await Menu.create(title=menu_title, icon="ic:round-menu")
+
+    # 重新加载菜单映射
+    all_menus = await Menu.all()
+    menu_map = {m.title: m for m in all_menus}
+
+    created = 0
+    skipped = 0
+    for item in payload.items:
+        if not item.title:
+            skipped += 1
+            continue
+        exists = await Links.filter(title=item.title).first()
+        if exists:
+            skipped += 1
+            continue
+        link = await Links.create(
+            title=item.title,
+            href=item.href,
+            icon=item.icon,
+            desc=item.desc,
+            color=item.color,
+            is_self=item.is_self,
+            is_vip=item.is_vip,
+            order=item.order,
+            cdn_img_id=item.cdn_img_id,
+            status=item.status,
+        )
+        menus_to_add = [menu_map[t] for t in item.menus if t in menu_map]
+        if menus_to_add:
+            await link.menus.add(*menus_to_add)
+        created += 1
+
+    await clear_link_cache()
+    return BaseApiOut(data={"created": created, "skipped": skipped})
 
 
 @link_router.put("/{item_id}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])

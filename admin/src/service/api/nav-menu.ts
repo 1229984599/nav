@@ -46,3 +46,12 @@ export function fetchMenuImport(file: File) {
     data: formData
   });
 }
+
+/** Import menus from pre-selected JSON data */
+export function fetchMenuImportJson(data: { items: any[] }) {
+  return request<{ created: number; skipped: number }>({
+    url: '/menu/import-json',
+    method: 'post',
+    data
+  });
+}

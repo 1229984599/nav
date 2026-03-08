@@ -19,6 +19,19 @@ class IndexSpec:
     name: str
 
 
+@dataclass(frozen=True)
+class ColumnAlterSpec:
+    table: str
+    column: str
+    new_type: str  # e.g. "VARCHAR(500)"
+
+
+COLUMN_ALTER_SPECS: tuple[ColumnAlterSpec, ...] = (
+    ColumnAlterSpec(table="links", column="icon", new_type="VARCHAR(500)"),
+    ColumnAlterSpec(table="links", column="href", new_type="VARCHAR(500)"),
+)
+
+
 INDEX_SPECS: tuple[IndexSpec, ...] = (
     IndexSpec(table="menu", column="order", name="idx_menu_order_manual"),
     IndexSpec(table="menu", column="is_vip", name="idx_menu_is_vip_manual"),
@@ -99,10 +112,31 @@ async def _create_index(connection, dialect: str, spec: IndexSpec) -> None:
     await connection.execute_script(sql)
 
 
+async def _alter_column(connection, dialect: str, spec: ColumnAlterSpec) -> None:
+    if dialect == "sqlite":
+        return
+    if dialect == "mysql":
+        sql = f"ALTER TABLE `{spec.table}` MODIFY COLUMN `{spec.column}` {spec.new_type}"
+    elif dialect == "postgres":
+        sql = f"ALTER TABLE {spec.table} ALTER COLUMN {spec.column} TYPE {spec.new_type}"
+    else:
+        return
+    try:
+        await connection.execute_script(sql)
+        _log_event("column_altered", table=spec.table, column=spec.column, new_type=spec.new_type)
+    except Exception as error:
+        _log_event("column_alter_skipped", table=spec.table, column=spec.column, reason=str(error))
+
+
 async def apply_runtime_migrations() -> None:
     dialect = _get_db_dialect()
     connection = Tortoise.get_connection("default")
 
+    # Column alterations
+    for spec in COLUMN_ALTER_SPECS:
+        await _alter_column(connection, dialect, spec)
+
+    # Index creation
     created = 0
     skipped = 0
     for spec in INDEX_SPECS:

@@ -4,8 +4,8 @@ from tortoise import fields
 
 class Links(AppModel):
     title = fields.CharField(100, unique=True)
-    href = fields.CharField(200)
-    icon = fields.CharField(128, null=True)
+    href = fields.CharField(500)
+    icon = fields.CharField(500, null=True)
     is_self = fields.BooleanField(default=False, description='是否站内打开')
     is_vip = fields.BooleanField(default=False, index=True, description='是否vip打开(登录即可）')
     desc = fields.TextField(null=True)

@@ -82,3 +82,12 @@ export function fetchLinkImport(file: File) {
     data: formData
   });
 }
+
+/** Import links from pre-selected JSON data (with menu mapping) */
+export function fetchLinkImportJson(data: { items: any[]; create_menus: string[] }) {
+  return request<{ created: number; skipped: number }>({
+    url: '/links/import-json',
+    method: 'post',
+    data
+  });
+}

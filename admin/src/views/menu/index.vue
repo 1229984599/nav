@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import type { SelectRenderLabel } from 'naive-ui';
-import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputNumber, NModal, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns } from 'naive-ui';
+import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputNumber, NModal, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, type DataTableColumns, type TreeOption } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
-import { fetchMenuTree, fetchMenuCreate, fetchMenuUpdate, fetchMenuDelete, fetchMenuBatchUpdate, fetchMenuImport } from '@/service/api';
+import { fetchMenuTree, fetchMenuCreate, fetchMenuUpdate, fetchMenuDelete, fetchMenuBatchUpdate, fetchMenuImport, fetchMenuImportJson } from '@/service/api';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization } from '@/service/request/shared';
 
@@ -213,37 +213,216 @@ async function loadData() {
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
-function handleExport() {
-  const token = getAuthorization();
-  const url = `${baseURL}/menu/export`;
-  fetch(url, { headers: { Authorization: token } })
-    .then(res => res.blob())
-    .then(blob => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'menus.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
+// --- Export Dialog ---
+const showExportDialog = ref(false);
+const exportData = ref<any[]>([]);
+const exportLoading = ref(false);
+const exportCheckedKeys = ref<string[]>([]);
+
+const exportTreeData = computed<TreeOption[]>(() => {
+  const items = exportData.value;
+  const parentMap = new Map<string, any[]>();
+
+  for (const item of items) {
+    if (item.parent_title) {
+      if (!parentMap.has(item.parent_title)) parentMap.set(item.parent_title, []);
+      parentMap.get(item.parent_title)!.push(item);
+    }
+  }
+
+  const tree: TreeOption[] = [];
+  for (const item of items) {
+    if (!item.parent_title) {
+      const children = parentMap.get(item.title) || [];
+      tree.push({
+        key: item.title,
+        label: children.length ? `${item.title} (${children.length} 个子菜单)` : item.title,
+        children: children.length ? children.map(c => ({
+          key: c.title,
+          label: c.title,
+          isLeaf: true
+        })) : undefined
+      });
+    }
+  }
+  return tree;
+});
+
+const exportSelectedCount = computed(() => {
+  return exportCheckedKeys.value.length;
+});
+
+function getAllMenuLeafKeys(nodes: TreeOption[]): string[] {
+  const keys: string[] = [];
+  for (const node of nodes) {
+    keys.push(String(node.key));
+    if (node.children?.length) {
+      keys.push(...getAllMenuLeafKeys(node.children));
+    }
+  }
+  return keys;
 }
 
+async function handleExport() {
+  showExportDialog.value = true;
+  exportLoading.value = true;
+  const token = getAuthorization();
+  const url = `${baseURL}/menu/export`;
+  try {
+    const res = await fetch(url, { headers: { Authorization: token || '' } });
+    exportData.value = await res.json();
+    exportCheckedKeys.value = getAllMenuLeafKeys(exportTreeData.value);
+  } catch {
+    window.$message?.error('获取导出数据失败');
+  }
+  exportLoading.value = false;
+}
+
+function handleExportSelectAll() {
+  exportCheckedKeys.value = getAllMenuLeafKeys(exportTreeData.value);
+}
+
+function handleExportDeselectAll() {
+  exportCheckedKeys.value = [];
+}
+
+function handleExportConfirm() {
+  const selectedTitles = new Set(exportCheckedKeys.value);
+  const filtered = exportData.value.filter(item => selectedTitles.has(item.title));
+  if (!filtered.length) {
+    window.$message?.warning('请至少选择一个菜单');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'menus.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showExportDialog.value = false;
+}
+
+// --- Import Preview Dialog ---
 const importFileRef = ref<HTMLInputElement | null>(null);
 const importLoading = ref(false);
+const showImportPreview = ref(false);
+const importPreviewData = ref<any[]>([]);
+const importCheckedKeys = ref<number[]>([]);
+const importExistingTitles = ref<Set<string>>(new Set());
+
 function handleImportClick() {
   importFileRef.value?.click();
 }
+
+function collectExistingMenuTitles(nodes: Api.NavMenu.MenuTreeNode[]): Set<string> {
+  const titles = new Set<string>();
+  for (const n of nodes) {
+    titles.add(n.title);
+    if (n.children) {
+      for (const t of collectExistingMenuTitles(n.children)) titles.add(t);
+    }
+  }
+  return titles;
+}
+
 async function handleImportFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
-  importLoading.value = true;
-  const { data, error } = await fetchMenuImport(file);
-  importLoading.value = false;
-  if (!error && data) {
-    window.$message?.success(`导入完成：新增 ${data.created} 个，跳过 ${data.skipped} 个`);
-    loadData();
+
+  let items: any[];
+  try {
+    const text = await file.text();
+    items = JSON.parse(text);
+  } catch {
+    window.$message?.error('JSON格式错误');
+    if (importFileRef.value) importFileRef.value.value = '';
+    return;
   }
+  if (!Array.isArray(items)) {
+    window.$message?.error('数据格式错误，应为数组');
+    if (importFileRef.value) importFileRef.value.value = '';
+    return;
+  }
+
+  importPreviewData.value = items.map((item, idx) => ({ ...item, _idx: idx }));
+
+  // Existing menu titles from treeData
+  importExistingTitles.value = collectExistingMenuTitles(treeData.value);
+
+  // Pre-select non-duplicate items
+  importCheckedKeys.value = importPreviewData.value
+    .filter(item => item.title && !importExistingTitles.value.has(item.title))
+    .map(item => item._idx);
+
+  showImportPreview.value = true;
   if (importFileRef.value) importFileRef.value.value = '';
 }
+
+function handleImportSelectAll() {
+  importCheckedKeys.value = importPreviewData.value.map(item => item._idx);
+}
+
+function handleImportDeselectAll() {
+  importCheckedKeys.value = [];
+}
+
+async function handleImportConfirm() {
+  const selectedItems = importCheckedKeys.value.map(idx => {
+    const raw = importPreviewData.value.find(item => item._idx === idx);
+    if (!raw) return null;
+    const item = { ...raw };
+    delete item._idx;
+    return item;
+  }).filter(Boolean);
+
+  importLoading.value = true;
+  const { data, error } = await fetchMenuImportJson({ items: selectedItems });
+  importLoading.value = false;
+
+  if (!error && data) {
+    window.$message?.success(`导入完成：新增 ${data.created} 个，跳过 ${data.skipped} 个`);
+    showImportPreview.value = false;
+    loadData();
+  }
+}
+
+const importPreviewColumns = computed<DataTableColumns<any>>(() => [
+  { type: 'selection' },
+  { title: '标题', key: 'title', width: 150 },
+  {
+    title: '图标',
+    key: 'icon',
+    width: 60,
+    render(row: any) {
+      if (!row.icon) return '';
+      return h(Icon, { icon: row.icon, color: row.color || undefined, width: '1.5em', height: '1.5em' });
+    }
+  },
+  {
+    title: '父级菜单',
+    key: 'parent_title',
+    width: 120,
+    render(row: any) {
+      if (!row.parent_title) return '--';
+      // Check if parent exists in system or is being imported
+      const existsInSystem = importExistingTitles.value.has(row.parent_title);
+      const existsInBatch = importPreviewData.value.some(
+        item => item.title === row.parent_title && importCheckedKeys.value.includes(item._idx)
+      );
+      const isMissing = !existsInSystem && !existsInBatch;
+      return h(NTag, { size: 'small', type: isMissing ? 'warning' : 'default' }, () => row.parent_title);
+    }
+  },
+  {
+    title: '状态',
+    key: '_import_status',
+    width: 100,
+    render(row: any) {
+      const exists = importExistingTitles.value.has(row.title);
+      return h(NTag, { size: 'small', type: exists ? 'default' : 'success' }, () => exists ? '已存在' : '新增');
+    }
+  }
+]);
 
 function handleAdd() {
   isEdit.value = false;
@@ -518,6 +697,62 @@ loadData();
       <template #action>
         <NButton @click="showBatchEdit = false">取消</NButton>
         <NButton type="primary" @click="handleBatchEditSave">保存</NButton>
+      </template>
+    </NModal>
+
+    <!-- Export Dialog -->
+    <NModal v-model:show="showExportDialog" preset="dialog" title="选择导出菜单" style="width: 600px">
+      <div class="mt-16px">
+        <div class="flex items-center justify-between mb-12px">
+          <NSpace>
+            <NButton size="small" @click="handleExportSelectAll">全选</NButton>
+            <NButton size="small" @click="handleExportDeselectAll">取消全选</NButton>
+          </NSpace>
+          <span class="text-13px text-gray-400">已选: {{ exportSelectedCount }} 个菜单</span>
+        </div>
+        <NSpin :show="exportLoading">
+          <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--n-border-color, #e0e0e6); border-radius: 4px; padding: 8px;">
+            <NTree
+              :data="exportTreeData"
+              checkable
+              cascade
+              :checked-keys="exportCheckedKeys"
+              block-line
+              expand-on-click
+              :default-expand-all="true"
+              @update:checked-keys="(keys: string[]) => exportCheckedKeys = keys"
+            />
+          </div>
+        </NSpin>
+      </div>
+      <template #action>
+        <NButton @click="showExportDialog = false">取消</NButton>
+        <NButton type="primary" :disabled="!exportSelectedCount" @click="handleExportConfirm">导出</NButton>
+      </template>
+    </NModal>
+
+    <!-- Import Preview Dialog -->
+    <NModal v-model:show="showImportPreview" preset="dialog" title="导入预览" style="width: 750px">
+      <div class="mt-16px">
+        <div class="flex items-center justify-between mb-12px">
+          <NSpace>
+            <NButton size="small" @click="handleImportSelectAll">全选</NButton>
+            <NButton size="small" @click="handleImportDeselectAll">取消全选</NButton>
+          </NSpace>
+          <span class="text-13px text-gray-400">已选: {{ importCheckedKeys.length }} / {{ importPreviewData.length }} 个</span>
+        </div>
+        <NDataTable
+          v-model:checked-row-keys="importCheckedKeys"
+          :columns="importPreviewColumns"
+          :data="importPreviewData"
+          :row-key="(row: any) => row._idx"
+          :max-height="350"
+          size="small"
+        />
+      </div>
+      <template #action>
+        <NButton @click="showImportPreview = false">取消</NButton>
+        <NButton type="primary" :loading="importLoading" :disabled="!importCheckedKeys.length" @click="handleImportConfirm">确认导入</NButton>
       </template>
     </NModal>
   </div>

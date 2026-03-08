@@ -66,3 +66,22 @@ class LinkUpdateAllSchema(BaseModel):
     cdn_img_id: int | None = None
     status: bool | None = None
     menus: list[int] | None = None
+
+
+class LinkImportItem(BaseModel):
+    title: str
+    href: str = ""
+    icon: str | None = None
+    desc: str | None = None
+    color: str | None = None
+    is_self: bool = False
+    is_vip: bool = False
+    order: int = 0
+    cdn_img_id: int | None = None
+    status: bool = True
+    menus: list[str] = []
+
+
+class LinkImportRequest(BaseModel):
+    items: list[LinkImportItem]
+    create_menus: list[str] = []

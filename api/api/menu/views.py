@@ -16,7 +16,7 @@ from .service import (
     parse_menu_order_by,
     update_menus_batch,
 )
-from .schemas import MenuSchemaFilters, MenuSchemaList, MenuSchemaUpdate, MenuUpdateAllSchema
+from .schemas import MenuImportRequest, MenuSchemaFilters, MenuSchemaList, MenuSchemaUpdate, MenuUpdateAllSchema
 
 menu_router = APIRouter()
 
@@ -60,6 +60,45 @@ async def handle_menu_create_all(items: list[MenuSchemaUpdate]):
     await clear_menu_cache()
     await create_menus_batch(items)
     return BaseApiOut(message="批量创建成功")
+
+
+@menu_router.post("/import-json", dependencies=[Depends(get_current_user)])
+async def handle_menu_import_json(payload: MenuImportRequest):
+    """从前端预览后的JSON数据导入菜单"""
+    created = 0
+    skipped = 0
+
+    # 第一遍：创建所有菜单（不设置parent）
+    for item in payload.items:
+        if not item.title:
+            skipped += 1
+            continue
+        exists = await Menu.filter(title=item.title).first()
+        if exists:
+            skipped += 1
+            continue
+        await Menu.create(
+            title=item.title,
+            icon=item.icon,
+            color=item.color,
+            order=item.order,
+            is_vip=item.is_vip,
+            status=item.status,
+        )
+        created += 1
+
+    # 第二遍：设置父级关系
+    for item in payload.items:
+        if not item.parent_title:
+            continue
+        menu = await Menu.filter(title=item.title).first()
+        parent = await Menu.filter(title=item.parent_title).first()
+        if menu and parent:
+            menu.parent_id = parent.id
+            await menu.save()
+
+    await clear_menu_cache()
+    return BaseApiOut(data={"created": created, "skipped": skipped})
 
 
 @menu_router.put("/{item_id}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
