@@ -4,15 +4,14 @@ services:
     image: ghcr.io/1229984599/nav:latest
     environment:
       - TZ=Asia/Shanghai
-      # 数据库配置（三选一）
-      # SQLite（默认）
-      - DATABASE_URI=sqlite:///app/data/data.db
-      # MySQL
+      - NGINX_PORT=${NAV_CONTAINER_PORT:-80}
+      # database config (pick one)
+      # - DATABASE_URI=sqlite:///app/data/data.db
       # - DATABASE_URI=mysql://user:password@db-host:3306/nav
-      # PostgreSQL
       # - DATABASE_URI=postgres://user:password@db-host:5432/nav
+      - DATABASE_URI=sqlite:///app/data/data.db
     ports:
-      - "9000:80"
+      - "${NAV_PORT:-9000}:${NAV_CONTAINER_PORT:-80}"
     volumes:
       - ./data:/app/data
     restart: unless-stopped

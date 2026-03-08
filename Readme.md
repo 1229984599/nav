@@ -14,8 +14,9 @@ mysql: `mysql://myuser:mypass@db.host:3306/somedb`
 
 
 ```shell
-docker run -p 9000:80 --env DATABASE_URI=sqlite://data/data.db --name nav registry.cn-chengdu.aliyuncs.com/moxiaoying/nav:master 
+docker run -e NGINX_PORT=${NGINX_PORT:-80} -p ${NAV_PORT:-9000}:${NGINX_PORT:-80} --env DATABASE_URI=sqlite://data/data.db --name nav ghcr.io/1229984599/nav:latest
 ```
+> `NGINX_PORT` support requires an image built from this source (or a released image tag that contains this feature).
 ### Docker-compose
 ```shell
 services:
@@ -24,6 +25,7 @@ services:
     image: ghcr.io/1229984599/nav:latest
     environment:
       - TZ=Asia/Shanghai
+      - NGINX_PORT=${NAV_CONTAINER_PORT:-80}
       # 数据库配置（三选一）
       # SQLite（默认）
       - DATABASE_URI=sqlite:///app/data/data.db
@@ -32,7 +34,7 @@ services:
       # PostgreSQL
       # - DATABASE_URI=postgres://user:password@db-host:5432/nav
     ports:
-      - "9000:80"
+      - "${NAV_PORT:-9000}:${NAV_CONTAINER_PORT:-80}"
     volumes:
       - ./data:/app/data
     restart: unless-stopped

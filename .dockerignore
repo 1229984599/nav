@@ -4,6 +4,8 @@ home/dist
 admin/dist
 
 # Python
+api/.venv
+api/data/backups
 **/__pycache__
 api/__pypackages__
 api/data/*.db

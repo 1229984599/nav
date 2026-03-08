@@ -1,37 +1,36 @@
 # ============================================
-# 阶段一：构建前端页面 - Home
+# Stage 1: build frontend - Home
 # ============================================
 FROM node:20-alpine AS home-builder
 WORKDIR /build
 COPY home/package.json home/pnpm-lock.yaml ./
-RUN corepack enable && corepack prepare pnpm@latest --activate \
+RUN corepack enable && corepack prepare pnpm@9 --activate \
     && pnpm install --frozen-lockfile
 COPY home .
 RUN pnpm build
 
 
 # ============================================
-# 阶段二：构建前端页面 - Admin
+# Stage 2: build frontend - Admin
 # ============================================
 FROM node:20-alpine AS admin-builder
 WORKDIR /build
 COPY admin/package.json admin/pnpm-lock.yaml admin/pnpm-workspace.yaml ./
 COPY admin/packages ./packages
-RUN corepack enable && corepack prepare pnpm@latest --activate \
+RUN corepack enable && corepack prepare pnpm@9 --activate \
     && pnpm install --frozen-lockfile
 COPY admin .
+ENV VITE_BASE_URL=/admin/
 RUN pnpm build
 
 
 # ============================================
-# 阶段三：使用 uv 编译 Python 依赖
+# Stage 3: build Python dependencies via uv
 # ============================================
 FROM alpine:3.21 AS py-deps
 
-# 从官方镜像复制 uv 二进制
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# 安装编译工具链
 RUN apk add --no-cache \
     python3 python3-dev \
     gcc g++ musl-dev libffi-dev \
@@ -41,7 +40,6 @@ RUN apk add --no-cache \
 WORKDIR /deps
 COPY api/pyproject.toml .
 
-# uv 安装依赖到独立目录，编译工具链不进入最终镜像
 RUN uv pip install --no-cache --python=$(which python3) \
     --prefix=/deps/install \
     -r pyproject.toml \
@@ -50,13 +48,12 @@ RUN uv pip install --no-cache --python=$(which python3) \
 
 
 # ============================================
-# 阶段四：最终运行镜像 (纯 Alpine)
+# Stage 4: runtime image (pure Alpine)
 # ============================================
 FROM alpine:3.21
 
 LABEL maintainer="moxiaoying <768091671@qq.com>"
 
-# 安装最小运行时依赖
 RUN apk add --no-cache \
     python3 \
     nginx \
@@ -66,24 +63,23 @@ RUN apk add --no-cache \
     && mkdir -p /var/www/html /var/log/supervisor /run/nginx
 
 WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    NGINX_PORT=80
 
-# 复制 Python 依赖（编译工具链不进入最终镜像）
 COPY --from=py-deps /deps/install /usr
 
-# 复制前端构建产物
 COPY --from=home-builder /build/dist /var/www/html/home
 COPY --from=admin-builder /build/dist /var/www/html/admin
 
-# 复制后端代码
 COPY api /app
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# 复制配置文件
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf.template
 COPY supervisord.conf /etc/supervisord.conf
 
 EXPOSE 80
 
-# tini (PID 1): 信号转发 + 僵尸进程回收
-# supervisord: nginx + uvicorn 双进程守护，崩溃自动重启
 ENTRYPOINT ["tini", "--"]
-CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/local/bin/docker-entrypoint.sh", "supervisord", "-c", "/etc/supervisord.conf"]
