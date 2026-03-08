@@ -4,7 +4,7 @@ import MMenuItem from "./MMenuItem.vue";
 import SubMenuItem from "./SubMenuItem.vue";
 import { useMenuStore } from "@/store/menu";
 import { useBookmarkStore } from "@/store/bookmark";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import { isMobile } from "@/utils/window";
 import { useRouter } from "vue-router";
@@ -18,14 +18,32 @@ const menuStore = useMenuStore();
 const bookmarkStore = useBookmarkStore();
 const router = useRouter();
 const loading = ref(false);
+const menuRef = ref<any>(null);
 
 onMounted(() => {
   loading.value = true;
   menuStore.getMenuTree().finally(() => (loading.value = false));
 });
 
-const targetRef = ref(null);
-onClickOutside(targetRef, () => {
+// 监听 activeMenuIndex 变化，主动展开对应父菜单并高亮子项
+watch(
+  () => menuStore.activeMenuIndex,
+  (index) => {
+    if (!index || !menuRef.value) return;
+    // 找到子项对应的父菜单，展开它
+    for (const item of menuStore.menuTree) {
+      if (item.children && item.children.length > 0) {
+        const matched = item.children.find((c) => c.title === index);
+        if (matched && item.title) {
+          menuRef.value.open(item.title);
+          break;
+        }
+      }
+    }
+  },
+);
+
+onClickOutside(menuRef, () => {
   if (isMobile.value) {
     appStore.isCollapse = true;
   }
@@ -51,7 +69,8 @@ function scrollToBookmarks(groupId?: string) {
 <template>
   <el-menu
     v-loading.fullscreen.lock="loading"
-    ref="targetRef"
+    ref="menuRef"
+    :default-active="menuStore.activeMenuIndex"
     :collapse-transition="false"
     :collapse="appStore.isCollapse"
     class="divide-y divide-gray-100"
@@ -86,4 +105,11 @@ function scrollToBookmarks(groupId?: string) {
   </el-menu>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.el-menu-item.is-active) {
+  background-color: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.1));
+  border-radius: 6px;
+  margin: 0 6px;
+  width: calc(100% - 12px);
+}
+</style>

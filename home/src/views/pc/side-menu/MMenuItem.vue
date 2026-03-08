@@ -3,6 +3,7 @@ import { PropType } from "vue";
 import { useRouter } from "vue-router";
 import SubMenuItem from "@/views/pc/side-menu/SubMenuItem.vue";
 import { MenuSchemaTree } from "@/api/menu/types";
+import { useMenuStore } from "@/store/menu";
 
 defineProps({
   item: Object as PropType<MenuSchemaTree>,
@@ -12,12 +13,33 @@ defineProps({
   },
 });
 const router = useRouter();
+const menuStore = useMenuStore();
 
-function gotoList(item: any) {
+function gotoList(item: MenuSchemaTree) {
+  menuStore.setActiveMenuIndex(item.title || "");
   router.push({
     path: "/list",
     query: {
       cat: item.title,
+      _t: Date.now().toString(),
+    },
+    replace: true,
+  });
+}
+
+function gotoChild(parent: MenuSchemaTree, child: MenuSchemaTree) {
+  // 通知 TabCategory 切换到对应子分类 tab
+  if (parent.id && child.id) {
+    menuStore.setActiveSubTab(parent.id, child.id);
+  }
+  menuStore.setActiveMenuIndex(child.title || "");
+  // 滚动到父分类位置，用 _t 时间戳强制触发路由变化
+  router.push({
+    path: "/list",
+    query: {
+      cat: parent.title,
+      sub: child.title,
+      _t: Date.now().toString(),
     },
     replace: true,
   });
@@ -37,7 +59,7 @@ function gotoList(item: any) {
         </div>
       </template>
       <el-menu-item
-        @click="gotoList(submenu)"
+        @click="gotoChild(item, submenu)"
         :index="submenu.title"
         v-for="submenu in item.children"
       >
