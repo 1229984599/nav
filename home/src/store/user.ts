@@ -3,6 +3,9 @@ import { defineStore } from "pinia";
 import { loginApi, getUserinfoApi } from "@/api/login";
 import { LoginRequestData, Token, UserRead } from "@/api/login/types";
 
+const SOY_TOKEN_KEY = "SOY_token";
+const SOY_REFRESH_TOKEN_KEY = "SOY_refreshToken";
+
 export const useUserStore = defineStore("user", {
   state: () => ({
     token: {} as Token,
@@ -25,13 +28,41 @@ export const useUserStore = defineStore("user", {
     async login(loginData: LoginRequestData) {
       this.token = await loginApi(loginData);
       await this.getUserinfo();
+      // Sync token to admin app for SSO
+      this.syncTokenToAdmin();
     },
     async getUserinfo() {
       const userInfo = await getUserinfoApi();
       this.userInfo = userInfo;
       this.sessionVerified = !!userInfo?.id;
     },
+    /** Sync token to admin app's localStorage format (SOY_ prefix) */
+    syncTokenToAdmin() {
+      if (this.token?.access_token) {
+        localStorage.setItem(SOY_TOKEN_KEY, this.token.access_token);
+      }
+      if (this.token?.refresh_token) {
+        localStorage.setItem(SOY_REFRESH_TOKEN_KEY, this.token.refresh_token);
+      }
+    },
+    /** Try to read token from admin app's localStorage if home has no valid token */
+    syncFromAdmin() {
+      if (this.hasValidToken) return;
+      const adminToken = localStorage.getItem(SOY_TOKEN_KEY);
+      if (adminToken) {
+        // Admin doesn't store expires, use a 24h future date
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        this.token = {
+          access_token: adminToken,
+          refresh_token: localStorage.getItem(SOY_REFRESH_TOKEN_KEY) || "",
+          expires,
+        };
+      }
+    },
     async verifyAdminSession() {
+      // Try syncing from admin first if we don't have a valid token
+      this.syncFromAdmin();
+
       if (!this.hasValidToken) {
         this.resetToken();
         this.userInfo = {};
@@ -69,6 +100,9 @@ export const useUserStore = defineStore("user", {
     logout() {
       this.resetToken();
       this.userInfo = {};
+      // Clear admin app's storage too for SSO logout
+      localStorage.removeItem(SOY_TOKEN_KEY);
+      localStorage.removeItem(SOY_REFRESH_TOKEN_KEY);
       location.reload();
     },
   },

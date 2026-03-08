@@ -9,7 +9,7 @@ import { SetupStoreId } from '@/enum';
 import { $t } from '@/locales';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
-import { clearAuthStorage, getToken } from './shared';
+import { clearAuthStorage, getToken, syncTokenToHome, syncUserInfoToHome } from './shared';
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const route = useRoute();
@@ -133,11 +133,17 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     localStg.set('token', loginToken.token);
     localStg.set('refreshToken', loginToken.refreshToken);
 
-    // 2. get user info
+    // 2. sync token to home app for SSO
+    syncTokenToHome(loginToken);
+
+    // 3. get user info
     const pass = await getUserInfo();
 
     if (pass) {
       token.value = loginToken.token;
+
+      // 4. sync user info to home app for SSO
+      syncUserInfoToHome(userInfo);
 
       return true;
     }

@@ -9,18 +9,12 @@ import { useSiteStore } from "@/store/site";
 
 const router = useRouter();
 const userStore = useUserStore();
-/** 登录表单元素的引用 */
 const loginFormRef = ref<FormInstance | null>(null);
-
-/** 登录按钮 Loading */
 const loading = ref(false);
-/** 验证码图片 URL */
-/** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
   username: "",
   password: "",
 });
-/** 登录表单校验规则 */
 const loginFormRules: FormRules = {
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
   password: [
@@ -28,9 +22,8 @@ const loginFormRules: FormRules = {
     { min: 5, max: 16, message: "长度在 5 到 16 个字符", trigger: "blur" },
   ],
 };
-/** 登录逻辑 */
 const handleLogin = () => {
-  loginFormRef.value?.validate((valid: boolean, fields) => {
+  loginFormRef.value?.validate((valid: boolean) => {
     if (valid) {
       loading.value = true;
       userStore
@@ -39,7 +32,6 @@ const handleLogin = () => {
           ElMessage.success("登录成功");
           userStore.getUserinfo();
           router.go(-1);
-          // router.push({ path: "/" });
         })
         .catch(() => {
           loginFormData.password = "";
@@ -47,8 +39,6 @@ const handleLogin = () => {
         .finally(() => {
           loading.value = false;
         });
-    } else {
-      console.error("表单校验不通过", fields);
     }
   });
 };
@@ -58,9 +48,12 @@ onMounted(siteStore.getSiteInfo);
 
 <template>
   <div class="login-container">
+    <div class="login-bg"></div>
     <div class="login-card">
-      <m-logo class="flex justify-center pt-4" />
-      <div class="content">
+      <div class="card-header">
+        <m-logo class="flex justify-center" font-size="24px" />
+      </div>
+      <div class="card-body">
         <el-form
           ref="loginFormRef"
           :model="loginFormData"
@@ -70,32 +63,34 @@ onMounted(siteStore.getSiteInfo);
           <el-form-item prop="username">
             <el-input
               v-model.trim="loginFormData.username"
-              placeholder="用户名"
+              placeholder="请输入用户名"
               clearable
               autofocus
               type="text"
               tabindex="1"
               size="large"
+              prefix-icon="User"
             />
           </el-form-item>
           <el-form-item prop="password">
             <el-input
               v-model.trim="loginFormData.password"
-              placeholder="密码"
+              placeholder="请输入密码"
               clearable
               type="password"
               tabindex="2"
               size="large"
               show-password
+              prefix-icon="Lock"
             />
           </el-form-item>
           <el-button
             :loading="loading"
             type="primary"
             size="large"
+            round
             @click.prevent="handleLogin"
-            >登 录
-          </el-button>
+          >登 录</el-button>
         </el-form>
       </div>
     </div>
@@ -104,41 +99,75 @@ onMounted(siteStore.getSiteInfo);
 
 <style lang="scss" scoped>
 .login-container {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
 
-  .login-card {
-    width: 480px;
-    max-width: 90%;
-    border-radius: 20px;
-    box-shadow: 0 0 10px #dcdfe6;
-    background-color: #fff;
-    overflow: hidden;
+.login-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 0;
 
-    .content {
-      padding: 20px 50px 50px 50px;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.12;
+    background: #fff;
+  }
 
-      :deep(.el-input-group__append) {
-        padding: 0;
-        overflow: hidden;
+  &::before {
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    right: -100px;
+    animation: float 8s ease-in-out infinite;
+  }
 
-        //.el-image {
-        //  width: 100px;
-        //  height: 40px;
-        //  border-left: 0px;
-        //  user-select: none;
-        //  cursor: pointer;
-        //  text-align: center;
-        //}
-      }
+  &::after {
+    width: 400px;
+    height: 400px;
+    bottom: -150px;
+    left: -100px;
+    animation: float 6s ease-in-out infinite reverse;
+  }
+}
 
-      .el-button {
-        width: 100%;
-        margin-top: 10px;
-      }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-30px); }
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 420px;
+  max-width: 90%;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+
+  .card-header {
+    padding: 32px 32px 16px;
+  }
+
+  .card-body {
+    padding: 8px 40px 40px;
+
+    .el-button {
+      width: 100%;
+      margin-top: 8px;
+      font-size: 16px;
+      letter-spacing: 4px;
     }
   }
 }
