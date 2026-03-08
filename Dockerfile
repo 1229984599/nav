@@ -15,11 +15,11 @@ RUN pnpm build
 # ============================================
 FROM node:20-alpine AS admin-builder
 WORKDIR /build
-COPY admin-new/package.json admin-new/pnpm-lock.yaml admin-new/pnpm-workspace.yaml ./
-COPY admin-new/packages ./packages
+COPY admin/package.json admin/pnpm-lock.yaml admin/pnpm-workspace.yaml ./
+COPY admin/packages ./packages
 RUN corepack enable && corepack prepare pnpm@latest --activate \
     && pnpm install --frozen-lockfile
-COPY admin-new .
+COPY admin .
 RUN pnpm build
 
 

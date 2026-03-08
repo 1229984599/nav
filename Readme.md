@@ -18,20 +18,25 @@ docker run -p 9000:80 --env DATABASE_URI=sqlite://data/data.db --name nav regist
 ```
 ### Docker-compose
 ```shell
-version: '1.0.0'
 services:
-    nav:
-        container_name: nav
-        image: registry.cn-chengdu.aliyuncs.com/moxiaoying/nav:master
-        environment:
-        # 时区
-        - TZ=Asia/Shanghai
-        - DATABASE_URI=sqlite://data/data.db
-        # - DATABASE_URI=mysql://myuser:mypass@db.host:3306/somedb
-        # 映射配置文件
-        ports:
-            - "9000:80"
-        restart: unless-stopped
+  nav:
+    container_name: nav
+    image: ghcr.io/1229984599/nav:latest
+    environment:
+      - TZ=Asia/Shanghai
+      # 数据库配置（三选一）
+      # SQLite（默认）
+      - DATABASE_URI=sqlite:///app/data/data.db
+      # MySQL
+      # - DATABASE_URI=mysql://user:password@db-host:3306/nav
+      # PostgreSQL
+      # - DATABASE_URI=postgres://user:password@db-host:5432/nav
+    ports:
+      - "9000:80"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
 
 ```
 > 默认账号:admin 密码:admina
