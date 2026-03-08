@@ -17,7 +17,7 @@ FROM node:20-alpine AS admin-builder
 WORKDIR /build
 COPY admin/package.json admin/pnpm-lock.yaml admin/pnpm-workspace.yaml ./
 COPY admin/packages ./packages
-RUN corepack enable && corepack prepare pnpm@9 --activate \
+RUN corepack enable && corepack prepare pnpm@10.5.0 --activate \
     && pnpm install --frozen-lockfile
 COPY admin .
 ENV VITE_BASE_URL=/admin/
