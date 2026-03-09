@@ -7,6 +7,7 @@ import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
 import { VueDraggable } from "vue-draggable-plus";
 import { useUserStore } from "@/store/user";
+import { isMobile } from "@/utils/window";
 import links from "@/api/links";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
 import EmptyState from "@/components/EmptyState.vue";
@@ -20,6 +21,8 @@ const props = defineProps({
 });
 
 const isAdmin = computed(() => userStore.isAdminAuthorized);
+const editMode = ref(false);
+const isDragActive = computed(() => isAdmin.value && (!isMobile.value || editMode.value));
 const linkList = ref<LinkSchemaList[]>([]);
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
 const orderSaving = ref(false);
@@ -74,9 +77,18 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
       :icon="menu.icon"
     />
     <h2 class="text-xl font-bold">{{ menu?.title }}</h2>
+    <button
+      v-if="isAdmin && isMobile"
+      class="edit-mode-btn"
+      :class="{ active: editMode }"
+      @click="editMode = !editMode"
+    >
+      <m-icon :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'" :size="14" />
+      {{ editMode ? '完成' : '排序' }}
+    </button>
   </div>
   <VueDraggable
-    v-if="isAdmin"
+    v-if="isDragActive"
     v-model="linkList"
     :disabled="orderSaving"
     class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8 mt-3"
@@ -101,3 +113,27 @@ function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
   />
   <link-context-menu v-if="isAdmin" ref="contextMenuRef" />
 </template>
+
+<style lang="scss" scoped>
+.edit-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 12px;
+  border: 1px solid var(--el-border-color, #dcdfe6);
+  background: var(--el-bg-color, #fff);
+  color: var(--nav-text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &.active {
+    color: #fff;
+    background: var(--el-color-primary, #409eff);
+    border-color: var(--el-color-primary, #409eff);
+  }
+}
+</style>

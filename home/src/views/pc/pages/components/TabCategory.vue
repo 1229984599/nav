@@ -8,6 +8,7 @@ import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
 import { VueDraggable } from "vue-draggable-plus";
 import { useUserStore } from "@/store/user";
+import { isMobile } from "@/utils/window";
 import { useMenuStore } from "@/store/menu";
 import links from "@/api/links";
 import menuApi from "@/api/menu";
@@ -27,6 +28,8 @@ const props = defineProps({
 });
 
 const isAdmin = computed(() => userStore.isAdminAuthorized);
+const editMode = ref(false);
+const isDragActive = computed(() => isAdmin.value && (!isMobile.value || editMode.value));
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
 const menuContextMenuRef = ref<InstanceType<typeof MenuContextMenu>>();
 const tabPillsWrapperRef = ref<HTMLElement>();
@@ -290,12 +293,21 @@ function handleTabTouchEnd() {
         :icon="menu.icon"
       />
       <h2 class="text-xl font-bold whitespace-nowrap">{{ menu?.title }}</h2>
+      <button
+        v-if="isAdmin && isMobile"
+        class="edit-mode-btn"
+        :class="{ active: editMode }"
+        @click="editMode = !editMode"
+      >
+        <m-icon :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'" :size="14" />
+        {{ editMode ? '完成' : '排序' }}
+      </button>
 
       <!-- Tab pills -->
       <div ref="tabPillsWrapperRef" class="tab-pills-wrapper">
         <!-- Admin: draggable tabs -->
         <VueDraggable
-          v-if="isAdmin"
+          v-if="isDragActive"
           v-model="tabList"
           :disabled="tabOrderSaving"
           class="tab-pills"
@@ -335,7 +347,7 @@ function handleTabTouchEnd() {
     <transition name="fade-slide" mode="out-in">
       <div :key="activeTab">
         <VueDraggable
-          v-if="isAdmin && linkList.length > 0"
+          v-if="isDragActive && linkList.length > 0"
           v-model="linkList"
           :disabled="orderSaving"
           class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8"
@@ -418,5 +430,27 @@ function handleTabTouchEnd() {
 
 .tab-drag-ghost {
   opacity: 0.4;
+}
+
+.edit-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 12px;
+  border: 1px solid var(--el-border-color, #dcdfe6);
+  background: var(--el-bg-color, #fff);
+  color: var(--nav-text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &.active {
+    color: #fff;
+    background: var(--el-color-primary, #409eff);
+    border-color: var(--el-color-primary, #409eff);
+  }
 }
 </style>

@@ -31,6 +31,8 @@ watch(
   () => menuStore.activeMenuIndex,
   (index) => {
     if (!index || !menuRef.value) return;
+    // 移动端侧边栏已收起，不展开子菜单（避免弹出侧边栏）
+    if (isMobile.value && appStore.isCollapse) return;
     // 找到子项对应的父菜单，展开它
     for (const item of menuStore.menuTree) {
       if (item.children && item.children.length > 0) {
