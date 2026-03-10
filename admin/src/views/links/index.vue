@@ -83,13 +83,17 @@ async function loadMenuTree() {
 }
 
 function buildTreeOptions(items: Api.NavMenu.MenuTreeNode[]): any[] {
-  return items.map(item => ({
+  const tree = items.map(item => ({
     key: item.id,
     label: item.title,
     icon: item.icon,
     color: item.color,
     children: item.children?.length ? buildTreeOptions(item.children) : undefined
   }));
+  return [
+    { key: 0, label: '未分类', icon: 'mdi:folder-off-outline', color: '#999' },
+    ...tree
+  ];
 }
 
 // Render colored icon prefix for tree-select options
@@ -241,6 +245,11 @@ function handleBatchCdnSync() {
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
+/** Normalize menu entry from export data: string (old) or object (new) → title string */
+function menuEntryTitle(m: string | { title: string }): string {
+  return typeof m === 'string' ? m : m.title;
+}
+
 // --- Export Dialog ---
 const showExportDialog = ref(false);
 const exportData = ref<any[]>([]);
@@ -255,7 +264,8 @@ const exportTreeData = computed<TreeOption[]>(() => {
     if (!link.menus?.length) {
       noMenu.push(link);
     } else {
-      for (const menuTitle of link.menus) {
+      for (const menuEntry of link.menus) {
+        const menuTitle = menuEntryTitle(menuEntry);
         if (!menuMap.has(menuTitle)) menuMap.set(menuTitle, []);
         menuMap.get(menuTitle)!.push(link);
       }
@@ -460,6 +470,15 @@ function reconnectPendingTasks() {
   }
 }
 
+interface MenuImportInfo {
+  title: string;
+  icon: string;
+  color: string | null;
+  parent_title: string | null;
+}
+/** Map: menuTitle → full MenuImportInfo from import JSON (for hierarchy-aware creation) */
+const importMenuInfoMap = ref<Map<string, MenuImportInfo>>(new Map());
+
 interface MenuMapping {
   menuTitle: string;
   action: 'create' | 'map' | 'skip';
@@ -518,10 +537,23 @@ async function handleImportFile(e: Event) {
     importExistingTitles.value = new Set(data);
   }
 
-  // Detect missing menus
+  // Detect missing menus and collect full menu info
   const allMenuTitlesInJson = new Set<string>();
+  importMenuInfoMap.value = new Map();
   items.forEach(item => {
-    (item.menus || []).forEach((m: string) => allMenuTitlesInJson.add(m));
+    (item.menus || []).forEach((m: string | MenuImportInfo) => {
+      const title = menuEntryTitle(m);
+      allMenuTitlesInJson.add(title);
+      // Store full info if it's a dict (new export format)
+      if (typeof m === 'object' && m.title && !importMenuInfoMap.value.has(title)) {
+        importMenuInfoMap.value.set(title, {
+          title: m.title,
+          icon: m.icon || 'ic:round-menu',
+          color: m.color || null,
+          parent_title: m.parent_title || null,
+        });
+      }
+    });
   });
 
   const existingMenuTitles = collectMenuTitlesFromTree(menuTreeData.value);
@@ -580,7 +612,8 @@ async function handleImportConfirm() {
     const item = { ...raw };
     delete item._idx;
     if (item.menus) {
-      item.menus = item.menus.flatMap((menuTitle: string) => {
+      item.menus = item.menus.flatMap((menuEntry: string | any) => {
+        const menuTitle = menuEntryTitle(menuEntry);
         const mapping = missingMenuMappings.value.find(m => m.menuTitle === menuTitle);
         if (!mapping) return [menuTitle];
         if (mapping.action === 'skip') return [];
@@ -595,10 +628,13 @@ async function handleImportConfirm() {
     return item;
   }).filter(Boolean);
 
-  // Collect menus to auto-create
-  const menusToCreate = missingMenuMappings.value
+  // Collect menus to auto-create (rich objects with hierarchy info)
+  const menusToCreate: Array<string | MenuImportInfo> = missingMenuMappings.value
     .filter(m => m.action === 'create')
-    .map(m => m.menuTitle);
+    .map(m => {
+      const info = importMenuInfoMap.value.get(m.menuTitle);
+      return info || m.menuTitle;
+    });
 
   importLoading.value = true;
   importProgress.value = null;
@@ -657,9 +693,10 @@ const importPreviewColumns = computed<DataTableColumns<any>>(() => [
       const menus = row.menus || [];
       if (!menus.length) return '';
       return h(NSpace, { size: 4 }, () =>
-        menus.map((m: string) => {
-          const isMissing = missingMenuMappings.value.some(mm => mm.menuTitle === m);
-          return h(NTag, { size: 'small', type: isMissing ? 'warning' : 'info' }, () => m);
+        menus.map((m: string | any) => {
+          const title = menuEntryTitle(m);
+          const isMissing = missingMenuMappings.value.some(mm => mm.menuTitle === title);
+          return h(NTag, { size: 'small', type: isMissing ? 'warning' : 'info' }, () => title);
         })
       );
     }

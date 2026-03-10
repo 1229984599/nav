@@ -31,8 +31,20 @@ export function fetchMenuBatchUpdate(data: Array<{ id: number; order: number }>)
 }
 
 /** Delete menus by ids */
-export function fetchMenuDelete(ids: string) {
-  return request({ url: `/menu/${ids}`, method: 'delete' });
+export function fetchMenuDelete(ids: string, childrenAction = 'move_up', linksAction = 'unlink') {
+  return request({
+    url: `/menu/${ids}`,
+    method: 'delete',
+    params: { children_action: childrenAction, links_action: linksAction }
+  });
+}
+
+/** Query deletion impact for menus */
+export function fetchMenuImpact(ids: string) {
+  return request<{ child_count: number; link_count: number; menu_titles: string[] }>({
+    url: '/menu/impact',
+    params: { ids }
+  });
 }
 
 /** Import menus from JSON file */

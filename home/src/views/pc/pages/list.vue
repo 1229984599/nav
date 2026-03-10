@@ -17,9 +17,12 @@ function scrollToCategory(cat: LocationQueryValue | LocationQueryValue[]) {
   if (!cat || typeof cat !== "string") return;
   nextTick(() => {
     const el = document.getElementById(cat);
-    if (el) {
-      document.querySelector(".right-container")?.scroll({
-        top: el.offsetTop - 90,
+    const container = document.querySelector(".right-container");
+    if (el && container) {
+      const containerHeight = container.clientHeight;
+      const scrollTarget = el.offsetTop - containerHeight / 2 + 60;
+      container.scroll({
+        top: Math.max(0, scrollTarget),
         behavior: "smooth",
       });
     }

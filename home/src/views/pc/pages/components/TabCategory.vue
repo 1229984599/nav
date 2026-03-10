@@ -286,22 +286,24 @@ function handleTabTouchEnd() {
 <template>
   <div :id="menu?.title">
     <!-- Header: icon + title + tab pills -->
-    <div class="flex items-center gap-x-2 mb-3">
-      <m-icon
-        v-if="menu?.icon"
-        :style="{ color: menu?.color }"
-        :icon="menu.icon"
-      />
-      <h2 class="text-xl font-bold whitespace-nowrap">{{ menu?.title }}</h2>
-      <button
-        v-if="isAdmin && isMobile"
-        class="edit-mode-btn"
-        :class="{ active: editMode }"
-        @click="editMode = !editMode"
-      >
-        <m-icon :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'" :size="14" />
-        {{ editMode ? '完成' : '排序' }}
-      </button>
+    <div class="category-header">
+      <div class="category-title-row">
+        <m-icon
+          v-if="menu?.icon"
+          :style="{ color: menu?.color }"
+          :icon="menu.icon"
+        />
+        <h2 class="text-xl font-bold whitespace-nowrap">{{ menu?.title }}</h2>
+        <button
+          v-if="isAdmin && isMobile"
+          class="edit-mode-btn"
+          :class="{ active: editMode }"
+          @click="editMode = !editMode"
+        >
+          <m-icon :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'" :size="14" />
+          {{ editMode ? '完成' : '排序' }}
+        </button>
+      </div>
 
       <!-- Tab pills -->
       <div ref="tabPillsWrapperRef" class="tab-pills-wrapper">
@@ -383,6 +385,26 @@ function handleTabTouchEnd() {
 </template>
 
 <style lang="scss" scoped>
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  @media screen and (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.category-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .tab-pills-wrapper {
   flex: 1;
   overflow-x: auto;
@@ -394,6 +416,11 @@ function handleTabTouchEnd() {
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
+
+  @media screen and (max-width: 768px) {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 .tab-pills {

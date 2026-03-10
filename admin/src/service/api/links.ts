@@ -84,7 +84,7 @@ export function fetchLinkImport(file: File) {
 }
 
 /** Import links from pre-selected JSON data (async task with WebSocket progress) */
-export function fetchLinkImportJson(data: { items: any[]; create_menus: string[] }) {
+export function fetchLinkImportJson(data: { items: any[]; create_menus: Array<string | { title: string; icon?: string; color?: string | null; parent_title?: string | null }> }) {
   return request<{ task_id: string }>({
     url: '/links/import-json',
     method: 'post',

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
+from tortoise.expressions import Q
 
 from auth.auth import get_current_user, get_current_super_user, is_login
 from common.errors import not_found
@@ -37,7 +38,14 @@ async def handle_link_list(
     item = filters.model_dump(exclude_unset=True)
     menus = item.pop("menus", None)
     if menus:
-        queryset = queryset.filter(menus__in=menus)
+        has_uncategorized = 0 in menus
+        real_menus = [m for m in menus if m != 0]
+        if has_uncategorized and not real_menus:
+            queryset = queryset.filter(menus__id__isnull=True)
+        elif has_uncategorized and real_menus:
+            queryset = queryset.filter(Q(menus__id__isnull=True) | Q(menus__in=real_menus)).distinct()
+        else:
+            queryset = queryset.filter(menus__in=menus)
     if not user:
         queryset = queryset.filter(is_vip=False)
     queryset = queryset.order_by(*parse_order_by(order_by))
@@ -79,6 +87,48 @@ async def handle_link_create_all(items: list[CreateMenuSchema]):
     return BaseApiOut(message="批量创建成功")
 
 
+def _normalize_menu_title(entry) -> str:
+    """Extract menu title from str or dict/MenuImportInfo."""
+    if isinstance(entry, str):
+        return entry
+    if isinstance(entry, dict):
+        return entry.get("title", "")
+    return getattr(entry, "title", "")
+
+
+async def _create_menus_from_import(create_menus: list) -> None:
+    """Two-pass menu creation preserving hierarchy, icons, and colors."""
+    # Pass 1: Create all menus (without parent)
+    for entry in create_menus:
+        if isinstance(entry, str):
+            title, icon, color = entry, "ic:round-menu", None
+        else:
+            info = entry if isinstance(entry, dict) else entry.model_dump() if hasattr(entry, "model_dump") else {"title": str(entry)}
+            title = info.get("title", "")
+            icon = info.get("icon", "ic:round-menu")
+            color = info.get("color")
+        if not title:
+            continue
+        exists = await Menu.filter(title=title).first()
+        if not exists:
+            await Menu.create(title=title, icon=icon or "ic:round-menu", color=color)
+
+    # Pass 2: Set parent relationships
+    for entry in create_menus:
+        if isinstance(entry, str):
+            continue
+        info = entry if isinstance(entry, dict) else entry.model_dump() if hasattr(entry, "model_dump") else {}
+        parent_title = info.get("parent_title")
+        if not parent_title:
+            continue
+        title = info.get("title", "")
+        menu = await Menu.filter(title=title).first()
+        parent = await Menu.filter(title=parent_title).first()
+        if menu and parent:
+            menu.parent_id = parent.id
+            await menu.save()
+
+
 @link_router.post("/import-json", dependencies=[Depends(get_current_user)])
 async def handle_link_import_json(payload: LinkImportRequest):
     """从前端预览后的JSON数据导入链接（后台任务 + WebSocket进度推送）"""
@@ -92,17 +142,13 @@ async def handle_link_import_json(payload: LinkImportRequest):
 
     async def _run_import():
         try:
-            # Auto-create missing menus
-            for menu_title in payload.create_menus:
-                exists = await Menu.filter(title=menu_title).first()
-                if not exists:
-                    await Menu.create(title=menu_title, icon="ic:round-menu")
+            # Auto-create missing menus with hierarchy
+            await _create_menus_from_import(payload.create_menus)
 
             # Pre-load menu map and existing titles for batch duplicate check
             all_menus = await Menu.all()
             menu_map = {m.title: m for m in all_menus}
 
-            existing_titles = set()
             existing_links = await Links.filter(
                 title__in=[item.title for item in payload.items if item.title]
             ).values_list("title", flat=True)
@@ -128,7 +174,8 @@ async def handle_link_import_json(payload: LinkImportRequest):
                         cdn_img_id=item.cdn_img_id,
                         status=item.status,
                     )
-                    menus_to_add = [menu_map[t] for t in item.menus if t in menu_map]
+                    menu_titles = [_normalize_menu_title(m) for m in item.menus]
+                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
                     if menus_to_add:
                         await link.menus.add(*menus_to_add)
                     created += 1
@@ -241,10 +288,28 @@ async def handle_sync_cdn_batch(link_ids: list[int]):
 
 @link_router.get("/export", dependencies=[Depends(get_current_user)])
 async def handle_link_export():
-    """导出所有链接数据为JSON"""
+    """导出所有链接数据为JSON（菜单包含层级信息）"""
     links = await Links.all().order_by("order").prefetch_related("menus")
+
+    # Batch-load all referenced menus with parent info
+    menu_ids = set()
+    for link in links:
+        for m in link.menus:
+            menu_ids.add(m.id)
+    menus_with_parent = await Menu.filter(id__in=list(menu_ids)).select_related("parent") if menu_ids else []
+    menu_map = {m.id: m for m in menus_with_parent}
+
     data = []
     for link in links:
+        menu_list = []
+        for m in link.menus:
+            full = menu_map.get(m.id, m)
+            menu_list.append({
+                "title": full.title,
+                "icon": full.icon,
+                "color": full.color,
+                "parent_title": full.parent.title if getattr(full, "parent", None) else None,
+            })
         data.append({
             "title": link.title,
             "href": link.href,
@@ -256,7 +321,7 @@ async def handle_link_export():
             "order": link.order,
             "cdn_img_id": link.cdn_img_id,
             "status": link.status,
-            "menus": [m.title for m in link.menus],
+            "menus": menu_list,
         })
     content = json.dumps(data, ensure_ascii=False, indent=2)
     return Response(
@@ -277,6 +342,15 @@ async def handle_link_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
+    # Auto-create missing menus with hierarchy (new dict-format entries)
+    all_menu_entries = []
+    for item in items:
+        for m in (item.get("menus") or []):
+            if isinstance(m, dict):
+                all_menu_entries.append(m)
+    if all_menu_entries:
+        await _create_menus_from_import(all_menu_entries)
+
     # Pre-load menu map and existing titles for batch duplicate check
     all_menus = await Menu.all()
     menu_map = {m.title: m for m in all_menus}
@@ -292,7 +366,7 @@ async def handle_link_import(file: UploadFile = File(...)):
         if not title or title in existing_titles:
             skipped += 1
             continue
-        menu_titles = item.pop("menus", []) or []
+        menu_entries = item.pop("menus", []) or []
         link = await Links.create(
             title=title,
             href=item.get("href", ""),
@@ -305,6 +379,7 @@ async def handle_link_import(file: UploadFile = File(...)):
             cdn_img_id=item.get("cdn_img_id"),
             status=item.get("status", True),
         )
+        menu_titles = [_normalize_menu_title(m) for m in menu_entries]
         menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
         if menus_to_add:
             await link.menus.add(*menus_to_add)

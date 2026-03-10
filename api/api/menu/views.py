@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
@@ -123,16 +123,77 @@ async def handle_menu_update_all(items: list[MenuUpdateAllSchema]):
     return BaseApiOut(message="批量更新成功")
 
 
+@menu_router.get("/impact", dependencies=[Depends(get_current_user)])
+async def handle_menu_impact(ids: str = Query(...)):
+    """查询删除菜单的影响：子菜单数量、关联链接数量"""
+    id_list = [int(x) for x in ids.split(",") if x.strip()]
+    id_set = set(id_list)
+
+    # Find children not already in the selection
+    children = await Menu.filter(parent_id__in=id_list).all()
+    external_children = [c for c in children if c.id not in id_set]
+    child_count = len(external_children)
+
+    # Count links associated with these menus (M2M)
+    menus = await Menu.filter(id__in=id_list).prefetch_related("links")
+    link_ids = set()
+    menu_titles = []
+    for m in menus:
+        menu_titles.append(m.title)
+        for link in m.links:
+            link_ids.add(link.id)
+    link_count = len(link_ids)
+
+    return BaseApiOut(data={
+        "child_count": child_count,
+        "link_count": link_count,
+        "menu_titles": menu_titles,
+    })
+
+
 @menu_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
-async def handle_menu_delete(item_ids: str):
-    ids = item_ids.split(",")
-    data = await Menu.filter(id__in=ids).delete()
-    return BaseApiOut(data=data)
+async def handle_menu_delete(
+    item_ids: str,
+    children_action: str = Query("move_up", regex="^(move_up|delete)$"),
+    links_action: str = Query("unlink", regex="^(unlink|delete)$"),
+):
+    ids = [int(x) for x in item_ids.split(",") if x.strip()]
+    id_set = set(ids)
+
+    async def _delete_menus(menu_ids: list[int]):
+        """Delete menus and handle children/links based on action params."""
+        menus = await Menu.filter(id__in=menu_ids).prefetch_related("links")
+        for menu in menus:
+            # Handle links
+            if links_action == "delete":
+                link_list = list(menu.links)
+                if link_list:
+                    await Links.filter(id__in=[l.id for l in link_list]).delete()
+            else:
+                await menu.links.clear()
+
+            # Handle children
+            children = await Menu.filter(parent_id=menu.id).all()
+            if children:
+                if children_action == "delete":
+                    child_ids = [c.id for c in children if c.id not in id_set]
+                    if child_ids:
+                        await _delete_menus(child_ids)
+                else:
+                    # move_up: reparent children to this menu's parent
+                    await Menu.filter(parent_id=menu.id).update(parent_id=menu.parent_id)
+
+        await Menu.filter(id__in=menu_ids).delete()
+
+    await _delete_menus(ids)
+    await clear_menu_cache()
+    return BaseApiOut()
 
 
 @menu_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(get_current_super_user)])
 async def handle_menu_delete_all():
     await Menu.all().delete()
+    await clear_menu_cache()
     return BaseApiOut(message="删除所有数据成功")
 
 

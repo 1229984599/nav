@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import type { SelectRenderLabel } from 'naive-ui';
-import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputNumber, NModal, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, type DataTableColumns, type TreeOption } from 'naive-ui';
+import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, type DataTableColumns, type TreeOption } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
-import { fetchMenuTree, fetchMenuCreate, fetchMenuUpdate, fetchMenuDelete, fetchMenuBatchUpdate, fetchMenuImport, fetchMenuImportJson } from '@/service/api';
+import { fetchMenuTree, fetchMenuCreate, fetchMenuUpdate, fetchMenuDelete, fetchMenuBatchUpdate, fetchMenuImport, fetchMenuImportJson, fetchMenuImpact } from '@/service/api';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization } from '@/service/request/shared';
 
@@ -459,8 +459,54 @@ async function handleSave() {
   loadData();
 }
 
+// Delete impact dialog
+const showDeleteDialog = ref(false);
+const deleteTargetIds = ref<number[]>([]);
+const deleteImpact = ref<{ child_count: number; link_count: number; menu_titles: string[] }>({ child_count: 0, link_count: 0, menu_titles: [] });
+const deleteChildrenAction = ref<'move_up' | 'delete'>('move_up');
+const deleteLinksAction = ref<'unlink' | 'delete'>('unlink');
+const deleteLoading = ref(false);
+
 async function handleDelete(id: number) {
-  await fetchMenuDelete(String(id));
+  await showDeleteImpactDialog([id]);
+}
+
+async function handleBatchDelete() {
+  if (!checkedRowKeys.value.length) return;
+  await showDeleteImpactDialog([...checkedRowKeys.value]);
+}
+
+async function showDeleteImpactDialog(ids: number[]) {
+  deleteTargetIds.value = ids;
+  deleteChildrenAction.value = 'move_up';
+  deleteLinksAction.value = 'unlink';
+
+  const { data, error } = await fetchMenuImpact(ids.join(','));
+  if (error || !data) {
+    window.$message?.error('查询影响失败');
+    return;
+  }
+  deleteImpact.value = data;
+
+  // If no children and no links, delete directly
+  if (data.child_count === 0 && data.link_count === 0) {
+    await executeDelete();
+    return;
+  }
+
+  showDeleteDialog.value = true;
+}
+
+async function executeDelete() {
+  deleteLoading.value = true;
+  await fetchMenuDelete(
+    deleteTargetIds.value.join(','),
+    deleteChildrenAction.value,
+    deleteLinksAction.value
+  );
+  deleteLoading.value = false;
+  showDeleteDialog.value = false;
+  checkedRowKeys.value = [];
   loadData();
 }
 
@@ -575,14 +621,7 @@ const columns = computed<DataTableColumns<Api.NavMenu.MenuTreeNode>>(() => [
     render(row) {
       return h(NSpace, { size: 8 }, () => [
         h(NButton, { size: 'small', type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
-        h(
-          NPopconfirm,
-          { onPositiveClick: () => handleDelete(row.id) },
-          {
-            trigger: () => h(NButton, { size: 'small', type: 'error' }, () => '删除'),
-            default: () => '确定删除？'
-          }
-        )
+        h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row.id) }, () => '删除')
       ]);
     }
   }
@@ -603,6 +642,7 @@ loadData();
       <NFormItem>
         <NSpace>
           <NButton type="primary" @click="handleAdd">新增</NButton>
+          <NButton type="error" :disabled="!checkedRowKeys.length" @click="handleBatchDelete">批量删除</NButton>
           <NButton type="info" :disabled="!checkedRowKeys.length" @click="handleBatchEditOpen">批量编辑</NButton>
           <NButton @click="handleExport">导出</NButton>
           <NButton :loading="importLoading" @click="handleImportClick">导入</NButton>
@@ -753,6 +793,45 @@ loadData();
       <template #action>
         <NButton @click="showImportPreview = false">取消</NButton>
         <NButton type="primary" :loading="importLoading" :disabled="!importCheckedKeys.length" @click="handleImportConfirm">确认导入</NButton>
+      </template>
+    </NModal>
+
+    <!-- Delete Impact Dialog -->
+    <NModal v-model:show="showDeleteDialog" preset="dialog" title="确认删除" style="width: 500px">
+      <div class="mt-16px">
+        <div class="mb-12px p-12px rounded" style="background: rgba(240, 160, 32, 0.08); border: 1px solid rgba(240, 160, 32, 0.3); border-radius: 6px;">
+          <div class="text-14px" style="color: #f0a020;">
+            即将删除菜单：{{ deleteImpact.menu_titles.join('、') }}
+          </div>
+        </div>
+
+        <div v-if="deleteImpact.child_count > 0" class="mb-16px">
+          <div class="text-14px font-500 mb-8px">
+            包含 {{ deleteImpact.child_count }} 个子菜单，如何处理？
+          </div>
+          <NRadioGroup v-model:value="deleteChildrenAction">
+            <NSpace vertical>
+              <NRadio value="move_up">将子菜单移到上级</NRadio>
+              <NRadio value="delete">同时删除子菜单</NRadio>
+            </NSpace>
+          </NRadioGroup>
+        </div>
+
+        <div v-if="deleteImpact.link_count > 0" class="mb-16px">
+          <div class="text-14px font-500 mb-8px">
+            关联了 {{ deleteImpact.link_count }} 个链接，如何处理？
+          </div>
+          <NRadioGroup v-model:value="deleteLinksAction">
+            <NSpace vertical>
+              <NRadio value="unlink">仅取消关联（保留链接）</NRadio>
+              <NRadio value="delete">同时删除关联链接</NRadio>
+            </NSpace>
+          </NRadioGroup>
+        </div>
+      </div>
+      <template #action>
+        <NButton @click="showDeleteDialog = false">取消</NButton>
+        <NButton type="error" :loading="deleteLoading" @click="executeDelete">确认删除</NButton>
       </template>
     </NModal>
   </div>

@@ -70,10 +70,15 @@ function scrollToBookmarks(groupId?: string) {
   router.push({ path: "/list", query: { cat: "本地书签" }, replace: true });
   const el = document.getElementById("本地书签");
   if (el) {
-    document.querySelector(".right-container")?.scroll({
-      top: el.offsetTop - 90,
-      behavior: "smooth",
-    });
+    const container = document.querySelector(".right-container");
+    if (container) {
+      const containerHeight = container.clientHeight;
+      const scrollTarget = el.offsetTop - containerHeight / 2 + 60;
+      container.scroll({
+        top: Math.max(0, scrollTarget),
+        behavior: "smooth",
+      });
+    }
   }
 }
 </script>

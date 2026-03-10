@@ -68,6 +68,14 @@ class LinkUpdateAllSchema(BaseModel):
     menus: list[int] | None = None
 
 
+class MenuImportInfo(BaseModel):
+    """Menu info embedded in link import for hierarchy-aware creation."""
+    title: str
+    icon: str = "ic:round-menu"
+    color: str | None = None
+    parent_title: str | None = None
+
+
 class LinkImportItem(BaseModel):
     title: str
     href: str = ""
@@ -79,9 +87,9 @@ class LinkImportItem(BaseModel):
     order: int = 0
     cdn_img_id: int | None = None
     status: bool = True
-    menus: list[str] = []
+    menus: list = []  # list[str | MenuImportInfo] — accept both old and new format
 
 
 class LinkImportRequest(BaseModel):
     items: list[LinkImportItem]
-    create_menus: list[str] = []
+    create_menus: list = []  # list[str | MenuImportInfo] — accept both formats
