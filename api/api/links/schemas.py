@@ -32,6 +32,7 @@ class FilterSchemaList(BaseModel):
     href: str | None = None
     status: bool | None = None
     menus: list[int] | None = None
+    keyword: str | None = None  # OR search across title, desc, href
 
 
 class LinkSchemaList(BaseModel):

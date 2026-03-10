@@ -37,6 +37,7 @@ async def handle_link_list(
     queryset = Links.filter()
     item = filters.model_dump(exclude_unset=True)
     menus = item.pop("menus", None)
+    keyword = item.pop("keyword", None)
     if menus:
         has_uncategorized = 0 in menus
         real_menus = [m for m in menus if m != 0]
@@ -49,6 +50,11 @@ async def handle_link_list(
     if not user:
         queryset = queryset.filter(is_vip=False)
     queryset = queryset.order_by(*parse_order_by(order_by))
+    # Keyword: OR search across title, desc, href
+    if keyword:
+        queryset = queryset.filter(
+            Q(title__icontains=keyword) | Q(desc__icontains=keyword) | Q(href__icontains=keyword)
+        )
     search_item = build_link_search_filters(item)
     queryset = queryset.filter(**search_item).prefetch_related("menus")
     data = await paginate(queryset, params, True)

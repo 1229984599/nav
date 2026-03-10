@@ -12,7 +12,7 @@ from models import Links, Menu, Site
 from .schemas import CreateMenuSchema, LinkSchemaList, LinkUpdateAllSchema
 from .utils import CdnImg
 
-LINK_TEXT_FILTER_FIELDS = {"title", "href"}
+LINK_TEXT_FILTER_FIELDS = {"title", "href", "desc"}
 LINK_ORDER_FIELDS = {
     "id",
     "title",
