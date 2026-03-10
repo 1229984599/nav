@@ -29,7 +29,9 @@ const props = defineProps({
 
 const isAdmin = computed(() => userStore.isAdminAuthorized);
 const editMode = ref(false);
-const isDragActive = computed(() => isAdmin.value && (!isMobile.value || editMode.value));
+const isDragActive = computed(
+  () => isAdmin.value && (!isMobile.value || editMode.value),
+);
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
 const menuContextMenuRef = ref<InstanceType<typeof MenuContextMenu>>();
 const tabPillsWrapperRef = ref<HTMLElement>();
@@ -37,7 +39,12 @@ const orderSaving = ref(false);
 const tabOrderSaving = ref(false);
 const dragSnapshot = ref<LinkSchemaList[]>([]);
 
-type TabItem = { key: string; title: string; menu: MenuSchemaTree; isParent: boolean };
+type TabItem = {
+  key: string;
+  title: string;
+  menu: MenuSchemaTree;
+  isParent: boolean;
+};
 
 // 将选中的 tab pill 滚动到可见区域
 function scrollActiveTabIntoView() {
@@ -108,7 +115,11 @@ watch(
       // 首次初始化：检查 URL 中的 sub 参数
       const urlSub = route.query?.sub;
       const urlCat = route.query?.cat;
-      if (urlSub && typeof urlSub === "string" && urlCat === props.menu?.title) {
+      if (
+        urlSub &&
+        typeof urlSub === "string" &&
+        urlCat === props.menu?.title
+      ) {
         const matchTab = val.find((t) => t.title === urlSub);
         if (matchTab) {
           activeTab.value = matchTab.key;
@@ -159,7 +170,9 @@ const activeMenu = computed(() => {
 watch(activeTab, (key) => {
   scrollActiveTabIntoView();
   // 同步侧边栏菜单高亮
-  const tab = tabs.value.find((t) => t.key === key) || tabList.value.find((t) => t.key === key);
+  const tab =
+    tabs.value.find((t) => t.key === key) ||
+    tabList.value.find((t) => t.key === key);
   if (tab) {
     menuStore.setActiveMenuIndex(tab.title);
   }
@@ -300,8 +313,11 @@ function handleTabTouchEnd() {
           :class="{ active: editMode }"
           @click="editMode = !editMode"
         >
-          <m-icon :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'" :size="14" />
-          {{ editMode ? '完成' : '排序' }}
+          <m-icon
+            :icon="editMode ? 'mdi:check' : 'mdi:sort-variant'"
+            :size="14"
+          />
+          {{ editMode ? "完成" : "排序" }}
         </button>
       </div>
 
@@ -369,7 +385,11 @@ function handleTabTouchEnd() {
           v-else-if="activeMenu?.links && activeMenu.links.length > 0"
           class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8"
         >
-          <item-desc :item="item" v-for="item in activeMenu?.links" :key="item.id" />
+          <item-desc
+            :item="item"
+            v-for="item in activeMenu?.links"
+            :key="item.id"
+          />
         </div>
         <empty-state
           v-else
@@ -388,13 +408,13 @@ function handleTabTouchEnd() {
 .category-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 12px;
 
   @media screen and (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
   }
 }
 
@@ -409,7 +429,12 @@ function handleTabTouchEnd() {
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  margin-left: 8px;
+  background: var(--nav-card-bg, #fff);
+  border-radius: 10px;
+  padding: 5px 6px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 0 1px var(--nav-border, rgba(0, 0, 0, 0.06));
 
   &::-webkit-scrollbar {
     display: none;
@@ -418,40 +443,44 @@ function handleTabTouchEnd() {
   scrollbar-width: none;
 
   @media screen and (max-width: 768px) {
-    margin-left: 0;
     width: 100%;
   }
 }
 
 .tab-pills {
   display: flex;
-  gap: 0;
+  gap: 2px;
   white-space: nowrap;
 }
 
 .tab-pill {
   position: relative;
   padding: 4px 14px;
-  font-size: 0.875rem;
-  color: var(--nav-text-secondary, #666);
+  font-size: 0.8125rem;
+  color: var(--nav-text-secondary, #6b7280);
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.25s ease;
-  border-radius: 4px;
+  transition: all 0.2s ease;
+  border-radius: 7px;
   line-height: 1.5;
   flex-shrink: 0;
+  letter-spacing: 0.01em;
 
   &:hover {
-    color: var(--el-color-primary);
-    background-color: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.06));
+    color: var(--el-color-primary, #409eff);
+    background-color: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.08));
   }
 
   &.active {
     color: #fff;
-    background-color: var(--el-color-primary, #409eff);
+    background: linear-gradient(
+      135deg,
+      var(--el-color-primary, #409eff),
+      var(--el-color-primary-light-3, #66b1ff)
+    );
     font-weight: 500;
-    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
   }
 }
 
