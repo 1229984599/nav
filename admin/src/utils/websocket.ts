@@ -7,12 +7,14 @@ import { getServiceBaseURL } from '@/utils/service';
  * @param taskId - The task ID returned by the API
  * @param onResult - Callback when task completes successfully
  * @param onError - Callback when task fails or connection errors
+ * @param onProgress - Optional callback for progress updates
  * @returns WebSocket instance
  */
 export function createTaskWebSocket(
   taskId: string,
   onResult: (data: any) => void,
-  onError?: (err: string) => void
+  onError?: (err: string) => void,
+  onProgress?: (data: any) => void
 ): WebSocket {
   const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
   const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
@@ -41,6 +43,8 @@ export function createTaskWebSocket(
       } else if (msg.type === 'task_failed') {
         onError?.(msg.data?.error || '任务执行失败');
         ws.close();
+      } else if (msg.type === 'task_progress') {
+        onProgress?.(msg.data);
       }
     } catch {
       // ignore parse errors

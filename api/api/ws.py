@@ -2,7 +2,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from loguru import logger
 
 from authlib.jose import JsonWebToken
-from core.tasks import get_task, set_task_websocket, remove_task_websocket, cleanup_task
+from core.tasks import get_task, set_task_websocket, remove_task_websocket
 from models import User
 from settings import settings
 
@@ -44,7 +44,6 @@ async def ws_task_status(websocket: WebSocket, task_id: str, token: str = Query(
         if task["status"] in ("completed", "failed"):
             msg_type = "task_completed" if task["status"] == "completed" else "task_failed"
             await websocket.send_json({"type": msg_type, "task_id": task_id, "data": task["result"]})
-            cleanup_task(task_id)
             await websocket.close()
             return
 

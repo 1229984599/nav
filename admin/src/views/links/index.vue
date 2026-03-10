@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import type { TreeSelectRenderPrefix } from 'naive-ui';
-import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, NTreeSelect, NUpload, type DataTableColumns, type TreeOption, type UploadFileInfo } from 'naive-ui';
+import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NProgress, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, NTreeSelect, NUpload, type DataTableColumns, type TreeOption, type UploadFileInfo } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
-import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchLinkSyncCdnBatch, fetchLinkImport, fetchLinkImportJson, fetchMenuTree } from '@/service/api';
+import { fetchLinkList, fetchLinkCreate, fetchLinkUpdate, fetchLinkDelete, fetchLinkSiteInfo, fetchLinkSyncCdn, fetchLinkSyncCdnFile, fetchLinkBatchUpdate, fetchLinkSyncCdnBatch, fetchLinkImport, fetchLinkImportJson, fetchLinkTitles, fetchMenuTree } from '@/service/api';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization } from '@/service/request/shared';
 import { createTaskWebSocket } from '@/utils/websocket';
@@ -211,11 +211,13 @@ function handleBatchCdnSync() {
     }
 
     window.$message?.info('CDN同步任务已启动，请等待完成通知...');
+    savePendingTask({ taskId: data.task_id, type: 'cdn_sync', startedAt: Date.now() });
 
     createTaskWebSocket(
       data.task_id,
       (result) => {
         cdnSyncLoading.value = false;
+        removePendingTask(data.task_id);
         const msg = `同步完成：成功 ${result.success} 个，失败 ${result.fail} 个`;
         if (result.fail > 0) {
           const reasons = result.fail_items.map((item: any) => `${item.title}: ${item.reason}`).join('\n');
@@ -228,6 +230,7 @@ function handleBatchCdnSync() {
       },
       (errMsg) => {
         cdnSyncLoading.value = false;
+        removePendingTask(data.task_id);
         window.$message?.error(errMsg || 'CDN同步失败');
       }
     );
@@ -357,6 +360,105 @@ const showImportPreview = ref(false);
 const importPreviewData = ref<any[]>([]);
 const importCheckedKeys = ref<number[]>([]);
 const importExistingTitles = ref<Set<string>>(new Set());
+const importProgress = ref<{ current: number; total: number; created: number; skipped: number } | null>(null);
+
+// --- Task Persistence (survive page refresh) ---
+const TASK_STORAGE_KEY = 'nav_pending_tasks';
+
+interface PendingTask {
+  taskId: string;
+  type: 'import' | 'cdn_sync';
+  startedAt: number;
+}
+
+function savePendingTask(task: PendingTask) {
+  const tasks = getPendingTasks();
+  tasks.push(task);
+  localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(tasks));
+}
+
+function getPendingTasks(): PendingTask[] {
+  try {
+    return JSON.parse(localStorage.getItem(TASK_STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function removePendingTask(taskId: string) {
+  const tasks = getPendingTasks().filter(t => t.taskId !== taskId);
+  localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(tasks));
+}
+
+function reconnectPendingTasks() {
+  const tasks = getPendingTasks();
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+  for (const task of tasks) {
+    // Discard tasks older than 5 minutes (server won't have them anyway)
+    if (task.startedAt < fiveMinutesAgo) {
+      removePendingTask(task.taskId);
+      continue;
+    }
+
+    if (task.type === 'import') {
+      importLoading.value = true;
+      importProgress.value = null;
+      window.$message?.info('检测到未完成的导入任务，正在重新连接...');
+
+      createTaskWebSocket(
+        task.taskId,
+        (result) => {
+          importLoading.value = false;
+          importProgress.value = null;
+          removePendingTask(task.taskId);
+          window.$message?.success(`导入完成：新增 ${result.created} 个，跳过 ${result.skipped} 个`);
+          showImportPreview.value = false;
+          loadData();
+          loadMenuTree();
+        },
+        (errMsg) => {
+          importLoading.value = false;
+          importProgress.value = null;
+          removePendingTask(task.taskId);
+          // Task might have expired, just silently clean up if WS fails
+          if (errMsg !== 'WebSocket连接失败') {
+            window.$message?.error(errMsg || '导入失败');
+          }
+        },
+        (progress) => {
+          importProgress.value = progress;
+        }
+      );
+    } else if (task.type === 'cdn_sync') {
+      cdnSyncLoading.value = true;
+      window.$message?.info('检测到未完成的CDN同步任务，正在重新连接...');
+
+      createTaskWebSocket(
+        task.taskId,
+        (result) => {
+          cdnSyncLoading.value = false;
+          removePendingTask(task.taskId);
+          const msg = `同步完成：成功 ${result.success} 个，失败 ${result.fail} 个`;
+          if (result.fail > 0) {
+            const reasons = result.fail_items.map((item: any) => `${item.title}: ${item.reason}`).join('\n');
+            window.$message?.warning(`${msg}\n${reasons}`, { duration: 5000 });
+          } else {
+            window.$message?.success(msg);
+          }
+          loadData();
+        },
+        (errMsg) => {
+          cdnSyncLoading.value = false;
+          removePendingTask(task.taskId);
+          if (errMsg !== 'WebSocket连接失败') {
+            window.$message?.error(errMsg || 'CDN同步失败');
+          }
+        }
+      );
+    }
+  }
+}
 
 interface MenuMapping {
   menuTitle: string;
@@ -411,9 +513,9 @@ async function handleImportFile(e: Event) {
   importPreviewData.value = items.map((item, idx) => ({ ...item, _idx: idx }));
 
   // Fetch existing link titles for duplicate detection
-  const { data } = await fetchLinkList({ page: 1, size: 9999 }, {}, 'order');
+  const { data } = await fetchLinkTitles();
   if (data) {
-    importExistingTitles.value = new Set(data.items.map(i => i.title));
+    importExistingTitles.value = new Set(data);
   }
 
   // Detect missing menus
@@ -499,19 +601,49 @@ async function handleImportConfirm() {
     .map(m => m.menuTitle);
 
   importLoading.value = true;
+  importProgress.value = null;
+
   const { data, error } = await fetchLinkImportJson({
     items: selectedItems,
     create_menus: menusToCreate
   });
-  importLoading.value = false;
 
-  if (!error && data) {
-    window.$message?.success(`导入完成：新增 ${data.created} 个，跳过 ${data.skipped} 个`);
-    showImportPreview.value = false;
-    loadData();
-    loadMenuTree();
+  if (error || !data?.task_id) {
+    importLoading.value = false;
+    window.$message?.error('启动导入任务失败');
+    return;
   }
+
+  window.$message?.info('导入任务已启动...');
+  savePendingTask({ taskId: data.task_id, type: 'import', startedAt: Date.now() });
+
+  createTaskWebSocket(
+    data.task_id,
+    (result) => {
+      importLoading.value = false;
+      importProgress.value = null;
+      removePendingTask(data.task_id);
+      window.$message?.success(`导入完成：新增 ${result.created} 个，跳过 ${result.skipped} 个`);
+      showImportPreview.value = false;
+      loadData();
+      loadMenuTree();
+    },
+    (errMsg) => {
+      importLoading.value = false;
+      importProgress.value = null;
+      removePendingTask(data.task_id);
+      window.$message?.error(errMsg || '导入失败');
+    },
+    (progress) => {
+      importProgress.value = progress;
+    }
+  );
 }
+
+const importProgressPercent = computed(() => {
+  if (!importProgress.value) return 0;
+  return Math.round((importProgress.value.current / importProgress.value.total) * 100);
+});
 
 const importPreviewColumns = computed<DataTableColumns<any>>(() => [
   { type: 'selection' },
@@ -676,6 +808,10 @@ const columns = computed<DataTableColumns<Api.Links.LinkItem>>(() => [
 // Init
 loadData();
 loadMenuTree();
+
+onMounted(() => {
+  reconnectPendingTasks();
+});
 </script>
 
 <template>
@@ -726,7 +862,7 @@ loadMenuTree();
         </template>
         确定将选中的 {{ checkedRowKeys.length }} 个链接的图标同步到CDN？
       </NPopconfirm>
-      <NButton @click="handleExport">导出</NButton>
+      <NButton :loading="exportLoading" @click="handleExport">导出</NButton>
       <NButton :loading="importLoading" @click="handleImportClick">导入</NButton>
       <NButton type="info" :disabled="!checkedRowKeys.length" @click="handleBatchEditOpen">批量编辑</NButton>
       <input ref="importFileRef" type="file" accept=".json" style="display:none" @change="handleImportFile">
@@ -862,7 +998,10 @@ loadMenuTree();
             <NButton size="small" @click="handleExportSelectAll">全选</NButton>
             <NButton size="small" @click="handleExportDeselectAll">取消全选</NButton>
           </NSpace>
-          <span class="text-13px text-gray-400">已选: {{ exportSelectedCount }} 个链接</span>
+          <span class="text-13px text-gray-400">
+            <template v-if="exportLoading">正在加载导出数据...</template>
+            <template v-else>共 {{ exportData.length }} 个链接，已选: {{ exportSelectedCount }} 个</template>
+          </span>
         </div>
         <NSpin :show="exportLoading">
           <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--n-border-color, #e0e0e6); border-radius: 4px; padding: 8px;">
@@ -873,7 +1012,6 @@ loadMenuTree();
               :checked-keys="exportCheckedKeys"
               block-line
               expand-on-click
-              :default-expand-all="true"
               @update:checked-keys="(keys: string[]) => exportCheckedKeys = keys"
             />
           </div>
@@ -937,6 +1075,19 @@ loadMenuTree();
         </div>
       </div>
       <template #action>
+        <div v-if="importProgress" class="mr-auto flex items-center gap-12px" style="min-width: 280px;">
+          <NProgress
+            type="line"
+            :percentage="importProgressPercent"
+            :indicator-placement="'inside'"
+            :height="20"
+            :border-radius="4"
+            processing
+          />
+          <span class="text-12px text-gray-400 flex-shrink-0">
+            {{ importProgress.created }} 新增 / {{ importProgress.skipped }} 跳过
+          </span>
+        </div>
         <NButton @click="showImportPreview = false">取消</NButton>
         <NButton type="primary" :loading="importLoading" :disabled="!importCheckedKeys.length" @click="handleImportConfirm">确认导入</NButton>
       </template>

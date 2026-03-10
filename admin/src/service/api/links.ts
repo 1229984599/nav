@@ -83,11 +83,16 @@ export function fetchLinkImport(file: File) {
   });
 }
 
-/** Import links from pre-selected JSON data (with menu mapping) */
+/** Import links from pre-selected JSON data (async task with WebSocket progress) */
 export function fetchLinkImportJson(data: { items: any[]; create_menus: string[] }) {
-  return request<{ created: number; skipped: number }>({
+  return request<{ task_id: string }>({
     url: '/links/import-json',
     method: 'post',
     data
   });
+}
+
+/** Get all link titles (for duplicate detection during import) */
+export function fetchLinkTitles() {
+  return request<string[]>({ url: '/links/titles' });
 }

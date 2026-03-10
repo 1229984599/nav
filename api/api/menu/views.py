@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -179,6 +180,29 @@ _TREE_CACHE_TTL = 3600 * 24  # 24 hours
 
 def invalidate_tree_cache():
     _tree_cache.clear()
+    # Schedule background re-warm so next request hits warm cache
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(_safe_warm())
+    except RuntimeError:
+        pass
+
+
+async def _safe_warm():
+    """Re-warm cache in background after invalidation."""
+    try:
+        await warm_tree_cache()
+    except Exception:
+        pass
+
+
+async def warm_tree_cache():
+    """Pre-build and cache tree data for both guest and user at startup."""
+    for cache_key, user in [("guest", None), ("user", True)]:
+        root_nodes = await _build_tree(user)
+        result = {"code": 200, "message": "请求成功", "msg": "请求成功", "data": root_nodes}
+        json_bytes = json.dumps(result, ensure_ascii=False).encode("utf-8")
+        _tree_cache[cache_key] = {"bytes": json_bytes, "ts": time.time()}
 
 
 async def _build_tree(user: User | None) -> list[dict]:
