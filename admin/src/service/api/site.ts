@@ -15,9 +15,9 @@ export function fetchSiteClearCache() {
   return request({ url: '/site/clear_cache', method: 'post' });
 }
 
-/** Create a full site backup */
+/** Create a full site backup (async task with WebSocket progress) */
 export function fetchSiteBackup() {
-  return request<{ filename: string; path: string }>({ url: '/site/backup', method: 'post' });
+  return request<{ task_id: string }>({ url: '/site/backup', method: 'post' });
 }
 
 /** List all backup files */
@@ -30,16 +30,16 @@ export function fetchSiteBackupDelete(filename: string) {
   return request({ url: `/site/backup/${filename}`, method: 'delete' });
 }
 
-/** Restore from a backup file on server */
+/** Restore from a backup file on server (async task with WebSocket progress) */
 export function fetchSiteRestore(filename: string) {
-  return request({ url: '/site/restore', method: 'post', params: { filename } });
+  return request<{ task_id: string }>({ url: '/site/restore', method: 'post', params: { filename } });
 }
 
-/** Restore from an uploaded backup file */
+/** Restore from an uploaded backup file (async task with WebSocket progress) */
 export function fetchSiteRestoreUpload(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return request({
+  return request<{ task_id: string }>({
     url: '/site/restore',
     method: 'post',
     headers: { 'Content-Type': 'multipart/form-data' },

@@ -71,11 +71,11 @@ export function fetchLinkSyncCdnFile(file: File, linkId?: number) {
   });
 }
 
-/** Import links from JSON file */
+/** Import links from JSON file (async task with WebSocket progress) */
 export function fetchLinkImport(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return request<{ created: number; skipped: number }>({
+  return request<{ task_id: string }>({
     url: '/links/import',
     method: 'post',
     headers: { 'Content-Type': 'multipart/form-data' },

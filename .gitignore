@@ -1,1 +1,4 @@
 !/api/data/data.db
+!/api/data/data.db-shm
+!/api/data/data.db-wal
+.ace-tool/

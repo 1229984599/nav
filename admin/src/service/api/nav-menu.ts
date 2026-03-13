@@ -47,11 +47,11 @@ export function fetchMenuImpact(ids: string) {
   });
 }
 
-/** Import menus from JSON file */
+/** Import menus from JSON file (async task with WebSocket progress) */
 export function fetchMenuImport(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return request<{ created: number; skipped: number }>({
+  return request<{ task_id: string }>({
     url: '/menu/import',
     method: 'post',
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -59,9 +59,9 @@ export function fetchMenuImport(file: File) {
   });
 }
 
-/** Import menus from pre-selected JSON data */
+/** Import menus from pre-selected JSON data (async task with WebSocket progress) */
 export function fetchMenuImportJson(data: { items: any[] }) {
-  return request<{ created: number; skipped: number }>({
+  return request<{ task_id: string }>({
     url: '/menu/import-json',
     method: 'post',
     data

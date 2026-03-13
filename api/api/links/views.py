@@ -339,7 +339,7 @@ async def handle_link_export():
 
 @link_router.post("/import", dependencies=[Depends(get_current_user)])
 async def handle_link_import(file: UploadFile = File(...)):
-    """从JSON文件导入链接数据"""
+    """从JSON文件导入链接数据（后台任务 + WebSocket进度推送）"""
     content = await file.read()
     try:
         items = json.loads(content)
@@ -348,49 +348,72 @@ async def handle_link_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
-    # Auto-create missing menus with hierarchy (new dict-format entries)
-    all_menu_entries = []
-    for item in items:
-        for m in (item.get("menus") or []):
-            if isinstance(m, dict):
-                all_menu_entries.append(m)
-    if all_menu_entries:
-        await _create_menus_from_import(all_menu_entries)
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
 
-    # Pre-load menu map and existing titles for batch duplicate check
-    all_menus = await Menu.all()
-    menu_map = {m.title: m for m in all_menus}
+    task_id = create_task_id()
+    register_task(task_id)
 
-    all_titles = [item.get("title") for item in items if item.get("title")]
-    existing_links = await Links.filter(title__in=all_titles).values_list("title", flat=True)
-    existing_titles = set(existing_links)
+    async def _run_import():
+        try:
+            # Auto-create missing menus with hierarchy (new dict-format entries)
+            all_menu_entries = []
+            for item in items:
+                for m in (item.get("menus") or []):
+                    if isinstance(m, dict):
+                        all_menu_entries.append(m)
+            if all_menu_entries:
+                await _create_menus_from_import(all_menu_entries)
 
-    created = 0
-    skipped = 0
-    for item in items:
-        title = item.get("title")
-        if not title or title in existing_titles:
-            skipped += 1
-            continue
-        menu_entries = item.pop("menus", []) or []
-        link = await Links.create(
-            title=title,
-            href=item.get("href", ""),
-            icon=item.get("icon"),
-            desc=item.get("desc"),
-            color=item.get("color"),
-            is_self=item.get("is_self", False),
-            is_vip=item.get("is_vip", False),
-            order=item.get("order", 0),
-            cdn_img_id=item.get("cdn_img_id"),
-            status=item.get("status", True),
-        )
-        menu_titles = [_normalize_menu_title(m) for m in menu_entries]
-        menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
-        if menus_to_add:
-            await link.menus.add(*menus_to_add)
-        created += 1
-        existing_titles.add(title)
+            # Pre-load menu map and existing titles for batch duplicate check
+            all_menus = await Menu.all()
+            menu_map = {m.title: m for m in all_menus}
 
-    await clear_link_cache()
-    return BaseApiOut(data={"created": created, "skipped": skipped})
+            all_titles = [item.get("title") for item in items if item.get("title")]
+            existing_links = await Links.filter(title__in=all_titles).values_list("title", flat=True)
+            existing_titles = set(existing_links)
+
+            created = 0
+            skipped = 0
+            total = len(items)
+
+            for i, item in enumerate(items):
+                title = item.get("title")
+                if not title or title in existing_titles:
+                    skipped += 1
+                else:
+                    menu_entries = item.pop("menus", []) or []
+                    link = await Links.create(
+                        title=title,
+                        href=item.get("href", ""),
+                        icon=item.get("icon"),
+                        desc=item.get("desc"),
+                        color=item.get("color"),
+                        is_self=item.get("is_self", False),
+                        is_vip=item.get("is_vip", False),
+                        order=item.get("order", 0),
+                        cdn_img_id=item.get("cdn_img_id"),
+                        status=item.get("status", True),
+                    )
+                    menu_titles = [_normalize_menu_title(m) for m in menu_entries]
+                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+                    if menus_to_add:
+                        await link.menus.add(*menus_to_add)
+                    created += 1
+                    existing_titles.add(title)
+
+                # Send progress every 5 items or on last item
+                if (i + 1) % 5 == 0 or (i + 1) == total:
+                    await send_task_progress(task_id, {
+                        "current": i + 1,
+                        "total": total,
+                        "created": created,
+                        "skipped": skipped,
+                    })
+
+            await clear_link_cache()
+            await complete_task(task_id, {"created": created, "skipped": skipped})
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_import())
+    return BaseApiOut(data={"task_id": task_id})

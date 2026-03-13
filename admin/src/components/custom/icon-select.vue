@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { NButton, NInput, NPopover, NScrollbar, NTabPane, NTabs, NUpload, type UploadFileInfo } from 'naive-ui';
+import { computed, ref, watch } from 'vue';
+import { NButton, NInput, NPopover, NScrollbar, NSpin, NTabPane, NTabs, NUpload, type UploadFileInfo } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { fetchLinkSyncCdnFile } from '@/service/api';
 
@@ -97,6 +97,53 @@ const filteredIcons = computed(() => {
   return result;
 });
 
+// Iconify API search
+const searchResults = ref<string[]>([]);
+const searchLoading = ref(false);
+const searchTotal = ref(0);
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+function getIconifyApiBase(): string {
+  const customUrl = import.meta.env.VITE_ICONIFY_URL;
+  return customUrl || 'https://api.iconify.design';
+}
+
+async function searchIconifyApi(query: string) {
+  if (!query.trim()) {
+    searchResults.value = [];
+    searchTotal.value = 0;
+    return;
+  }
+  searchLoading.value = true;
+  try {
+    const base = getIconifyApiBase();
+    const res = await fetch(`${base}/search?query=${encodeURIComponent(query)}&limit=64`);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    searchResults.value = data.icons || [];
+    searchTotal.value = data.total || 0;
+  } catch {
+    searchResults.value = [];
+    searchTotal.value = 0;
+  } finally {
+    searchLoading.value = false;
+  }
+}
+
+watch(iconSearch, (val) => {
+  if (searchTimer) clearTimeout(searchTimer);
+  if (!val.trim()) {
+    searchResults.value = [];
+    searchTotal.value = 0;
+    searchLoading.value = false;
+    return;
+  }
+  searchLoading.value = true;
+  searchTimer = setTimeout(() => {
+    searchIconifyApi(val);
+  }, 300);
+});
+
 function selectIcon(icon: string) {
   emit('update:value', icon);
   showPopover.value = false;
@@ -139,7 +186,34 @@ async function handleUpload({ file }: { file: UploadFileInfo }) {
       <div class="p-4px">
         <NInput v-model:value="iconSearch" placeholder="搜索图标..." clearable size="small" class="mb-8px" />
         <NScrollbar style="max-height: 300px">
-          <NTabs type="segment" size="small">
+          <!-- Iconify API search results -->
+          <template v-if="iconSearch.trim()">
+            <div v-if="searchLoading && !searchResults.length" class="flex-center py-24px">
+              <NSpin size="small" />
+              <span class="ml-8px text-12px text-gray-400">搜索中...</span>
+            </div>
+            <template v-else-if="searchResults.length">
+              <div class="text-12px text-gray-400 mb-4px px-2px">
+                搜索结果（{{ searchResults.length }}<template v-if="searchTotal > searchResults.length"> / {{ searchTotal }}</template>）
+              </div>
+              <div class="grid grid-cols-8 gap-4px">
+                <div
+                  v-for="icon in searchResults"
+                  :key="icon"
+                  class="flex-center p-6px cursor-pointer rounded hover:bg-primary/10 transition-colors"
+                  :title="icon"
+                  @click="selectIcon(icon)"
+                >
+                  <Icon :icon="icon" class="text-22px" />
+                </div>
+              </div>
+            </template>
+            <div v-else-if="!searchLoading" class="text-12px text-gray-400 text-center py-16px">
+              无匹配图标
+            </div>
+          </template>
+          <!-- Preset icons (when not searching) -->
+          <NTabs v-else type="segment" size="small">
             <NTabPane v-for="(icons, category) in filteredIcons" :key="category" :name="category" :tab="category">
               <div class="grid grid-cols-8 gap-4px mt-8px">
                 <div

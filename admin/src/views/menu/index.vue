@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import type { SelectRenderLabel } from 'naive-ui';
 import { NButton, NCheckbox, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputNumber, NModal, NPopconfirm, NRadio, NRadioGroup, NSelect, NSpace, NSpin, NSwitch, NTag, NTree, type DataTableColumns, type TreeOption } from 'naive-ui';
 import { Icon } from '@iconify/vue';
-import { useDraggable } from 'vue-draggable-plus';
+import Sortable from 'sortablejs';
 import { fetchMenuTree, fetchMenuCreate, fetchMenuUpdate, fetchMenuDelete, fetchMenuBatchUpdate, fetchMenuImport, fetchMenuImportJson, fetchMenuImpact } from '@/service/api';
 import { getServiceBaseURL } from '@/utils/service';
 import { getAuthorization } from '@/service/request/shared';
+import { createTaskWebSocket } from '@/utils/websocket';
 
 const loading = ref(false);
 const treeData = ref<Api.NavMenu.MenuTreeNode[]>([]);
@@ -64,7 +65,7 @@ interface FlatItem {
 
 function buildFlatItems(): FlatItem[] {
   const flat: FlatItem[] = [];
-  treeData.value.forEach(parent => {
+  filteredData.value.forEach(parent => {
     flat.push({ id: parent.id, isParent: true, parentId: null });
     if (parent.children?.length) {
       parent.children.forEach(child => {
@@ -78,27 +79,30 @@ function buildFlatItems(): FlatItem[] {
 function computeAndSaveOrder(oldIdx: number, newIdx: number) {
   const flat = buildFlatItems();
   const movedItem = flat[oldIdx];
-  const targetItem = flat[newIdx];
-  if (!movedItem || !targetItem) return;
-
-  // Disallow cross-parent child moves (child dragged to a different parent's area)
-  if (!movedItem.isParent && !targetItem.isParent && movedItem.parentId !== targetItem.parentId) {
-    loadData();
-    return;
-  }
-  // Disallow child being dragged to a parent position or vice versa
-  if (movedItem.isParent !== targetItem.isParent) {
-    loadData();
-    return;
-  }
+  if (!movedItem) return;
 
   if (movedItem.isParent) {
     // --- Reorder top-level parents ---
-    // Extract parent indices from flat array
+    // Find which parent position the item was dragged from and to
     const parentIndices = flat.map((item, i) => item.isParent ? i : -1).filter(i => i !== -1);
     const parentOldPos = parentIndices.indexOf(oldIdx);
-    const parentNewPos = parentIndices.indexOf(newIdx);
-    if (parentOldPos === -1 || parentNewPos === -1) { loadData(); return; }
+    if (parentOldPos === -1) { loadData(); return; }
+
+    // Map newIdx to the closest parent position:
+    // Find which parent "slot" the newIdx falls into
+    let parentNewPos: number;
+    if (newIdx <= parentIndices[0]) {
+      parentNewPos = 0;
+    } else {
+      // Find the last parent index that is <= newIdx
+      parentNewPos = 0;
+      for (let i = 0; i < parentIndices.length; i++) {
+        if (parentIndices[i] <= newIdx) {
+          parentNewPos = i;
+        }
+      }
+    }
+    if (parentOldPos === parentNewPos) return;
 
     // Move within treeData array
     const arr = [...treeData.value];
@@ -124,8 +128,33 @@ function computeAndSaveOrder(oldIdx: number, newIdx: number) {
       }
     });
     const childOldPos = childFlatIndices.indexOf(oldIdx);
-    const childNewPos = childFlatIndices.indexOf(newIdx);
-    if (childOldPos === -1 || childNewPos === -1) { loadData(); return; }
+    if (childOldPos === -1) { loadData(); return; }
+
+    // Map newIdx to the closest child position within same parent
+    let childNewPos: number;
+    if (newIdx <= childFlatIndices[0]) {
+      childNewPos = 0;
+    } else if (newIdx >= childFlatIndices[childFlatIndices.length - 1]) {
+      childNewPos = childFlatIndices.length - 1;
+    } else {
+      childNewPos = 0;
+      for (let i = 0; i < childFlatIndices.length; i++) {
+        if (childFlatIndices[i] <= newIdx) {
+          childNewPos = i;
+        }
+      }
+    }
+
+    // If dragged outside this parent's child range, reject
+    const parentFlatIdx = flat.findIndex(item => item.isParent && item.id === movedItem.parentId);
+    const nextParentFlatIdx = flat.findIndex((item, i) => i > parentFlatIdx && item.isParent);
+    const childRangeEnd = nextParentFlatIdx === -1 ? flat.length : nextParentFlatIdx;
+    if (newIdx <= parentFlatIdx || newIdx >= childRangeEnd) {
+      loadData();
+      return;
+    }
+
+    if (childOldPos === childNewPos) return;
 
     // Move within children array
     const children = [...parentNode.children];
@@ -141,35 +170,39 @@ function computeAndSaveOrder(oldIdx: number, newIdx: number) {
   }
 }
 
-const sortable = useDraggable<Api.NavMenu.MenuTreeNode>(ref(undefined), treeData, {
-  animation: 150,
-  handle: '.drag-handle',
-  immediate: false,
-  // Empty customUpdate prevents default data sync which corrupts treeData for tree tables
-  customUpdate() { /* no-op */ },
-  onEnd(evt) {
-    // onEnd always fires (even when customUpdate doesn't)
-    const oldIdx = evt.oldIndex;
-    const newIdx = evt.newIndex;
-    if (oldIdx == null || newIdx == null || oldIdx === newIdx) return;
-    computeAndSaveOrder(oldIdx, newIdx);
-  }
-});
+let sortableInstance: Sortable | null = null;
 
 function initSortable() {
   nextTick(() => {
     const el = tableRef.value?.$el as HTMLElement | undefined;
     if (!el) return;
-    const tbody = el.querySelector('tbody') as HTMLElement | null;
-    if (tbody) {
-      try { sortable.destroy(); } catch { /* ignore */ }
-      sortable.start(tbody);
+    const tbody = el.querySelector('.n-data-table-tbody') as HTMLElement
+      || el.querySelector('tbody') as HTMLElement;
+    if (!tbody) return;
+
+    if (sortableInstance) {
+      try { sortableInstance.destroy(); } catch { /* ignore */ }
+      sortableInstance = null;
     }
+
+    sortableInstance = Sortable.create(tbody, {
+      animation: 150,
+      handle: '.drag-handle',
+      onEnd(evt) {
+        const oldIdx = evt.oldIndex;
+        const newIdx = evt.newIndex;
+        if (oldIdx == null || newIdx == null || oldIdx === newIdx) return;
+        computeAndSaveOrder(oldIdx, newIdx);
+      }
+    });
   });
 }
 
 onBeforeUnmount(() => {
-  try { sortable.destroy(); } catch { /* ignore */ }
+  if (sortableInstance) {
+    try { sortableInstance.destroy(); } catch { /* ignore */ }
+    sortableInstance = null;
+  }
 });
 
 // Filtered tree data
@@ -182,6 +215,13 @@ const filteredData = computed(() => {
     data = data.filter(node => filterNode(node, filterStatus.value!));
   }
   return data;
+});
+
+const isFilterActive = computed(() => !!filterTitle.value || (filterStatus.value !== null && filterStatus.value !== undefined));
+
+// Re-init sortable whenever the table re-renders due to data/filter changes
+watch(filteredData, () => {
+  initSortable();
 });
 
 function filterTree(items: Api.NavMenu.MenuTreeNode[], keyword: string): Api.NavMenu.MenuTreeNode[] {
@@ -377,13 +417,25 @@ async function handleImportConfirm() {
 
   importLoading.value = true;
   const { data, error } = await fetchMenuImportJson({ items: selectedItems });
-  importLoading.value = false;
 
-  if (!error && data) {
-    window.$message?.success(`导入完成：新增 ${data.created} 个，跳过 ${data.skipped} 个`);
-    showImportPreview.value = false;
-    loadData();
+  if (error || !data?.task_id) {
+    importLoading.value = false;
+    return;
   }
+
+  createTaskWebSocket(
+    data.task_id,
+    (result) => {
+      importLoading.value = false;
+      window.$message?.success(`导入完成：新增 ${result.created} 个，跳过 ${result.skipped} 个`);
+      showImportPreview.value = false;
+      loadData();
+    },
+    (errMsg) => {
+      importLoading.value = false;
+      window.$message?.error(errMsg || '菜单导入失败');
+    }
+  );
 }
 
 const importPreviewColumns = computed<DataTableColumns<any>>(() => [
@@ -551,6 +603,9 @@ const columns = computed<DataTableColumns<Api.NavMenu.MenuTreeNode>>(() => [
     key: 'drag',
     width: 40,
     render() {
+      if (isFilterActive.value) {
+        return h('div');
+      }
       return h('div', { class: 'drag-handle cursor-move flex-center' }, [
         h(Icon, { icon: 'mdi:drag', width: '1.2em', height: '1.2em', class: 'text-gray-400' })
       ]);

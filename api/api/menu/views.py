@@ -66,41 +66,66 @@ async def handle_menu_create_all(items: list[MenuSchemaUpdate]):
 
 @menu_router.post("/import-json", dependencies=[Depends(get_current_user)])
 async def handle_menu_import_json(payload: MenuImportRequest):
-    """从前端预览后的JSON数据导入菜单"""
-    created = 0
-    skipped = 0
+    """从前端预览后的JSON数据导入菜单（后台任务 + WebSocket进度推送）"""
+    if not payload.items:
+        return BaseApiOut(data={"created": 0, "skipped": 0})
 
-    # 第一遍：创建所有菜单（不设置parent）
-    for item in payload.items:
-        if not item.title:
-            skipped += 1
-            continue
-        exists = await Menu.filter(title=item.title).first()
-        if exists:
-            skipped += 1
-            continue
-        await Menu.create(
-            title=item.title,
-            icon=item.icon,
-            color=item.color,
-            order=item.order,
-            is_vip=item.is_vip,
-            status=item.status,
-        )
-        created += 1
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
 
-    # 第二遍：设置父级关系
-    for item in payload.items:
-        if not item.parent_title:
-            continue
-        menu = await Menu.filter(title=item.title).first()
-        parent = await Menu.filter(title=item.parent_title).first()
-        if menu and parent:
-            menu.parent_id = parent.id
-            await menu.save()
+    task_id = create_task_id()
+    register_task(task_id)
 
-    await clear_menu_cache()
-    return BaseApiOut(data={"created": created, "skipped": skipped})
+    async def _run_import():
+        try:
+            created = 0
+            skipped = 0
+            total = len(payload.items)
+
+            # 第一遍：创建所有菜单（不设置parent）
+            for i, item in enumerate(payload.items):
+                if not item.title:
+                    skipped += 1
+                    continue
+                exists = await Menu.filter(title=item.title).first()
+                if exists:
+                    skipped += 1
+                    continue
+                await Menu.create(
+                    title=item.title,
+                    icon=item.icon,
+                    color=item.color,
+                    order=item.order,
+                    is_vip=item.is_vip,
+                    status=item.status,
+                )
+                created += 1
+
+                if (i + 1) % 5 == 0 or (i + 1) == total:
+                    await send_task_progress(task_id, {
+                        "current": i + 1,
+                        "total": total,
+                        "created": created,
+                        "skipped": skipped,
+                        "message": f"正在创建菜单（{i + 1}/{total}）...",
+                    })
+
+            # 第二遍：设置父级关系
+            for item in payload.items:
+                if not item.parent_title:
+                    continue
+                menu = await Menu.filter(title=item.title).first()
+                parent = await Menu.filter(title=item.parent_title).first()
+                if menu and parent:
+                    menu.parent_id = parent.id
+                    await menu.save()
+
+            await clear_menu_cache()
+            await complete_task(task_id, {"created": created, "skipped": skipped})
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_import())
+    return BaseApiOut(data={"task_id": task_id})
 
 
 @menu_router.put("/{item_id}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
@@ -154,8 +179,8 @@ async def handle_menu_impact(ids: str = Query(...)):
 @menu_router.delete("/{item_ids}", response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
 async def handle_menu_delete(
     item_ids: str,
-    children_action: str = Query("move_up", regex="^(move_up|delete)$"),
-    links_action: str = Query("unlink", regex="^(unlink|delete)$"),
+    children_action: str = Query("move_up", pattern="^(move_up|delete)$"),
+    links_action: str = Query("unlink", pattern="^(unlink|delete)$"),
 ):
     ids = [int(x) for x in item_ids.split(",") if x.strip()]
     id_set = set(ids)
@@ -331,7 +356,7 @@ async def handle_menu_export():
 
 @menu_router.post("/import", dependencies=[Depends(get_current_user)])
 async def handle_menu_import(file: UploadFile = File(...)):
-    """从JSON文件导入菜单数据"""
+    """从JSON文件导入菜单数据（后台任务 + WebSocket进度推送）"""
     content = await file.read()
     try:
         items = json.loads(content)
@@ -340,39 +365,61 @@ async def handle_menu_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
-    created = 0
-    skipped = 0
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
 
-    # 第一遍：创建所有菜单（不设置parent）
-    for item in items:
-        title = item.get("title")
-        if not title:
-            skipped += 1
-            continue
-        exists = await Menu.filter(title=title).first()
-        if exists:
-            skipped += 1
-            continue
-        await Menu.create(
-            title=title,
-            icon=item.get("icon", "ic:round-menu"),
-            color=item.get("color"),
-            order=item.get("order", 0),
-            is_vip=item.get("is_vip", False),
-            status=item.get("status", True),
-        )
-        created += 1
+    task_id = create_task_id()
+    register_task(task_id)
 
-    # 第二遍：设置父级关系
-    for item in items:
-        parent_title = item.get("parent_title")
-        if not parent_title:
-            continue
-        menu = await Menu.filter(title=item.get("title")).first()
-        parent = await Menu.filter(title=parent_title).first()
-        if menu and parent:
-            menu.parent_id = parent.id
-            await menu.save()
+    async def _run_import():
+        try:
+            created = 0
+            skipped = 0
+            total = len(items)
 
-    await clear_menu_cache()
-    return BaseApiOut(data={"created": created, "skipped": skipped})
+            # 第一遍：创建所有菜单（不设置parent）
+            for i, item in enumerate(items):
+                title = item.get("title")
+                if not title:
+                    skipped += 1
+                    continue
+                exists = await Menu.filter(title=title).first()
+                if exists:
+                    skipped += 1
+                    continue
+                await Menu.create(
+                    title=title,
+                    icon=item.get("icon", "ic:round-menu"),
+                    color=item.get("color"),
+                    order=item.get("order", 0),
+                    is_vip=item.get("is_vip", False),
+                    status=item.get("status", True),
+                )
+                created += 1
+
+                if (i + 1) % 5 == 0 or (i + 1) == total:
+                    await send_task_progress(task_id, {
+                        "current": i + 1,
+                        "total": total,
+                        "created": created,
+                        "skipped": skipped,
+                        "message": f"正在创建菜单（{i + 1}/{total}）...",
+                    })
+
+            # 第二遍：设置父级关系
+            for item in items:
+                parent_title = item.get("parent_title")
+                if not parent_title:
+                    continue
+                menu = await Menu.filter(title=item.get("title")).first()
+                parent = await Menu.filter(title=parent_title).first()
+                if menu and parent:
+                    menu.parent_id = parent.id
+                    await menu.save()
+
+            await clear_menu_cache()
+            await complete_task(task_id, {"created": created, "skipped": skipped})
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_import())
+    return BaseApiOut(data={"task_id": task_id})

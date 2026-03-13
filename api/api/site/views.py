@@ -1,3 +1,4 @@
+import asyncio
 import json
 import shutil
 from datetime import datetime
@@ -16,6 +17,7 @@ from models import Site, Menu, Links, Friend, User
 from .schemas import SiteSchemaList, SiteSchemaPublic, SiteSchemaUpdate
 from auth.auth import get_current_user, get_current_super_user
 from settings import settings
+from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
 
 site_router = APIRouter()
 
@@ -87,75 +89,111 @@ BACKUP_DIR = settings.BASE_PATH / "data" / "backups"
 
 @site_router.post('/backup', dependencies=[Depends(get_current_super_user)])
 async def handle_backup():
-    """全站数据备份为JSON文件，保存到 api/data/backups/"""
+    """全站数据备份为JSON文件（后台任务 + WebSocket进度推送）"""
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 收集站点设置
-    site = await Site.first()
-    site_data = None
-    if site:
-        site_data = {
-            "title": site.title, "desc": site.desc, "keywords": site.keywords,
-            "icon": site.icon, "color": site.color, "footer": site.footer,
-            "yiyan": site.yiyan, "weather": site.weather, "weather_key": site.weather_key,
-            "copyright": site.copyright, "cdn_img_token": site.cdn_img_token,
-        }
+    task_id = create_task_id()
+    register_task(task_id)
 
-    # 收集菜单
-    menus = await Menu.all().order_by("order").select_related("parent")
-    menus_data = []
-    for m in menus:
-        menus_data.append({
-            "title": m.title, "icon": m.icon, "color": m.color,
-            "order": m.order, "is_vip": m.is_vip, "status": m.status,
-            "parent_title": m.parent.title if m.parent else None,
-        })
+    async def _run_backup():
+        try:
+            total_steps = 6
 
-    # 收集链接（含菜单关联）
-    links = await Links.all().order_by("order").prefetch_related("menus")
-    links_data = []
-    for link in links:
-        link_menus = await link.menus.all()
-        links_data.append({
-            "title": link.title, "href": link.href, "icon": link.icon,
-            "desc": link.desc, "color": link.color, "is_self": link.is_self,
-            "is_vip": link.is_vip, "order": link.order, "cdn_img_id": link.cdn_img_id,
-            "status": link.status, "menus": [m.title for m in link_menus],
-        })
+            # Step 1: Site settings
+            await send_task_progress(task_id, {
+                "step": "site", "current": 1, "total": total_steps,
+                "message": "正在收集站点设置..."
+            })
+            site = await Site.first()
+            site_data = None
+            if site:
+                site_data = {
+                    "title": site.title, "desc": site.desc, "keywords": site.keywords,
+                    "icon": site.icon, "color": site.color, "footer": site.footer,
+                    "yiyan": site.yiyan, "weather": site.weather, "weather_key": site.weather_key,
+                    "copyright": site.copyright, "cdn_img_token": site.cdn_img_token,
+                }
 
-    # 收集友链
-    friends = await Friend.all().order_by("order")
-    friends_data = []
-    for f in friends:
-        friends_data.append({
-            "title": f.title, "href": f.href, "icon": f.icon,
-            "desc": f.desc, "color": f.color, "order": f.order, "status": f.status,
-        })
+            # Step 2: Menus
+            await send_task_progress(task_id, {
+                "step": "menus", "current": 2, "total": total_steps,
+                "message": "正在收集菜单数据..."
+            })
+            menus = await Menu.all().order_by("order").select_related("parent")
+            menus_data = []
+            for m in menus:
+                menus_data.append({
+                    "title": m.title, "icon": m.icon, "color": m.color,
+                    "order": m.order, "is_vip": m.is_vip, "status": m.status,
+                    "parent_title": m.parent.title if m.parent else None,
+                })
 
-    # 收集用户
-    users = await User.all().order_by("order")
-    users_data = []
-    for u in users:
-        users_data.append({
-            "username": u.username, "password": u.password, "nickname": u.nickname,
-            "status": u.status, "is_super": u.is_super, "order": u.order,
-        })
+            # Step 3: Links
+            await send_task_progress(task_id, {
+                "step": "links", "current": 3, "total": total_steps,
+                "message": "正在收集链接数据..."
+            })
+            links = await Links.all().order_by("order").prefetch_related("menus")
+            links_data = []
+            for link in links:
+                link_menus = await link.menus.all()
+                links_data.append({
+                    "title": link.title, "href": link.href, "icon": link.icon,
+                    "desc": link.desc, "color": link.color, "is_self": link.is_self,
+                    "is_vip": link.is_vip, "order": link.order, "cdn_img_id": link.cdn_img_id,
+                    "status": link.status, "menus": [m.title for m in link_menus],
+                })
 
-    backup = {
-        "version": 1,
-        "created_at": datetime.now().isoformat(),
-        "site": site_data,
-        "menus": menus_data,
-        "links": links_data,
-        "friends": friends_data,
-        "users": users_data,
-    }
+            # Step 4: Friends
+            await send_task_progress(task_id, {
+                "step": "friends", "current": 4, "total": total_steps,
+                "message": "正在收集友链数据..."
+            })
+            friends = await Friend.all().order_by("order")
+            friends_data = []
+            for f in friends:
+                friends_data.append({
+                    "title": f.title, "href": f.href, "icon": f.icon,
+                    "desc": f.desc, "color": f.color, "order": f.order, "status": f.status,
+                })
 
-    filename = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    filepath = BACKUP_DIR / filename
-    filepath.write_text(json.dumps(backup, ensure_ascii=False, indent=2), encoding="utf-8")
+            # Step 5: Users
+            await send_task_progress(task_id, {
+                "step": "users", "current": 5, "total": total_steps,
+                "message": "正在收集用户数据..."
+            })
+            users = await User.all().order_by("order")
+            users_data = []
+            for u in users:
+                users_data.append({
+                    "username": u.username, "password": u.password, "nickname": u.nickname,
+                    "status": u.status, "is_super": u.is_super, "order": u.order,
+                })
 
-    return BaseApiOut(data={"filename": filename, "path": str(filepath)})
+            # Step 6: Write file
+            await send_task_progress(task_id, {
+                "step": "write", "current": 6, "total": total_steps,
+                "message": "正在写入备份文件..."
+            })
+            backup = {
+                "version": 1,
+                "created_at": datetime.now().isoformat(),
+                "site": site_data,
+                "menus": menus_data,
+                "links": links_data,
+                "friends": friends_data,
+                "users": users_data,
+            }
+            filename = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filepath = BACKUP_DIR / filename
+            filepath.write_text(json.dumps(backup, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            await complete_task(task_id, {"filename": filename, "path": str(filepath)})
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_backup())
+    return BaseApiOut(data={"task_id": task_id})
 
 
 @site_router.get('/backup/list', dependencies=[Depends(get_current_super_user)])
@@ -195,7 +233,7 @@ async def handle_backup_delete(filename: str):
 
 @site_router.post('/restore', dependencies=[Depends(get_current_super_user)])
 async def handle_restore(filename: str = "", file: UploadFile | None = File(None)):
-    """从备份文件恢复全站数据。支持上传文件或指定已有备份文件名"""
+    """从备份文件恢复全站数据（后台任务 + WebSocket进度推送）"""
     if file and file.filename:
         content = await file.read()
     elif filename:
@@ -211,52 +249,108 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="JSON格式错误")
 
-    # 恢复站点设置
-    if backup.get("site"):
-        site = await Site.first()
-        if site:
-            await site.update_from_dict(backup["site"])
-            await site.save()
+    task_id = create_task_id()
+    register_task(task_id)
 
-    # 恢复菜单
-    if backup.get("menus"):
-        await Menu.all().delete()
-        for item in backup["menus"]:
-            parent_title = item.pop("parent_title", None)
-            await Menu.create(**item)
-        # 第二遍设置父级
-        for item in backup["menus"]:
-            parent_title = item.get("parent_title")
-            if not parent_title:
-                continue
-            menu = await Menu.filter(title=item["title"]).first()
-            parent = await Menu.filter(title=parent_title).first()
-            if menu and parent:
-                menu.parent_id = parent.id
-                await menu.save()
+    async def _run_restore():
+        try:
+            steps = []
+            if backup.get("site"): steps.append("site")
+            if backup.get("menus"): steps.append("menus")
+            if backup.get("links"): steps.append("links")
+            if backup.get("friends"): steps.append("friends")
+            if backup.get("users"): steps.append("users")
+            total_steps = len(steps)
+            current_step = 0
 
-    # 恢复链接
-    if backup.get("links"):
-        await Links.all().delete()
-        menu_map = {m.title: m for m in await Menu.all()}
-        for item in backup["links"]:
-            menu_titles = item.pop("menus", []) or []
-            link = await Links.create(**item)
-            menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
-            if menus_to_add:
-                await link.menus.add(*menus_to_add)
+            # Restore site settings
+            if backup.get("site"):
+                current_step += 1
+                await send_task_progress(task_id, {
+                    "step": "site", "current": current_step, "total": total_steps,
+                    "message": "正在恢复站点设置..."
+                })
+                site = await Site.first()
+                if site:
+                    await site.update_from_dict(backup["site"])
+                    await site.save()
 
-    # 恢复友链
-    if backup.get("friends"):
-        await Friend.all().delete()
-        for item in backup["friends"]:
-            await Friend.create(**item)
+            # Restore menus
+            if backup.get("menus"):
+                current_step += 1
+                await send_task_progress(task_id, {
+                    "step": "menus", "current": current_step, "total": total_steps,
+                    "message": f"正在恢复菜单数据（共 {len(backup['menus'])} 条）..."
+                })
+                await Menu.all().delete()
+                # Save parent_title before popping (fix: pop removes the key for second pass)
+                parent_titles = {}
+                for item in backup["menus"]:
+                    parent_titles[item.get("title")] = item.pop("parent_title", None)
+                    await Menu.create(**item)
+                # Second pass: set parent relationships
+                for title, parent_title in parent_titles.items():
+                    if not parent_title:
+                        continue
+                    menu = await Menu.filter(title=title).first()
+                    parent = await Menu.filter(title=parent_title).first()
+                    if menu and parent:
+                        menu.parent_id = parent.id
+                        await menu.save()
 
-    # 恢复用户
-    if backup.get("users"):
-        await User.all().delete()
-        for item in backup["users"]:
-            await User.create(**item)
+            # Restore links
+            if backup.get("links"):
+                current_step += 1
+                total_links = len(backup["links"])
+                await send_task_progress(task_id, {
+                    "step": "links", "current": current_step, "total": total_steps,
+                    "message": f"正在恢复链接数据（共 {total_links} 条）..."
+                })
+                await Links.all().delete()
+                menu_map = {m.title: m for m in await Menu.all()}
+                for i, item in enumerate(backup["links"]):
+                    menu_titles = item.pop("menus", []) or []
+                    link = await Links.create(**item)
+                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+                    if menus_to_add:
+                        await link.menus.add(*menus_to_add)
+                    if (i + 1) % 20 == 0 or (i + 1) == total_links:
+                        await send_task_progress(task_id, {
+                            "step": "links", "current": current_step, "total": total_steps,
+                            "message": f"正在恢复链接数据（{i + 1}/{total_links}）...",
+                            "detail_current": i + 1,
+                            "detail_total": total_links,
+                        })
 
-    await FastAPICache.clear()
-    return BaseApiOut(message="数据恢复成功")
+            # Restore friends
+            if backup.get("friends"):
+                current_step += 1
+                await send_task_progress(task_id, {
+                    "step": "friends", "current": current_step, "total": total_steps,
+                    "message": f"正在恢复友链数据（共 {len(backup['friends'])} 条）..."
+                })
+                await Friend.all().delete()
+                for item in backup["friends"]:
+                    await Friend.create(**item)
+
+            # Restore users
+            if backup.get("users"):
+                current_step += 1
+                await send_task_progress(task_id, {
+                    "step": "users", "current": current_step, "total": total_steps,
+                    "message": f"正在恢复用户数据（共 {len(backup['users'])} 条）..."
+                })
+                await User.all().delete()
+                for item in backup["users"]:
+                    await User.create(**item)
+
+            await FastAPICache.clear()
+            from api.menu.views import invalidate_tree_cache
+            invalidate_tree_cache()
+
+            await complete_task(task_id, {"message": "数据恢复成功"})
+        except Exception as e:
+            await fail_task(task_id, str(e))
+
+    asyncio.create_task(_run_restore())
+    return BaseApiOut(data={"task_id": task_id})
