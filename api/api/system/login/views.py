@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
+from collections import defaultdict
+import time
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, Request
 from fastapi_jwt import JwtAuthorizationCredentials
 
 from auth import auth, schemas
@@ -11,14 +13,32 @@ from settings import settings
 
 login_router = APIRouter()
 
+# 简单内存限流：每个 IP 最多 5 次/分钟
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+_RATE_LIMIT = 5
+_RATE_WINDOW = 60  # seconds
+
+
+def _check_rate_limit(ip: str) -> bool:
+    """检查是否超过限流，返回 True 表示允许，False 表示拒绝"""
+    now = time.time()
+    attempts = _login_attempts[ip]
+    # 清理过期记录
+    _login_attempts[ip] = [t for t in attempts if now - t < _RATE_WINDOW]
+    return len(_login_attempts[ip]) < _RATE_LIMIT
+
 
 @login_router.post("/login", name="Login", response_model=BaseApiOut[schemas.Token])
-async def handle_login(form_data: schemas.LoginSchema):
+async def handle_login(request: Request, form_data: schemas.LoginSchema):
+    client_ip = request.client.host if request.client else "unknown"
+    if not _check_rate_limit(client_ip):
+        return BaseApiOut(code=429, message="登录尝试过于频繁，请稍后再试")
+    _login_attempts[client_ip].append(time.time())
     user = await User.filter(username=form_data.username, status=True).first()
     if not user:
-        return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户不存在或已被禁用")
+        return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户名或密码错误")
     if not auth.verify_password(form_data.password, user.password):
-        return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="密码错误")
+        return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户名或密码错误")
     subject = {"username": user.username}
     access_token = auth.access_security.create_access_token(subject=subject)
     refresh_token = auth.refresh_security.create_refresh_token(subject=subject)

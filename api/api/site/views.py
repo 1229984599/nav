@@ -17,7 +17,7 @@ from models import Site, Menu, Links, Friend, User
 from .schemas import SiteSchemaList, SiteSchemaPublic, SiteSchemaUpdate
 from auth.auth import get_current_user, get_current_super_user
 from settings import settings
-from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
+from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress, track_task
 
 site_router = APIRouter()
 
@@ -39,8 +39,7 @@ async def handle_update_site(site: SiteSchemaUpdate):
 
 
 @site_router.get('/get', response_model=BaseApiOut)
-# 站点数据，几乎不会改变，缓存30天
-# @cache(expire=60 * 60 * 24 * 30, namespace='site')
+@cache(expire=60 * 60 * 24, namespace='site')
 async def handle_get_site():
     """
     获取数据站点（公开接口，不返回敏感字段）
@@ -48,6 +47,44 @@ async def handle_get_site():
     data = await Site.first()
     payload = SiteSchemaPublic.model_validate(data, from_attributes=True)
     return BaseApiOut(data=payload)
+
+
+@site_router.get('/stats', response_model=BaseApiOut, dependencies=[Depends(get_current_user)])
+async def handle_stats():
+    """获取系统统计数据（供 Dashboard 使用）"""
+    link_count = await Links.all().count()
+    menu_count = await Menu.all().count()
+    friend_count = await Friend.all().count()
+    user_count = await User.all().count()
+    # 每个分类下的链接数分布
+    menus = await Menu.filter(parent_id=None).prefetch_related("links")
+    distribution = []
+    for m in menus:
+        count = await m.links.all().count()
+        if count > 0:
+            distribution.append({"name": m.title, "value": count})
+    # 最近添加的链接
+    recent = await Links.all().order_by("-create_time").limit(8).values(
+        "id", "title", "href", "icon", "create_time"
+    )
+    recent_links = [
+        {
+            "id": r["id"],
+            "title": r["title"],
+            "href": r["href"],
+            "icon": r["icon"],
+            "create_time": r["create_time"].strftime("%Y-%m-%d %H:%M") if r["create_time"] else "",
+        }
+        for r in recent
+    ]
+    return BaseApiOut(data={
+        "link_count": link_count,
+        "menu_count": menu_count,
+        "friend_count": friend_count,
+        "user_count": user_count,
+        "distribution": distribution,
+        "recent_links": recent_links,
+    })
 
 
 # 上传图片的路由和处理函数
@@ -136,7 +173,7 @@ async def handle_backup():
             links = await Links.all().order_by("order").prefetch_related("menus")
             links_data = []
             for link in links:
-                link_menus = await link.menus.all()
+                link_menus = link.menus  # 已 prefetch_related，直接访问无需 await
                 links_data.append({
                     "title": link.title, "href": link.href, "icon": link.icon,
                     "desc": link.desc, "color": link.color, "is_self": link.is_self,
@@ -192,7 +229,7 @@ async def handle_backup():
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_backup())
+    track_task(_run_backup())
     return BaseApiOut(data={"task_id": task_id})
 
 
@@ -254,6 +291,8 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
 
     async def _run_restore():
         try:
+            from tortoise.transactions import in_transaction
+
             steps = []
             if backup.get("site"): steps.append("site")
             if backup.get("menus"): steps.append("menus")
@@ -263,86 +302,87 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
             total_steps = len(steps)
             current_step = 0
 
-            # Restore site settings
-            if backup.get("site"):
-                current_step += 1
-                await send_task_progress(task_id, {
-                    "step": "site", "current": current_step, "total": total_steps,
-                    "message": "正在恢复站点设置..."
-                })
-                site = await Site.first()
-                if site:
-                    await site.update_from_dict(backup["site"])
-                    await site.save()
+            async with in_transaction():
+                # Restore site settings
+                if backup.get("site"):
+                    current_step += 1
+                    await send_task_progress(task_id, {
+                        "step": "site", "current": current_step, "total": total_steps,
+                        "message": "正在恢复站点设置..."
+                    })
+                    site = await Site.first()
+                    if site:
+                        await site.update_from_dict(backup["site"])
+                        await site.save()
 
-            # Restore menus
-            if backup.get("menus"):
-                current_step += 1
-                await send_task_progress(task_id, {
-                    "step": "menus", "current": current_step, "total": total_steps,
-                    "message": f"正在恢复菜单数据（共 {len(backup['menus'])} 条）..."
-                })
-                await Menu.all().delete()
-                # Save parent_title before popping (fix: pop removes the key for second pass)
-                parent_titles = {}
-                for item in backup["menus"]:
-                    parent_titles[item.get("title")] = item.pop("parent_title", None)
-                    await Menu.create(**item)
-                # Second pass: set parent relationships
-                for title, parent_title in parent_titles.items():
-                    if not parent_title:
-                        continue
-                    menu = await Menu.filter(title=title).first()
-                    parent = await Menu.filter(title=parent_title).first()
-                    if menu and parent:
-                        menu.parent_id = parent.id
-                        await menu.save()
+                # Restore menus
+                if backup.get("menus"):
+                    current_step += 1
+                    await send_task_progress(task_id, {
+                        "step": "menus", "current": current_step, "total": total_steps,
+                        "message": f"正在恢复菜单数据（共 {len(backup['menus'])} 条）..."
+                    })
+                    await Menu.all().delete()
+                    # Save parent_title before popping (fix: pop removes the key for second pass)
+                    parent_titles = {}
+                    for item in backup["menus"]:
+                        parent_titles[item.get("title")] = item.pop("parent_title", None)
+                        await Menu.create(**item)
+                    # Second pass: set parent relationships
+                    for title, parent_title in parent_titles.items():
+                        if not parent_title:
+                            continue
+                        menu = await Menu.filter(title=title).first()
+                        parent = await Menu.filter(title=parent_title).first()
+                        if menu and parent:
+                            menu.parent_id = parent.id
+                            await menu.save()
 
-            # Restore links
-            if backup.get("links"):
-                current_step += 1
-                total_links = len(backup["links"])
-                await send_task_progress(task_id, {
-                    "step": "links", "current": current_step, "total": total_steps,
-                    "message": f"正在恢复链接数据（共 {total_links} 条）..."
-                })
-                await Links.all().delete()
-                menu_map = {m.title: m for m in await Menu.all()}
-                for i, item in enumerate(backup["links"]):
-                    menu_titles = item.pop("menus", []) or []
-                    link = await Links.create(**item)
-                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
-                    if menus_to_add:
-                        await link.menus.add(*menus_to_add)
-                    if (i + 1) % 20 == 0 or (i + 1) == total_links:
-                        await send_task_progress(task_id, {
-                            "step": "links", "current": current_step, "total": total_steps,
-                            "message": f"正在恢复链接数据（{i + 1}/{total_links}）...",
-                            "detail_current": i + 1,
-                            "detail_total": total_links,
-                        })
+                # Restore links
+                if backup.get("links"):
+                    current_step += 1
+                    total_links = len(backup["links"])
+                    await send_task_progress(task_id, {
+                        "step": "links", "current": current_step, "total": total_steps,
+                        "message": f"正在恢复链接数据（共 {total_links} 条）..."
+                    })
+                    await Links.all().delete()
+                    menu_map = {m.title: m for m in await Menu.all()}
+                    for i, item in enumerate(backup["links"]):
+                        menu_titles = item.pop("menus", []) or []
+                        link = await Links.create(**item)
+                        menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+                        if menus_to_add:
+                            await link.menus.add(*menus_to_add)
+                        if (i + 1) % 20 == 0 or (i + 1) == total_links:
+                            await send_task_progress(task_id, {
+                                "step": "links", "current": current_step, "total": total_steps,
+                                "message": f"正在恢复链接数据（{i + 1}/{total_links}）...",
+                                "detail_current": i + 1,
+                                "detail_total": total_links,
+                            })
 
-            # Restore friends
-            if backup.get("friends"):
-                current_step += 1
-                await send_task_progress(task_id, {
-                    "step": "friends", "current": current_step, "total": total_steps,
-                    "message": f"正在恢复友链数据（共 {len(backup['friends'])} 条）..."
-                })
-                await Friend.all().delete()
-                for item in backup["friends"]:
-                    await Friend.create(**item)
+                # Restore friends
+                if backup.get("friends"):
+                    current_step += 1
+                    await send_task_progress(task_id, {
+                        "step": "friends", "current": current_step, "total": total_steps,
+                        "message": f"正在恢复友链数据（共 {len(backup['friends'])} 条）..."
+                    })
+                    await Friend.all().delete()
+                    for item in backup["friends"]:
+                        await Friend.create(**item)
 
-            # Restore users
-            if backup.get("users"):
-                current_step += 1
-                await send_task_progress(task_id, {
-                    "step": "users", "current": current_step, "total": total_steps,
-                    "message": f"正在恢复用户数据（共 {len(backup['users'])} 条）..."
-                })
-                await User.all().delete()
-                for item in backup["users"]:
-                    await User.create(**item)
+                # Restore users
+                if backup.get("users"):
+                    current_step += 1
+                    await send_task_progress(task_id, {
+                        "step": "users", "current": current_step, "total": total_steps,
+                        "message": f"正在恢复用户数据（共 {len(backup['users'])} 条）..."
+                    })
+                    await User.all().delete()
+                    for item in backup["users"]:
+                        await User.create(**item)
 
             await FastAPICache.clear()
             from api.menu.views import invalidate_tree_cache
@@ -352,5 +392,5 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_restore())
+    track_task(_run_restore())
     return BaseApiOut(data={"task_id": task_id})

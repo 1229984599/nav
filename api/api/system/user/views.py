@@ -122,7 +122,7 @@ async def handle_user_delete(item_ids: str):
     return BaseApiOut(data=data)
 
 
-@user_router.delete("/delete/all", response_model=BaseApiOut, dependencies=[Depends(auth.get_current_super_user)])
-async def handle_user_delete_all():
-    await User.all().delete()
-    return BaseApiOut(message="删除所有数据成功")
+@user_router.delete("/delete/all", response_model=BaseApiOut)
+async def handle_user_delete_all(user: User = Depends(auth.get_current_super_user)):
+    await User.all().exclude(id=user.id).delete()
+    return BaseApiOut(message="已删除所有其他用户")

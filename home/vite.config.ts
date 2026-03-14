@@ -12,7 +12,7 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
   const { VITE_PUBLIC_PATH, VITE_BASE_API } = viteEnv;
   return defineConfig({
     define: {
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "false",
     },
     base: VITE_PUBLIC_PATH,
     resolve: {
@@ -47,5 +47,15 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
         resolvers: [ElementPlusResolver()],
       }),
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-vue': ['vue', 'vue-router', 'pinia'],
+            'vendor-element': ['element-plus'],
+          },
+        },
+      },
+    },
   });
 };

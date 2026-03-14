@@ -13,6 +13,7 @@ import { useTitle } from "@vueuse/core";
 import SearchDialog from "@/components/m-search/SearchDialog.vue";
 import MMask from "@/components/m-mask.vue";
 import style from "@/styles/variables.module.scss";
+import { useScrollProgress } from "@/composables/useScrollProgress";
 
 const appStore = useAppStore();
 const siteStore = useSiteStore();
@@ -60,33 +61,24 @@ const menuWidth = computed(() => {
 });
 
 // 滚动进度条
-const scrollPercent = ref(0);
+const { scrollProgress, scrollPercent } = useScrollProgress();
 
-onMounted(() => {
-  setTimeout(() => {
-    const container = document.querySelector(".right-container");
-    if (container) {
-      container.addEventListener("scroll", () => {
-        const { scrollTop, scrollHeight, clientHeight } = container as HTMLElement;
-        scrollPercent.value = scrollHeight <= clientHeight ? 0 : (scrollTop / (scrollHeight - clientHeight)) * 100;
-      });
-    }
-  }, 100);
-});
+// Provide scrollProgress to child components (footer uses it)
+provide("scrollProgress", scrollProgress);
 </script>
 
 <template>
   <div class="common-layout">
     <!--    左侧菜单-->
-    <div class="left-container">
+    <div class="left-container" role="navigation" aria-label="分类菜单">
       <el-aside class="menu-side">
         <m-logo :style="{ backgroundColor: 'var(--nav-logo-bg)' }" />
         <m-side-menu />
       </el-aside>
     </div>
     <!--    右侧内容-->
-    <div class="right-container">
-      <div class="scroll-progress" :style="{ width: scrollPercent + '%' }" />
+    <div class="right-container" role="main">
+      <div class="scroll-progress" role="progressbar" :aria-valuenow="Math.round(scrollPercent)" aria-valuemin="0" aria-valuemax="100" :style="{ width: scrollPercent + '%' }" />
       <m-navbar class="navbar" @open-search="openSearch" />
       <div class="p-2 md:p-6">
         <app-main />

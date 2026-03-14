@@ -5,6 +5,18 @@ export function fetchSiteGet() {
   return request<Api.Site.SiteInfo>({ url: '/site/get' });
 }
 
+/** Get site stats for dashboard */
+export function fetchSiteStats() {
+  return request<{
+    link_count: number;
+    menu_count: number;
+    friend_count: number;
+    user_count: number;
+    distribution: Array<{ name: string; value: number }>;
+    recent_links: Array<{ id: number; title: string; href: string; icon: string | null; create_time: string }>;
+  }>({ url: '/site/stats' });
+}
+
 /** Update site settings */
 export function fetchSiteUpdate(data: Api.Site.SiteUpdate) {
   return request({ url: '/site/update', method: 'post', data });

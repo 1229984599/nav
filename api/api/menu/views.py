@@ -1,4 +1,3 @@
-import asyncio
 import json
 import time
 
@@ -70,7 +69,7 @@ async def handle_menu_import_json(payload: MenuImportRequest):
     if not payload.items:
         return BaseApiOut(data={"created": 0, "skipped": 0})
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress, track_task
 
     task_id = create_task_id()
     register_task(task_id)
@@ -124,7 +123,7 @@ async def handle_menu_import_json(payload: MenuImportRequest):
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_import())
+    track_task(_run_import())
     return BaseApiOut(data={"task_id": task_id})
 
 
@@ -365,7 +364,7 @@ async def handle_menu_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress, track_task
 
     task_id = create_task_id()
     register_task(task_id)
@@ -421,5 +420,5 @@ async def handle_menu_import(file: UploadFile = File(...)):
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_import())
+    track_task(_run_import())
     return BaseApiOut(data={"task_id": task_id})

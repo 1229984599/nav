@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { watch } from 'vue';
-import { useAppStore } from '@/store/modules/app';
+import { onMounted } from 'vue';
 import { useEcharts } from '@/hooks/common/echarts';
-import { $t } from '@/locales';
+import { fetchSiteStats } from '@/service/api';
 
 defineOptions({
   name: 'PieChart'
 });
-
-const appStore = useAppStore();
 
 const { domRef, updateOptions } = useEcharts(() => ({
   tooltip: {
@@ -23,8 +20,8 @@ const { domRef, updateOptions } = useEcharts(() => ({
   },
   series: [
     {
-      color: ['#5da8ff', '#8e9dff', '#fedc69', '#26deca'],
-      name: $t('page.home.schedule'),
+      color: ['#5da8ff', '#8e9dff', '#fedc69', '#26deca', '#ec4786', '#56cdf3', '#f68057', '#865ec0'],
+      name: '链接分布',
       type: 'pie',
       radius: ['45%', '75%'],
       avoidLabelOverlap: false,
@@ -51,57 +48,19 @@ const { domRef, updateOptions } = useEcharts(() => ({
   ]
 }));
 
-async function mockData() {
-  await new Promise(resolve => {
-    setTimeout(resolve, 1000);
-  });
-
-  updateOptions(opts => {
-    opts.series[0].data = [
-      { name: $t('page.home.study'), value: 20 },
-      { name: $t('page.home.entertainment'), value: 10 },
-      { name: $t('page.home.work'), value: 40 },
-      { name: $t('page.home.rest'), value: 30 }
-    ];
-
-    return opts;
-  });
-}
-
-function updateLocale() {
-  updateOptions((opts, factory) => {
-    const originOpts = factory();
-
-    opts.series[0].name = originOpts.series[0].name;
-
-    opts.series[0].data = [
-      { name: $t('page.home.study'), value: 20 },
-      { name: $t('page.home.entertainment'), value: 10 },
-      { name: $t('page.home.work'), value: 40 },
-      { name: $t('page.home.rest'), value: 30 }
-    ];
-
-    return opts;
-  });
-}
-
-async function init() {
-  mockData();
-}
-
-watch(
-  () => appStore.locale,
-  () => {
-    updateLocale();
+onMounted(async () => {
+  const { data, error } = await fetchSiteStats();
+  if (!error && data && data.distribution) {
+    updateOptions(opts => {
+      opts.series[0].data = data.distribution;
+      return opts;
+    });
   }
-);
-
-// init
-init();
+});
 </script>
 
 <template>
-  <NCard :bordered="false" class="card-wrapper">
+  <NCard :bordered="false" class="card-wrapper" title="分类链接分布">
     <div ref="domRef" class="h-360px overflow-hidden"></div>
   </NCard>
 </template>

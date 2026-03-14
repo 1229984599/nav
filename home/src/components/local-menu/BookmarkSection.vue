@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref } from "vue";
+import { computed, ref } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 import MIcon from "@/components/MIcon.vue";
 import MLocalAddLink from "@/components/add-link/local.vue";
 import BookmarkGroupDialog from "./BookmarkGroupDialog.vue";
 import { useBookmarkStore } from "@/store/bookmark";
 import { DEFAULT_GROUP_ID } from "@/types/bookmark";
-import type { LocalLink, BookmarkGroup, BookmarkExportData } from "@/types/bookmark";
-import linksModel from "@/api/links";
-import { isUrl } from "@/utils/window";
+import type { LocalLink, BookmarkGroup } from "@/types/bookmark";
+import { useBookmarkContextMenu } from "./composables/useBookmarkContextMenu";
+import { useBookmarkIO } from "./composables/useBookmarkIO";
 
 defineOptions({ name: "BookmarkSection" });
 
@@ -21,126 +21,10 @@ const linkRef = ref<InstanceType<typeof MLocalAddLink>>();
 const groupDialogRef = ref<InstanceType<typeof BookmarkGroupDialog>>();
 const groupDialogVisible = ref(false);
 
-// 快速添加
-const quickUrl = ref("");
-const quickLoading = ref(false);
-
-// 右键菜单
-const ctxVisible = ref(false);
-const ctxStyle = ref({ left: "0px", top: "0px" });
-const ctxLink = ref<LocalLink | null>(null);
-
-// 分组标签右键
-const groupCtxVisible = ref(false);
-const groupCtxStyle = ref({ left: "0px", top: "0px" });
-const groupCtxTarget = ref<BookmarkGroup | null>(null);
-
 // ---- Computed ----
 
 const displayLinks = computed(() => bookmarkStore.activeLinks);
 const isDraggable = computed(() => bookmarkStore.sortMode === "manual");
-
-// ---- 右键菜单 ----
-
-const ctxMenuRef = ref<HTMLElement | null>(null);
-const groupCtxMenuRef = ref<HTMLElement | null>(null);
-
-function showContextMenu(e: MouseEvent, link: LocalLink) {
-  e.preventDefault();
-  ctxLink.value = link;
-  ctxStyle.value = { left: `${e.clientX}px`, top: `${e.clientY}px` };
-  ctxVisible.value = true;
-  groupCtxVisible.value = false;
-  document.removeEventListener("mousedown", onDocMouseDown);
-  nextTick(() => {
-    document.addEventListener("mousedown", onDocMouseDown);
-  });
-}
-
-function hideContextMenu() {
-  ctxVisible.value = false;
-  document.removeEventListener("mousedown", onDocMouseDown);
-}
-
-function onDocMouseDown(e: MouseEvent) {
-  const target = e.target as HTMLElement;
-  if (ctxMenuRef.value?.contains(target) || groupCtxMenuRef.value?.contains(target)) return;
-  hideContextMenu();
-  hideGroupCtx();
-}
-
-function ctxEdit() {
-  if (!ctxLink.value) return;
-  handleEditLink(ctxLink.value);
-  ctxVisible.value = false;
-}
-
-function ctxDelete() {
-  if (!ctxLink.value) return;
-  const link = ctxLink.value;
-  hideContextMenu();
-  ElMessageBox.confirm("确定要删除该书签？", "删除确认", {
-    confirmButtonText: "删除",
-    cancelButtonText: "取消",
-    type: "warning",
-    confirmButtonClass: "el-button--danger",
-  }).then(() => {
-    handleDeleteLink(link);
-  });
-}
-
-function ctxCopyLink() {
-  if (!ctxLink.value) return;
-  navigator.clipboard.writeText(ctxLink.value.href).then(() => {
-    ElMessage.success("链接已复制");
-  });
-  ctxVisible.value = false;
-}
-
-function ctxToggleGroup(groupId: string) {
-  if (!ctxLink.value) return;
-  bookmarkStore.toggleLinkGroup(ctxLink.value.id, groupId);
-}
-
-// 分组标签右键
-
-function showGroupContextMenu(e: MouseEvent, group: BookmarkGroup) {
-  e.preventDefault();
-  if (group.id === DEFAULT_GROUP_ID) return;
-  groupCtxTarget.value = group;
-  groupCtxStyle.value = { left: `${e.clientX}px`, top: `${e.clientY}px` };
-  groupCtxVisible.value = true;
-  ctxVisible.value = false;
-  document.removeEventListener("mousedown", onDocMouseDown);
-  nextTick(() => {
-    document.addEventListener("mousedown", onDocMouseDown);
-  });
-}
-
-function hideGroupCtx() {
-  groupCtxVisible.value = false;
-  document.removeEventListener("mousedown", onDocMouseDown);
-}
-
-function groupCtxEdit() {
-  if (!groupCtxTarget.value) return;
-  handleEditGroup(groupCtxTarget.value);
-  groupCtxVisible.value = false;
-}
-
-function groupCtxDelete() {
-  if (!groupCtxTarget.value) return;
-  const g = groupCtxTarget.value;
-  hideGroupCtx();
-  ElMessageBox.confirm(
-    `删除分组「${g.name}」后，其下书签将移至未分类。`,
-    "删除确认",
-    { confirmButtonText: "删除", cancelButtonText: "取消", type: "warning", confirmButtonClass: "el-button--danger" }
-  ).then(() => {
-    bookmarkStore.deleteGroup(g.id);
-    ElMessage.success("分组已删除");
-  });
-}
 
 // ---- Link Actions ----
 
@@ -178,105 +62,24 @@ function handleEditGroup(group: BookmarkGroup) {
   groupDialogVisible.value = true;
 }
 
-// ---- Quick Add ----
+// ---- Context Menu (composable) ----
 
-async function handleQuickAdd() {
-  if (!quickUrl.value || !isUrl(quickUrl.value)) {
-    ElMessage.warning("请输入有效的URL");
-    return;
-  }
-  quickLoading.value = true;
-  try {
-    const data: any = await linksModel.getSiteInfo(quickUrl.value);
-    bookmarkStore.addLink({
-      href: quickUrl.value,
-      title: data?.title || new URL(quickUrl.value).hostname,
-      icon: data?.icon || "",
-      color: data?.color || "",
-      desc: data?.desc || "",
-      is_self: false,
-      groupIds: [bookmarkStore.activeGroupId || DEFAULT_GROUP_ID],
-    });
-    ElMessage.success("添加成功");
-    quickUrl.value = "";
-  } catch {
-    bookmarkStore.addLink({
-      href: quickUrl.value,
-      title: new URL(quickUrl.value).hostname,
-      icon: "",
-      color: "",
-      desc: "",
-      is_self: false,
-      groupIds: [bookmarkStore.activeGroupId || DEFAULT_GROUP_ID],
-    });
-    ElMessage.success("添加成功（未能采集到站点信息）");
-    quickUrl.value = "";
-  } finally {
-    quickLoading.value = false;
-  }
-}
+const {
+  ctxVisible, ctxStyle, ctxLink, ctxMenuRef,
+  showContextMenu, ctxEdit, ctxDelete, ctxCopyLink, ctxToggleGroup,
+  groupCtxVisible, groupCtxStyle, groupCtxMenuRef,
+  showGroupContextMenu, groupCtxEdit, groupCtxDelete,
+  onTouchStart, onTouchEnd, onTouchMove,
+} = useBookmarkContextMenu(handleEditLink, handleDeleteLink, handleEditGroup);
 
-// ---- Import / Export ----
+// ---- Import / Export (composable) ----
 
-function handleExport() {
-  const data = bookmarkStore.exportData();
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `bookmarks-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  ElMessage.success("导出成功");
-}
+const {
+  quickUrl, quickLoading, handleQuickAdd,
+  handleExport, handleImport, handleResetAll,
+} = useBookmarkIO();
 
-function handleImport() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".json";
-  input.onchange = async (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const data: BookmarkExportData = JSON.parse(text);
-      if (data.version !== 1 || !Array.isArray(data.groups) || !Array.isArray(data.links)) {
-        throw new Error("Invalid format");
-      }
-      ElMessageBox.confirm("选择导入方式", "导入书签", {
-        confirmButtonText: "替换全部",
-        cancelButtonText: "合并追加",
-        distinguishCancelAndClose: true,
-      })
-        .then(() => {
-          bookmarkStore.importData(data, "replace");
-          ElMessage.success("导入成功（替换）");
-        })
-        .catch((action: string) => {
-          if (action === "cancel") {
-            bookmarkStore.importData(data, "merge");
-            ElMessage.success("导入成功（合并）");
-          }
-        });
-    } catch {
-      ElMessage.error("文件格式错误");
-    }
-  };
-  input.click();
-}
-
-function handleResetAll() {
-  ElMessageBox.confirm("确定要清空所有本地书签吗？此操作不可恢复。", "清空确认", {
-    confirmButtonText: "清空",
-    cancelButtonText: "取消",
-    type: "error",
-    confirmButtonClass: "el-button--danger",
-  }).then(() => {
-    bookmarkStore.resetAll();
-    ElMessage.success("清空成功");
-  });
-}
+// ---- Helpers ----
 
 function onDragEnd() {}
 
@@ -289,43 +92,6 @@ function getGroupNames(groupIds: string[]): string {
 function getGroupName(groupId: string): string {
   return bookmarkStore.groups.find((g) => g.id === groupId)?.name || "未分类";
 }
-
-// ---- 移动端长按支持 ----
-let longPressTimer: ReturnType<typeof setTimeout> | null = null;
-
-function onTouchStart(e: TouchEvent, link: LocalLink) {
-  longPressTimer = setTimeout(() => {
-    longPressTimer = null;
-    const touch = e.touches[0];
-    ctxLink.value = link;
-    ctxStyle.value = { left: `${touch.clientX}px`, top: `${touch.clientY}px` };
-    ctxVisible.value = true;
-    groupCtxVisible.value = false;
-    document.removeEventListener("mousedown", onDocMouseDown);
-    nextTick(() => {
-      document.addEventListener("mousedown", onDocMouseDown);
-    });
-  }, 500);
-}
-
-function onTouchEnd() {
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
-  }
-}
-
-function onTouchMove() {
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
-  }
-}
-
-onBeforeUnmount(() => {
-  document.removeEventListener("mousedown", onDocMouseDown);
-  if (longPressTimer) clearTimeout(longPressTimer);
-});
 </script>
 
 <template>

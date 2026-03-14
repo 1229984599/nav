@@ -45,6 +45,16 @@ export default defineConfig(configEnv => {
       sourcemap: viteEnv.VITE_SOURCE_MAP === 'Y',
       commonjsOptions: {
         ignoreTryCatch: false
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-vue': ['vue', 'vue-router', 'pinia'],
+            'vendor-naive': ['naive-ui'],
+            'vendor-echarts': ['echarts'],
+            'vendor-iconify': ['@iconify/vue'],
+          }
+        }
       }
     }
   };

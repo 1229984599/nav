@@ -1,5 +1,6 @@
 import uuid
 import time
+import asyncio
 from typing import Any
 
 from fastapi import WebSocket
@@ -10,6 +11,17 @@ _tasks: dict[str, dict[str, Any]] = {}
 
 # Keep completed/failed tasks for 5 minutes so refreshed pages can retrieve results
 _TASK_RETAIN_SECONDS = 300
+
+# 保持后台任务引用，防止 GC 回收
+_background_tasks: set[asyncio.Task] = set()
+
+
+def track_task(coro) -> asyncio.Task:
+    """创建后台任务并保持引用，防止被垃圾回收"""
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+    return task
 
 
 def create_task_id() -> str:

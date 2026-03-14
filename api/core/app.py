@@ -16,8 +16,8 @@ def create_app() -> FastAPI:
         debug=settings.DEBUG,
         title=settings.TITLE,
         description=settings.DESCRIPTION,
-        docs_url=settings.DOCS_URL,
-        redoc_url=settings.REDOC_URL,
+        docs_url=settings.DOCS_URL if settings.DEBUG else None,
+        redoc_url=settings.REDOC_URL if settings.DEBUG else None,
         lifespan=lifespan,
     )
 
@@ -29,7 +29,5 @@ def create_app() -> FastAPI:
 
     # 注册捕获全局异常
     register_exception(app)
-    # 如果不想捕捉任何异常，可以将其注释掉。
-    # if not settings.DEBUG:
-    #     register_exception(app)
+
     return app

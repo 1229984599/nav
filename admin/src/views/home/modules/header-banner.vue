@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useAppStore } from '@/store/modules/app';
 import { useAuthStore } from '@/store/modules/auth';
 import { $t } from '@/locales';
+import { fetchSiteStats } from '@/service/api';
 
 defineOptions({
   name: 'HeaderBanner'
@@ -19,23 +20,22 @@ interface StatisticData {
   value: string;
 }
 
-const statisticData = computed<StatisticData[]>(() => [
-  {
-    id: 0,
-    label: $t('page.home.projectCount'),
-    value: '25'
-  },
-  {
-    id: 1,
-    label: $t('page.home.todo'),
-    value: '4/16'
-  },
-  {
-    id: 2,
-    label: $t('page.home.message'),
-    value: '12'
-  }
+const statisticData = ref<StatisticData[]>([
+  { id: 0, label: '链接', value: '-' },
+  { id: 1, label: '分类', value: '-' },
+  { id: 2, label: '友链', value: '-' }
 ]);
+
+onMounted(async () => {
+  const { data, error } = await fetchSiteStats();
+  if (!error && data) {
+    statisticData.value = [
+      { id: 0, label: '链接', value: String(data.link_count) },
+      { id: 1, label: '分类', value: String(data.menu_count) },
+      { id: 2, label: '友链', value: String(data.friend_count) }
+    ];
+  }
+});
 </script>
 
 <template>

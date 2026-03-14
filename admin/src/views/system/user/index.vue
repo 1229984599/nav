@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
-import { NButton, NDataTable, NForm, NFormItem, NInput, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns } from 'naive-ui';
+import { NButton, NDataTable, NForm, NFormItem, NInput, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns, type FormInst, type FormRules } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
 import { fetchUserList, fetchUserCreate, fetchUserUpdate, fetchUserDelete, fetchUserBatchUpdate } from '@/service/api';
@@ -22,6 +22,12 @@ const formModel = reactive({
   status: false as boolean,
   is_super: false as boolean
 });
+
+const formRef = ref<FormInst | null>(null);
+const formRules = computed<FormRules>(() => ({
+  username: { required: true, message: '请输入用户名', trigger: 'blur' },
+  password: isEdit.value ? undefined : { required: true, message: '请输入密码', trigger: 'blur' }
+}));
 
 const statusOptions = [
   { label: '全部', value: null },
@@ -111,6 +117,11 @@ function handleEdit(row: Api.SystemUser.UserItem) {
 }
 
 async function handleSave() {
+  try {
+    await formRef.value?.validate();
+  } catch {
+    return;
+  }
   if (isEdit.value && editId.value) {
     const payload: Api.SystemUser.UserUpdate = {
       username: formModel.username,
@@ -238,11 +249,11 @@ loadData();
     </div>
 
     <NModal v-model:show="showDialog" preset="dialog" :title="isEdit ? '编辑用户' : '新增用户'" style="width: 450px">
-      <NForm label-placement="left" label-width="80px" class="mt-16px">
-        <NFormItem label="用户名">
+      <NForm ref="formRef" :model="formModel" :rules="formRules" label-placement="left" label-width="80px" class="mt-16px">
+        <NFormItem label="用户名" path="username">
           <NInput v-model:value="formModel.username" placeholder="用户名" />
         </NFormItem>
-        <NFormItem label="密码">
+        <NFormItem label="密码" path="password">
           <NInput v-model:value="formModel.password" type="password" show-password-on="click"
             :placeholder="isEdit ? '留空则不修改' : '密码'" />
         </NFormItem>

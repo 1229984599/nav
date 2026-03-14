@@ -6,6 +6,8 @@ from fastapi import FastAPI, Response, Request
 from starlette.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 
+from settings import settings
+
 
 class RouterCacheControlResetMiddleware(BaseHTTPMiddleware):
     """Disable Response headers Cache-Control (set to 'no-cache').
@@ -32,14 +34,11 @@ def register_middleware(app: FastAPI) -> None:
     # 支持跨域
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
-    # app.add_middleware(RouterCacheControlResetMiddleware)
-    # 添加登录验证中间件
 
     # 添加Pagination
     add_pagination(app)
-    pass

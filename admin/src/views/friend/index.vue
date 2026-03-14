@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
-import { NButton, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns } from 'naive-ui';
+import { NButton, NColorPicker, NDataTable, NForm, NFormItem, NInput, NInputGroup, NInputNumber, NModal, NPagination, NPopconfirm, NSelect, NSpace, NSwitch, NTag, type DataTableColumns, type FormInst, type FormRules } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { useDraggable } from 'vue-draggable-plus';
 import { fetchFriendList, fetchFriendCreate, fetchFriendUpdate, fetchFriendDelete, fetchFriendSiteInfo, fetchFriendBatchUpdate } from '@/service/api';
@@ -17,6 +17,12 @@ const editId = ref<number | null>(null);
 const formModel = reactive<Api.Friend.FriendCreate>({
   title: '', href: '', icon: '', desc: '', color: '', order: 0, status: true
 });
+
+const formRef = ref<FormInst | null>(null);
+const formRules: FormRules = {
+  title: { required: true, message: '请输入标题', trigger: 'blur' },
+  href: { required: true, message: '请输入链接地址', trigger: 'blur' }
+};
 
 const statusOptions = [
   { label: '全部', value: null },
@@ -104,6 +110,11 @@ function handleEdit(row: Api.Friend.FriendItem) {
 }
 
 async function handleSave() {
+  try {
+    await formRef.value?.validate();
+  } catch {
+    return;
+  }
   if (isEdit.value && editId.value) {
     await fetchFriendUpdate(editId.value, formModel);
   } else {
@@ -239,9 +250,9 @@ loadData();
     </div>
 
     <NModal v-model:show="showDialog" preset="dialog" :title="isEdit ? '编辑友链' : '新增友链'" style="width: 600px">
-      <NForm label-placement="left" label-width="80px" class="mt-16px">
-        <NFormItem label="标题"><NInput v-model:value="formModel.title" placeholder="友链标题" /></NFormItem>
-        <NFormItem label="链接">
+      <NForm ref="formRef" :model="formModel" :rules="formRules" label-placement="left" label-width="80px" class="mt-16px">
+        <NFormItem label="标题" path="title"><NInput v-model:value="formModel.title" placeholder="友链标题" /></NFormItem>
+        <NFormItem label="链接" path="href">
           <NInputGroup>
             <NInput v-model:value="formModel.href" placeholder="https://" />
             <NButton type="info" :loading="spiderLoading" @click="handleFormSpider">抓取</NButton>

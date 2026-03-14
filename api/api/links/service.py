@@ -28,7 +28,7 @@ LINK_BATCH_MAX_SIZE = 1000
 
 
 async def clear_link_cache() -> None:
-    await FastAPICache.clear()
+    await FastAPICache.clear(namespace="link")
     from api.menu.views import invalidate_tree_cache
     invalidate_tree_cache()
 

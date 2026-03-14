@@ -141,7 +141,7 @@ async def handle_link_import_json(payload: LinkImportRequest):
     if not payload.items:
         return BaseApiOut(data={"created": 0, "skipped": 0})
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress, track_task
 
     task_id = create_task_id()
     register_task(task_id)
@@ -201,7 +201,7 @@ async def handle_link_import_json(payload: LinkImportRequest):
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_import())
+    track_task(_run_import())
 
     return BaseApiOut(data={"task_id": task_id})
 
@@ -273,7 +273,7 @@ async def handle_sync_cdn_batch(link_ids: list[int]):
     if not link_ids:
         raise HTTPException(status_code=400, detail="请选择要同步的链接")
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task
 
     task_id = create_task_id()
     register_task(task_id)
@@ -287,7 +287,7 @@ async def handle_sync_cdn_batch(link_ids: list[int]):
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_sync())
+    track_task(_run_sync())
 
     return BaseApiOut(data={"task_id": task_id})
 
@@ -348,7 +348,7 @@ async def handle_link_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, send_task_progress
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress, track_task
 
     task_id = create_task_id()
     register_task(task_id)
@@ -415,5 +415,5 @@ async def handle_link_import(file: UploadFile = File(...)):
         except Exception as e:
             await fail_task(task_id, str(e))
 
-    asyncio.create_task(_run_import())
+    track_task(_run_import())
     return BaseApiOut(data={"task_id": task_id})

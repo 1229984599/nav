@@ -4,17 +4,18 @@ import linkModel from "@/api/links";
 import MIcon from "@/components/MIcon.vue";
 import { getBaiduSuggestions } from "@/api/spider";
 import { useRouter } from "vue-router";
+import { useSearch } from "@/composables/useSearch";
 
 defineOptions({
   name: "MSearchDialog",
 });
 
 const router = useRouter();
+const { getHistory, addHistory, removeHistory, clearHistory, sortByMatchPriority } = useSearch();
 const visible = ref(false);
 const searchQuery = ref("");
 const autocompleteRef = ref<any>(null);
 const HISTORY_KEY = "search-history";
-const MAX_HISTORY = 10;
 
 // Search engines
 const engines = [
@@ -48,30 +49,7 @@ function close() {
   searchQuery.value = "";
 }
 
-// Search history
-function getHistory(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function addHistory(keyword: string) {
-  if (!keyword.trim()) return;
-  const history = getHistory().filter((h) => h !== keyword);
-  history.unshift(keyword);
-  localStorage.setItem(
-    HISTORY_KEY,
-    JSON.stringify(history.slice(0, MAX_HISTORY)),
-  );
-}
-
-function removeHistory(keyword: string) {
-  const history = getHistory().filter((h) => h !== keyword);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
-
+// Search history (clear for dialog = clear + close popper)
 function removeHistoryAndRefresh(keyword: string) {
   removeHistory(keyword);
   // Close and reopen to refresh the suggestion list
@@ -81,22 +59,7 @@ function removeHistoryAndRefresh(keyword: string) {
   });
 }
 
-function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY);
-}
-
-// Sort by match priority: title > href > desc
-function sortByMatchPriority(items: any[], q: string) {
-  const lower = q.toLowerCase();
-  return [...items].sort((a, b) => {
-    const pa = a.title?.toLowerCase().includes(lower) ? 0
-      : a.href?.toLowerCase().includes(lower) ? 1 : 2;
-    const pb = b.title?.toLowerCase().includes(lower) ? 0
-      : b.href?.toLowerCase().includes(lower) ? 1 : 2;
-    return pa - pb;
-  });
-}
-
+// Sort by match priority: title > href > desc (from composable)
 async function fetchSuggestions(
   queryString: string,
   callback: (arg: any) => void,
@@ -184,7 +147,7 @@ defineExpose({ open, close });
 <template>
   <teleport to="body">
     <transition name="search-fade">
-      <div v-if="visible" class="search-overlay" @click.self="close">
+      <div v-if="visible" class="search-overlay" role="dialog" aria-modal="true" aria-label="搜索" @click.self="close">
         <div class="search-dialog">
           <!-- Search input -->
           <div

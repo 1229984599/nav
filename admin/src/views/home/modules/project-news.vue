@@ -1,38 +1,46 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { $t } from '@/locales';
+import { onMounted, ref } from 'vue';
+import { fetchSiteStats } from '@/service/api';
 
 defineOptions({
   name: 'ProjectNews'
 });
 
-interface NewsItem {
+interface RecentLink {
   id: number;
-  content: string;
-  time: string;
+  title: string;
+  href: string;
+  icon: string | null;
+  create_time: string;
 }
 
-const newses = computed<NewsItem[]>(() => [
-  { id: 1, content: $t('page.home.projectNews.desc1'), time: '2021-05-28 22:22:22' },
-  { id: 2, content: $t('page.home.projectNews.desc2'), time: '2021-10-27 10:24:54' },
-  { id: 3, content: $t('page.home.projectNews.desc3'), time: '2021-10-31 22:43:12' },
-  { id: 4, content: $t('page.home.projectNews.desc4'), time: '2021-11-03 20:33:31' },
-  { id: 5, content: $t('page.home.projectNews.desc5'), time: '2021-11-07 22:45:32' }
-]);
+const recentLinks = ref<RecentLink[]>([]);
+
+onMounted(async () => {
+  const { data, error } = await fetchSiteStats();
+  if (!error && data && data.recent_links) {
+    recentLinks.value = data.recent_links;
+  }
+});
+
+function openLink(href: string) {
+  window.open(href, '_blank');
+}
 </script>
 
 <template>
-  <NCard :title="$t('page.home.projectNews.title')" :bordered="false" size="small" segmented class="card-wrapper">
-    <template #header-extra>
-      <a class="text-primary" href="javascript:;">{{ $t('page.home.projectNews.moreNews') }}</a>
-    </template>
-    <NList>
-      <NListItem v-for="item in newses" :key="item.id">
+  <NCard title="最近添加" :bordered="false" size="small" segmented class="card-wrapper">
+    <NList hoverable clickable>
+      <NListItem v-for="item in recentLinks" :key="item.id" @click="openLink(item.href)">
         <template #prefix>
-          <SoybeanAvatar class="size-48px!" />
+          <NAvatar v-if="item.icon" :src="item.icon" :size="36" round object-fit="contain" />
+          <NAvatar v-else :size="36" round>
+            {{ item.title.charAt(0) }}
+          </NAvatar>
         </template>
-        <NThing :title="item.content" :description="item.time" />
+        <NThing :title="item.title" :description="item.create_time" />
       </NListItem>
+      <NEmpty v-if="recentLinks.length === 0" description="暂无链接" />
     </NList>
   </NCard>
 </template>

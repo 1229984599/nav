@@ -6,35 +6,18 @@ import { LinkSchemaList } from "@/api/links/types";
 import MIcon from "@/components/MIcon.vue";
 import EmptyState from "@/components/EmptyState.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
+import { useSearch } from "@/composables/useSearch";
 
 const route = useRoute();
 const router = useRouter();
+const { searchHistory, clearHistory, removeHistory, sortByMatchPriority } = useSearch();
 
 const keyword = computed(() => (route.query.q as string) || "");
 const loading = ref(false);
 const results = ref<LinkSchemaList[]>([]);
 
-const HISTORY_KEY = "search-history";
-
-function getHistory(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-const searchHistory = ref<string[]>(getHistory());
-
-function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY);
-  searchHistory.value = [];
-}
-
 function removeHistoryItem(kw: string) {
-  const history = getHistory().filter((h) => h !== kw);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  searchHistory.value = history;
+  removeHistory(kw);
 }
 
 function searchByHistory(kw: string) {
@@ -57,21 +40,23 @@ const groupedResults = computed(() => {
 const totalCount = computed(() => results.value.length);
 
 // Highlight keyword
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function highlightText(text: string): string {
-  if (!keyword.value || !text) return text;
-  const escaped = keyword.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return text.replace(
+  if (!keyword.value || !text) return escapeHtml(text);
+  const safe = escapeHtml(text);
+  const escaped = escapeHtml(keyword.value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return safe.replace(
     new RegExp(`(${escaped})`, "gi"),
     '<mark class="search-highlight">$1</mark>',
   );
-}
-
-// Sort by match priority: title > href > desc
-function matchPriority(link: LinkSchemaList, q: string): number {
-  const lower = q.toLowerCase();
-  if (link.title?.toLowerCase().includes(lower)) return 0;
-  if (link.href?.toLowerCase().includes(lower)) return 1;
-  return 2;
 }
 
 async function doSearch(q: string) {
@@ -85,9 +70,7 @@ async function doSearch(q: string) {
       { page: 1, pageSize: 50, order_by: "order" },
       { keyword: q },
     );
-    results.value = [...items].sort(
-      (a, b) => matchPriority(a, q) - matchPriority(b, q),
-    );
+    results.value = sortByMatchPriority(items, q);
   } catch {
     results.value = [];
   } finally {
@@ -99,7 +82,7 @@ watch(keyword, (val) => doSearch(val), { immediate: true });
 </script>
 
 <template>
-  <div class="search-page">
+  <div class="search-page" role="search" aria-label="搜索结果">
     <!-- Search header -->
     <div class="search-header" v-if="keyword">
       <div class="search-header-left">

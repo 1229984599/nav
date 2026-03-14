@@ -23,7 +23,7 @@ MENU_BATCH_MAX_SIZE = 1000
 
 
 async def clear_menu_cache() -> None:
-    await FastAPICache.clear()
+    await FastAPICache.clear(namespace="menu")
     from .views import invalidate_tree_cache
     invalidate_tree_cache()
 

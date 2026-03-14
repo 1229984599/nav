@@ -19,7 +19,7 @@ _CLIENT_KWARGS = dict(
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     },
-    verify=False,
+    verify=True,
     timeout=httpx.Timeout(15, connect=10),
     follow_redirects=True,
     max_redirects=5,
@@ -273,6 +273,10 @@ async def get_site_info(url: str) -> dict | None:
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
 
+    # SSRF 防护：校验 URL 不指向内网地址
+    from common.validation import validate_external_url
+    validate_external_url(url)
+
     response = await _fetch_with_retry(url)
     if response is None:
         return None
@@ -301,6 +305,7 @@ async def get_site_info(url: str) -> dict | None:
 class CdnImg:
     def __init__(self, token, base_url='https://img.ink/api'):
         self.token = token
+        # CdnImg 是已知第三方 API（img.ink），保留 verify=False 以兼容其证书
         self.session = httpx.AsyncClient(
             headers={
                 'User-Agent': _DEFAULT_UA,

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
 import { useThemeStore } from '@/store/modules/theme';
-import { $t } from '@/locales';
+import { fetchSiteStats } from '@/service/api';
 
 defineOptions({
   name: 'CardData'
@@ -20,52 +20,53 @@ interface CardData {
   icon: string;
 }
 
-const cardData = computed<CardData[]>(() => [
+const stats = ref({ link_count: 0, menu_count: 0, friend_count: 0, user_count: 0 });
+
+const cardData = ref<CardData[]>([
   {
-    key: 'visitCount',
-    title: $t('page.home.visitCount'),
-    value: 9725,
+    key: 'linkCount',
+    title: '链接总数',
+    value: 0,
     unit: '',
-    color: {
-      start: '#ec4786',
-      end: '#b955a4'
-    },
-    icon: 'ant-design:bar-chart-outlined'
+    color: { start: '#ec4786', end: '#b955a4' },
+    icon: 'pajamas:link'
   },
   {
-    key: 'turnover',
-    title: $t('page.home.turnover'),
-    value: 1026,
-    unit: '$',
-    color: {
-      start: '#865ec0',
-      end: '#5144b4'
-    },
-    icon: 'ant-design:money-collect-outlined'
+    key: 'menuCount',
+    title: '分类总数',
+    value: 0,
+    unit: '',
+    color: { start: '#865ec0', end: '#5144b4' },
+    icon: 'ep:menu'
   },
   {
-    key: 'downloadCount',
-    title: $t('page.home.downloadCount'),
-    value: 970925,
+    key: 'friendCount',
+    title: '友链总数',
+    value: 0,
     unit: '',
-    color: {
-      start: '#56cdf3',
-      end: '#719de3'
-    },
-    icon: 'carbon:document-download'
+    color: { start: '#56cdf3', end: '#719de3' },
+    icon: 'fluent-mdl2:message-friend-request'
   },
   {
-    key: 'dealCount',
-    title: $t('page.home.dealCount'),
-    value: 9527,
+    key: 'userCount',
+    title: '用户总数',
+    value: 0,
     unit: '',
-    color: {
-      start: '#fcbc25',
-      end: '#f68057'
-    },
-    icon: 'ant-design:trademark-circle-outlined'
+    color: { start: '#fcbc25', end: '#f68057' },
+    icon: 'mdi:user'
   }
 ]);
+
+onMounted(async () => {
+  const { data, error } = await fetchSiteStats();
+  if (!error && data) {
+    stats.value = data;
+    cardData.value[0].value = data.link_count;
+    cardData.value[1].value = data.menu_count;
+    cardData.value[2].value = data.friend_count;
+    cardData.value[3].value = data.user_count;
+  }
+});
 
 interface GradientBgProps {
   gradientColor: string;

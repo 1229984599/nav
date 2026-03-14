@@ -5,6 +5,7 @@ import AddLink from "@/components/add-link/remote.vue";
 import { useSiteStore } from "@/store/site";
 import { useFriendStore } from "@/store/friend";
 import { inject, onMounted, ref } from "vue";
+import type { Ref } from "vue";
 import SubMenuItem from "../side-menu/SubMenuItem.vue";
 import { useUserStore } from "@/store/user";
 import { useRouter } from "vue-router";
@@ -21,18 +22,8 @@ onMounted(friendStore.getFriendList);
 
 const openSearch = inject<() => void>("openSearch", () => {});
 
-// 滚动进度
-const scrollProgress = ref(0);
-
-onMounted(() => {
-  const container = document.querySelector(".right-container");
-  if (container) {
-    container.addEventListener("scroll", () => {
-      const { scrollTop, scrollHeight, clientHeight } = container as HTMLElement;
-      scrollProgress.value = scrollHeight <= clientHeight ? 0 : scrollTop / (scrollHeight - clientHeight);
-    });
-  }
-});
+// 滚动进度 (provided by parent pc/index.vue via useScrollProgress)
+const scrollProgress = inject<Ref<number>>("scrollProgress", ref(0));
 
 const item = {
   title: "友情链接",
@@ -73,7 +64,7 @@ function handleScrollTop() {
       />
     </div>
 
-    <footer class="mt-5">
+    <footer class="mt-5" role="contentinfo">
       <!-- 版权信息 -->
       <span style="color: var(--nav-text-secondary)" class="text-sm">
         <a href="https://beian.miit.gov.cn" target="_blank">{{
@@ -88,9 +79,13 @@ function handleScrollTop() {
     </footer>
     <div
       class="right-4 fixed bottom-4 flex flex-col justify-center gap-y-3 cursor-pointer"
+      role="toolbar"
+      aria-label="页面工具"
     >
       <el-tooltip content="搜索 (Ctrl+K)" placement="left">
-        <m-icon class="tool-item" icon="mingcute:search-line" @click="openSearch" />
+        <button class="tool-item" aria-label="搜索" @click="openSearch">
+          <m-icon icon="mingcute:search-line" />
+        </button>
       </el-tooltip>
       <el-tooltip content="回到顶部" placement="left">
         <div class="back-top-wrapper" @click="handleScrollTop">

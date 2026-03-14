@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
-import { computed, nextTick, PropType, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, PropType, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { MenuSchemaTree } from "@/api/menu/types";
@@ -294,10 +294,17 @@ function handleTabTouchEnd() {
     longPressTimer.value = undefined;
   }
 }
+
+onBeforeUnmount(() => {
+  if (longPressTimer.value) {
+    clearTimeout(longPressTimer.value);
+    longPressTimer.value = undefined;
+  }
+});
 </script>
 
 <template>
-  <div :id="menu?.title">
+  <div :id="menu?.title" role="region" :aria-label="menu?.title">
     <!-- Header: icon + title + tab pills -->
     <div class="category-header">
       <div class="category-title-row">
@@ -348,11 +355,13 @@ function handleTabTouchEnd() {
           </button>
         </VueDraggable>
         <!-- Normal: plain tabs -->
-        <div v-else class="tab-pills">
+        <div v-else class="tab-pills" role="tablist">
           <button
             v-for="tab in tabs"
             :key="tab.key"
             :class="['tab-pill', { active: activeTab === tab.key }]"
+            role="tab"
+            :aria-selected="activeTab === tab.key"
             @click="handleTabClick(tab)"
           >
             {{ tab.title }}
