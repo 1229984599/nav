@@ -50,6 +50,6 @@ const bgUrl = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-bottom: 112px;
+  padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 }
 </style>

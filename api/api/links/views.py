@@ -6,6 +6,7 @@ from fastapi.responses import Response
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.tortoise import paginate
 from tortoise.expressions import Q
+from tortoise.transactions import in_transaction
 
 from auth.auth import get_current_user, get_current_super_user, is_login
 from common.errors import not_found
@@ -104,7 +105,11 @@ def _normalize_menu_title(entry) -> str:
 
 async def _create_menus_from_import(create_menus: list) -> None:
     """Two-pass menu creation preserving hierarchy, icons, and colors."""
-    # Pass 1: Create all menus (without parent)
+    # 预加载所有已有菜单标题
+    existing_titles = set(await Menu.all().values_list("title", flat=True))
+
+    # Pass 1: Batch create all menus (without parent)
+    menus_to_create = []
     for entry in create_menus:
         if isinstance(entry, str):
             title, icon, color = entry, "ic:round-menu", None
@@ -113,13 +118,16 @@ async def _create_menus_from_import(create_menus: list) -> None:
             title = info.get("title", "")
             icon = info.get("icon", "ic:round-menu")
             color = info.get("color")
-        if not title:
+        if not title or title in existing_titles:
             continue
-        exists = await Menu.filter(title=title).first()
-        if not exists:
-            await Menu.create(title=title, icon=icon or "ic:round-menu", color=color)
+        menus_to_create.append(Menu(title=title, icon=icon or "ic:round-menu", color=color))
+        existing_titles.add(title)
 
-    # Pass 2: Set parent relationships
+    if menus_to_create:
+        await Menu.bulk_create(menus_to_create)
+
+    # Pass 2: Set parent relationships — 批量查询所有菜单构建 map
+    menu_map = {m.title: m for m in await Menu.all()}
     for entry in create_menus:
         if isinstance(entry, str):
             continue
@@ -128,8 +136,8 @@ async def _create_menus_from_import(create_menus: list) -> None:
         if not parent_title:
             continue
         title = info.get("title", "")
-        menu = await Menu.filter(title=title).first()
-        parent = await Menu.filter(title=parent_title).first()
+        menu = menu_map.get(title)
+        parent = menu_map.get(parent_title)
         if menu and parent:
             menu.parent_id = parent.id
             await menu.save()
@@ -141,7 +149,7 @@ async def handle_link_import_json(payload: LinkImportRequest):
     if not payload.items:
         return BaseApiOut(data={"created": 0, "skipped": 0})
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress, track_task
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress
 
     task_id = create_task_id()
     register_task(task_id)
@@ -160,15 +168,18 @@ async def handle_link_import_json(payload: LinkImportRequest):
             ).values_list("title", flat=True)
             existing_titles = set(existing_links)
 
-            created = 0
-            skipped = 0
             total = len(payload.items)
 
-            for i, item in enumerate(payload.items):
+            # Separate items into create vs skip, record menu associations
+            links_to_create = []
+            link_menu_map = []  # parallel list: menu titles per link
+            skipped = 0
+
+            for item in payload.items:
                 if not item.title or item.title in existing_titles:
                     skipped += 1
                 else:
-                    link = await Links.create(
+                    links_to_create.append(Links(
                         title=item.title,
                         href=item.href,
                         icon=item.icon,
@@ -179,22 +190,38 @@ async def handle_link_import_json(payload: LinkImportRequest):
                         order=item.order,
                         cdn_img_id=item.cdn_img_id,
                         status=item.status,
-                    )
-                    menu_titles = [_normalize_menu_title(m) for m in item.menus]
-                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
-                    if menus_to_add:
-                        await link.menus.add(*menus_to_add)
-                    created += 1
+                    ))
+                    link_menu_map.append([_normalize_menu_title(m) for m in item.menus])
                     existing_titles.add(item.title)
 
-                # Send progress every 5 items or on last item
-                if (i + 1) % 5 == 0 or (i + 1) == total:
+            created = len(links_to_create)
+
+            # Batch create links in chunks
+            BATCH_SIZE = 100
+            async with in_transaction():
+                for start in range(0, len(links_to_create), BATCH_SIZE):
+                    batch = links_to_create[start:start + BATCH_SIZE]
+                    await Links.bulk_create(batch)
+                    progress = min(start + BATCH_SIZE, len(links_to_create))
                     await send_task_progress(task_id, {
-                        "current": i + 1,
+                        "current": skipped + progress,
                         "total": total,
-                        "created": created,
+                        "created": progress,
                         "skipped": skipped,
                     })
+
+            # Set M2M relationships: query back created links by title
+            if created > 0:
+                created_titles = [l.title for l in links_to_create]
+                created_links = await Links.filter(title__in=created_titles)
+                link_by_title = {l.title: l for l in created_links}
+                for link_obj, menu_titles in zip(links_to_create, link_menu_map):
+                    db_link = link_by_title.get(link_obj.title)
+                    if not db_link:
+                        continue
+                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+                    if menus_to_add:
+                        await db_link.menus.add(*menus_to_add)
 
             await clear_link_cache()
             await complete_task(task_id, {"created": created, "skipped": skipped})
@@ -348,7 +375,7 @@ async def handle_link_import(file: UploadFile = File(...)):
     if not isinstance(items, list):
         raise HTTPException(status_code=400, detail="数据格式错误，应为数组")
 
-    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress, track_task
+    from core.tasks import create_task_id, register_task, complete_task, fail_task, track_task, send_task_progress
 
     task_id = create_task_id()
     register_task(task_id)
@@ -372,17 +399,19 @@ async def handle_link_import(file: UploadFile = File(...)):
             existing_links = await Links.filter(title__in=all_titles).values_list("title", flat=True)
             existing_titles = set(existing_links)
 
-            created = 0
-            skipped = 0
             total = len(items)
 
-            for i, item in enumerate(items):
+            # Separate items into create vs skip, record menu associations
+            links_to_create = []
+            link_menu_map = []
+            skipped = 0
+
+            for item in items:
                 title = item.get("title")
                 if not title or title in existing_titles:
                     skipped += 1
                 else:
-                    menu_entries = item.pop("menus", []) or []
-                    link = await Links.create(
+                    links_to_create.append(Links(
                         title=title,
                         href=item.get("href", ""),
                         icon=item.get("icon"),
@@ -393,22 +422,38 @@ async def handle_link_import(file: UploadFile = File(...)):
                         order=item.get("order", 0),
                         cdn_img_id=item.get("cdn_img_id"),
                         status=item.get("status", True),
-                    )
-                    menu_titles = [_normalize_menu_title(m) for m in menu_entries]
-                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
-                    if menus_to_add:
-                        await link.menus.add(*menus_to_add)
-                    created += 1
+                    ))
+                    menu_entries = item.get("menus") or []
+                    link_menu_map.append([_normalize_menu_title(m) for m in menu_entries])
                     existing_titles.add(title)
 
-                # Send progress every 5 items or on last item
-                if (i + 1) % 5 == 0 or (i + 1) == total:
-                    await send_task_progress(task_id, {
-                        "current": i + 1,
-                        "total": total,
-                        "created": created,
-                        "skipped": skipped,
-                    })
+            created = len(links_to_create)
+
+            # Batch create links in chunks
+            BATCH_SIZE = 100
+            for start in range(0, len(links_to_create), BATCH_SIZE):
+                batch = links_to_create[start:start + BATCH_SIZE]
+                await Links.bulk_create(batch)
+                progress = min(start + BATCH_SIZE, len(links_to_create))
+                await send_task_progress(task_id, {
+                    "current": skipped + progress,
+                    "total": total,
+                    "created": progress,
+                    "skipped": skipped,
+                })
+
+            # Set M2M relationships: query back created links by title
+            if created > 0:
+                created_titles = [l.title for l in links_to_create]
+                created_links = await Links.filter(title__in=created_titles)
+                link_by_title = {l.title: l for l in created_links}
+                for link_obj, menu_titles in zip(links_to_create, link_menu_map):
+                    db_link = link_by_title.get(link_obj.title)
+                    if not db_link:
+                        continue
+                    menus_to_add = [menu_map[t] for t in menu_titles if t in menu_map]
+                    if menus_to_add:
+                        await db_link.menus.add(*menus_to_add)
 
             await clear_link_cache()
             await complete_task(task_id, {"created": created, "skipped": skipped})

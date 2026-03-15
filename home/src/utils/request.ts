@@ -4,6 +4,12 @@ import { ElMessage } from "element-plus";
 import { get, merge } from "lodash-es";
 import { useUserStore } from "@/store/user";
 
+/** 扩展 AxiosRequestConfig 支持静默模式 */
+export interface RequestConfig extends AxiosRequestConfig {
+  /** 静默模式：不显示错误提示 */
+  silent?: boolean;
+}
+
 /** 创建请求实例 */
 function createService() {
   // 创建一个 axios 实例命名为 service
@@ -27,7 +33,9 @@ function createService() {
       const code = apiData.code;
       // 如果没有 code, 代表这不是项目后端开发的 api
       if (code === undefined) {
-        ElMessage.error("非本系统的接口");
+        if (!(response.config as RequestConfig)?.silent) {
+          ElMessage.error("非本系统的接口");
+        }
         return Promise.reject(new Error("非本系统的接口"));
       }
       switch (code) {
@@ -37,12 +45,16 @@ function createService() {
 
         default:
           // 不是正确的 code
-          ElMessage.error(apiData.message || "Error");
+          if (!(response.config as RequestConfig)?.silent) {
+            ElMessage.error(apiData.message || "Error");
+          }
           return Promise.reject(new Error("Error"));
       }
     },
     (error) => {
-      ElMessage.error(error.message || "请求失败");
+      if (!error.config?.silent) {
+        ElMessage.error(error.message || "请求失败");
+      }
       return Promise.reject(error);
     },
   );
@@ -51,23 +63,29 @@ function createService() {
 
 /** 创建请求方法 */
 function createRequest(service: AxiosInstance) {
-  return function <T>(config: AxiosRequestConfig): Promise<T> {
+  return function <T>(config: RequestConfig): Promise<T> {
     const userStore = useUserStore();
-    // 判断token是否过期
-    if (new Date(userStore.token?.expires) < new Date()) {
+    const hasToken = !!userStore.token?.access_token;
+
+    // 仅在有 token 时检查过期
+    if (hasToken && userStore.token?.expires && new Date(userStore.token.expires) < new Date()) {
       userStore.logout();
       ElMessage.warning("登录已过期，请重新登录");
       return Promise.reject(new Error("登录已过期，请重新登录"));
     }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    // 仅在有有效 token 时携带 Authorization
+    if (hasToken) {
+      headers.Authorization = `Bearer ${userStore.token.access_token}`;
+    }
+
     const defaultConfig = {
-      headers: {
-        // 携带 Token
-        Authorization: `Bearer ${userStore.token?.access_token}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       timeout: 15000,
-      // baseURL: import.meta.env.VITE_BASE_API,
-      baseURL: "/api",
+      baseURL: import.meta.env.VITE_BASE_API || "/api",
       data: {},
     };
     // 将默认配置 defaultConfig 和传入的自定义配置 config 进行合并成为 mergeConfig

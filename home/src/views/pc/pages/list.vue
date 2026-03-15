@@ -8,6 +8,7 @@ import { useTitle } from "@vueuse/core";
 import { useSiteStore } from "@/store/site";
 import BookmarkSection from "@/components/local-menu/BookmarkSection.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
+import MIcon from "@/components/MIcon.vue";
 
 const routes = useRoute();
 const siteStore = useSiteStore();
@@ -122,17 +123,30 @@ onBeforeUnmount(() => {
     <bookmark-section />
 
     <!-- 骨架屏：菜单数据加载中 -->
-    <template v-if="menuStore.menuTree.length === 0">
+    <template v-if="menuStore.loading && menuStore.menuTree.length === 0">
       <div v-for="i in 2" :key="'sk-' + i" class="mb-8">
         <div class="flex items-center gap-x-2 mb-3">
-          <div class="w-6 h-6 rounded bg-[#e9ecef] skeleton-pulse" />
-          <div class="w-24 h-6 rounded bg-[#e9ecef] skeleton-pulse" />
+          <div class="w-6 h-6 rounded bg-[#e9ecef] dark:bg-[#3a3a5a] skeleton-pulse" />
+          <div class="w-24 h-6 rounded bg-[#e9ecef] dark:bg-[#3a3a5a] skeleton-pulse" />
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           <skeleton-card type="card" :count="8" />
         </div>
       </div>
     </template>
+
+    <!-- 加载失败：错误状态 + 重试 -->
+    <div v-else-if="menuStore.loadError && menuStore.menuTree.length === 0" class="flex flex-col items-center justify-center py-20 gap-4">
+      <m-icon icon="mdi:wifi-off" :size="48" style="color: var(--nav-text-secondary, #999)" />
+      <p style="color: var(--nav-text-secondary, #6b7280)">菜单加载失败，请检查网络后重试</p>
+      <button
+        class="px-4 py-2 rounded-lg text-white text-sm"
+        style="background: var(--el-color-primary, #409eff)"
+        @click="menuStore.getMenuTree()"
+      >
+        重新加载
+      </button>
+    </div>
 
     <div v-for="menuItem in menuStore.menuTree" :key="menuItem.id">
       <!-- 有子分类的菜单：使用 Tab 切换模式 -->

@@ -232,6 +232,8 @@ const local: App.I18n.Schema = {
     system: '系统管理',
     system_user: '用户列表',
     system_site: '站点设置',
+    system_cors: '跨域管理',
+    system_backup: '备份管理',
     'user-center': '个人中心'
   },
   page: {

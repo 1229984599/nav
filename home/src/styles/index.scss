@@ -26,6 +26,12 @@ $sidebar-hide-width: 64px;
   background: #555;
 }
 
+html.dark {
+  ::-webkit-scrollbar-track { background: #1a1a2e; }
+  ::-webkit-scrollbar-thumb { background: #4a4a6a; }
+  ::-webkit-scrollbar-thumb:hover { background: #6a6a8a; }
+}
+
 /* Handle */
 
 :root {
@@ -47,12 +53,74 @@ $sidebar-hide-width: 64px;
   --space-12: 48px;
 }
 
+html.dark {
+  --nav-bg: #1a1a2e;
+  --nav-card-bg: #222244;
+  --nav-text: #e2e8f0;
+  --nav-text-secondary: #94a3b8;
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-navbar-bg: rgba(26, 26, 46, 0.95);
+  --nav-logo-bg: #222244;
+  color-scheme: dark;
+
+  // Element Plus dark overrides
+  --el-bg-color: #222244;
+  --el-bg-color-overlay: #2a2a4a;
+  --el-fill-color: rgba(255, 255, 255, 0.06);
+  --el-fill-color-light: rgba(255, 255, 255, 0.04);
+  --el-fill-color-lighter: rgba(255, 255, 255, 0.03);
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-light: rgba(255, 255, 255, 0.08);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.06);
+  --el-text-color-primary: #e2e8f0;
+  --el-text-color-regular: #cbd5e1;
+  --el-text-color-secondary: #94a3b8;
+  --el-text-color-placeholder: #64748b;
+
+  // El Plus extra dark overrides
+  --el-color-white: #222244;
+  --el-box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  --el-box-shadow-light: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+
+  // El Plus menu (sidebar) dark overrides
+  --el-menu-bg-color: var(--nav-card-bg);
+  --el-menu-text-color: var(--nav-text);
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.06);
+  --el-menu-active-color: var(--el-color-primary);
+
+  // Fix context menu / popover backgrounds
+  .bk-ctx-menu,
+  .context-menu {
+    background: #2a2a4a !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  }
+
+  // El Plus popover / dialog dark fix
+  .el-popover.el-popper,
+  .el-dialog {
+    background: var(--el-bg-color-overlay) !important;
+  }
+
+  // El Plus autocomplete dropdown
+  .el-autocomplete-suggestion {
+    background: var(--el-bg-color-overlay);
+  }
+
+  // SVG progress ring
+  .progress-ring-bg {
+    stroke: rgba(255, 255, 255, 0.15) !important;
+  }
+}
+
 html, body, #app {
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 0;
   color: var(--nav-text);
+  background-color: var(--nav-bg);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 路由切换过渡动画 (fade + slide-up) */

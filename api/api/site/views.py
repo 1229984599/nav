@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Request
 from fastapi.responses import Response
 from common.response import BaseApiOut
 
-from models import Site, Menu, Links, Friend, User
+from models import Site, Menu, Links, Friend, User, CorsOrigin
 from .schemas import SiteSchemaList, SiteSchemaPublic, SiteSchemaUpdate
 from auth.auth import get_current_user, get_current_super_user
 from settings import settings
@@ -28,6 +28,8 @@ async def handle_update_site(site: SiteSchemaUpdate):
     创更新数据
     """
     first_model = await Site.first()
+    if not first_model:
+        raise HTTPException(status_code=404, detail="站点信息未初始化")
     await first_model.update_from_dict(site.model_dump(exclude_unset=True, exclude={"id"}))
     await first_model.save()
     # data = await Site.update_one(site.id, site.dict(exclude_unset=True, exclude={"id"}))
@@ -45,6 +47,8 @@ async def handle_get_site():
     获取数据站点（公开接口，不返回敏感字段）
     """
     data = await Site.first()
+    if not data:
+        return BaseApiOut(data=None)
     payload = SiteSchemaPublic.model_validate(data, from_attributes=True)
     return BaseApiOut(data=payload)
 
@@ -60,7 +64,7 @@ async def handle_stats():
     menus = await Menu.filter(parent_id=None).prefetch_related("links")
     distribution = []
     for m in menus:
-        count = await m.links.all().count()
+        count = len(m.links)
         if count > 0:
             distribution.append({"name": m.title, "value": count})
     # 最近添加的链接
@@ -134,7 +138,7 @@ async def handle_backup():
 
     async def _run_backup():
         try:
-            total_steps = 6
+            total_steps = 7
 
             # Step 1: Site settings
             await send_task_progress(task_id, {
@@ -151,9 +155,22 @@ async def handle_backup():
                     "copyright": site.copyright, "cdn_img_token": site.cdn_img_token,
                 }
 
-            # Step 2: Menus
+            # Step 2: CORS origins
             await send_task_progress(task_id, {
-                "step": "menus", "current": 2, "total": total_steps,
+                "step": "cors", "current": 2, "total": total_steps,
+                "message": "正在收集跨域配置..."
+            })
+            cors_list = await CorsOrigin.all().order_by("order")
+            cors_data = []
+            for c in cors_list:
+                cors_data.append({
+                    "origin": c.origin, "desc": c.desc,
+                    "order": c.order, "status": c.status,
+                })
+
+            # Step 3: Menus
+            await send_task_progress(task_id, {
+                "step": "menus", "current": 3, "total": total_steps,
                 "message": "正在收集菜单数据..."
             })
             menus = await Menu.all().order_by("order").select_related("parent")
@@ -165,9 +182,9 @@ async def handle_backup():
                     "parent_title": m.parent.title if m.parent else None,
                 })
 
-            # Step 3: Links
+            # Step 4: Links
             await send_task_progress(task_id, {
-                "step": "links", "current": 3, "total": total_steps,
+                "step": "links", "current": 4, "total": total_steps,
                 "message": "正在收集链接数据..."
             })
             links = await Links.all().order_by("order").prefetch_related("menus")
@@ -181,9 +198,9 @@ async def handle_backup():
                     "status": link.status, "menus": [m.title for m in link_menus],
                 })
 
-            # Step 4: Friends
+            # Step 5: Friends
             await send_task_progress(task_id, {
-                "step": "friends", "current": 4, "total": total_steps,
+                "step": "friends", "current": 5, "total": total_steps,
                 "message": "正在收集友链数据..."
             })
             friends = await Friend.all().order_by("order")
@@ -194,9 +211,9 @@ async def handle_backup():
                     "desc": f.desc, "color": f.color, "order": f.order, "status": f.status,
                 })
 
-            # Step 5: Users
+            # Step 6: Users
             await send_task_progress(task_id, {
-                "step": "users", "current": 5, "total": total_steps,
+                "step": "users", "current": 6, "total": total_steps,
                 "message": "正在收集用户数据..."
             })
             users = await User.all().order_by("order")
@@ -207,15 +224,16 @@ async def handle_backup():
                     "status": u.status, "is_super": u.is_super, "order": u.order,
                 })
 
-            # Step 6: Write file
+            # Step 7: Write file
             await send_task_progress(task_id, {
-                "step": "write", "current": 6, "total": total_steps,
+                "step": "write", "current": 7, "total": total_steps,
                 "message": "正在写入备份文件..."
             })
             backup = {
-                "version": 1,
+                "version": 2,
                 "created_at": datetime.now().isoformat(),
                 "site": site_data,
+                "cors_origins": cors_data,
                 "menus": menus_data,
                 "links": links_data,
                 "friends": friends_data,
@@ -252,17 +270,23 @@ async def handle_backup_list():
 @site_router.get('/backup/download/{filename}', dependencies=[Depends(get_current_super_user)])
 async def handle_backup_download(filename: str):
     """下载指定备份文件"""
-    filepath = BACKUP_DIR / filename
-    if not filepath.exists() or not filepath.name.startswith("backup_"):
+    safe_name = Path(filename).name
+    if safe_name != filename or '..' in filename or '/' in filename or '\\' in filename:
+        raise HTTPException(status_code=400, detail="非法文件名")
+    filepath = BACKUP_DIR / safe_name
+    if not filepath.exists() or not safe_name.startswith("backup_"):
         raise HTTPException(status_code=404, detail="备份文件不存在")
-    return FileResponse(filepath, filename=filename, media_type="application/json")
+    return FileResponse(filepath, filename=safe_name, media_type="application/json")
 
 
 @site_router.delete('/backup/{filename}', dependencies=[Depends(get_current_super_user)])
 async def handle_backup_delete(filename: str):
     """删除指定备份文件"""
-    filepath = BACKUP_DIR / filename
-    if not filepath.exists() or not filepath.name.startswith("backup_"):
+    safe_name = Path(filename).name
+    if safe_name != filename or '..' in filename or '/' in filename or '\\' in filename:
+        raise HTTPException(status_code=400, detail="非法文件名")
+    filepath = BACKUP_DIR / safe_name
+    if not filepath.exists() or not safe_name.startswith("backup_"):
         raise HTTPException(status_code=404, detail="备份文件不存在")
     filepath.unlink()
     return BaseApiOut(message="备份文件已删除")
@@ -295,6 +319,7 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
 
             steps = []
             if backup.get("site"): steps.append("site")
+            if backup.get("cors_origins"): steps.append("cors")
             if backup.get("menus"): steps.append("menus")
             if backup.get("links"): steps.append("links")
             if backup.get("friends"): steps.append("friends")
@@ -311,9 +336,27 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
                         "message": "正在恢复站点设置..."
                     })
                     site = await Site.first()
+                    site_dict = {k: v for k, v in backup["site"].items() if k != "cors_origins"}
                     if site:
-                        await site.update_from_dict(backup["site"])
+                        await site.update_from_dict(site_dict)
                         await site.save()
+
+                # Restore CORS origins
+                if backup.get("cors_origins"):
+                    current_step += 1
+                    await send_task_progress(task_id, {
+                        "step": "cors", "current": current_step, "total": total_steps,
+                        "message": f"正在恢复跨域配置（共 {len(backup['cors_origins'])} 条）..."
+                    })
+                    await CorsOrigin.all().delete()
+                    cors_items = backup["cors_origins"]
+                    if cors_items and isinstance(cors_items[0], str):
+                        # 兼容旧版 v1 格式：cors_origins 是字符串数组
+                        for i, origin in enumerate(cors_items):
+                            await CorsOrigin.create(origin=origin, order=i, status=True)
+                    else:
+                        for item in cors_items:
+                            await CorsOrigin.create(**item)
 
                 # Restore menus
                 if backup.get("menus"):
@@ -328,12 +371,13 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
                     for item in backup["menus"]:
                         parent_titles[item.get("title")] = item.pop("parent_title", None)
                         await Menu.create(**item)
-                    # Second pass: set parent relationships
+                    # Second pass: set parent relationships — 批量查询构建 map
+                    menu_map = {m.title: m for m in await Menu.all()}
                     for title, parent_title in parent_titles.items():
                         if not parent_title:
                             continue
-                        menu = await Menu.filter(title=title).first()
-                        parent = await Menu.filter(title=parent_title).first()
+                        menu = menu_map.get(title)
+                        parent = menu_map.get(parent_title)
                         if menu and parent:
                             menu.parent_id = parent.id
                             await menu.save()
@@ -387,6 +431,9 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
             await FastAPICache.clear()
             from api.menu.views import invalidate_tree_cache
             invalidate_tree_cache()
+            # 恢复后刷新 CORS 缓存
+            from core.middleware import load_cors_origins
+            await load_cors_origins()
 
             await complete_task(task_id, {"message": "数据恢复成功"})
         except Exception as e:

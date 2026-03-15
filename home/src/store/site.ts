@@ -7,7 +7,7 @@ import siteModel from "@/api/site";
  */
 export const useSiteStore = defineStore("siteInfo", {
   state: () => ({
-    siteInfo: Object as SiteSchema,
+    siteInfo: {} as SiteSchema,
   }),
   actions: {
     async getSiteInfo() {

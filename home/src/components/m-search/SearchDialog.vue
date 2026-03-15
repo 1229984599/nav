@@ -1,37 +1,24 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, nextTick, computed } from "vue";
-import linkModel from "@/api/links";
+import { onBeforeUnmount, onMounted, ref, nextTick } from "vue";
 import MIcon from "@/components/MIcon.vue";
-import { getBaiduSuggestions } from "@/api/spider";
-import { useRouter } from "vue-router";
-import { useSearch } from "@/composables/useSearch";
+import SearchSuggestionItem from "./SearchSuggestionItem.vue";
+import { useSearch, useSearchActions } from "@/composables/useSearch";
 
 defineOptions({
   name: "MSearchDialog",
 });
 
-const router = useRouter();
-const { getHistory, addHistory, removeHistory, clearHistory, sortByMatchPriority } = useSearch();
+const {
+  engines,
+  activeEngine,
+  currentEngine,
+  setEngine,
+  fetchSuggestions,
+} = useSearch();
+
 const visible = ref(false);
 const searchQuery = ref("");
 const autocompleteRef = ref<any>(null);
-const HISTORY_KEY = "search-history";
-
-// Search engines
-const engines = [
-  { key: "baidu", label: "百度", icon: "simple-icons:baidu", url: "https://www.baidu.com/s?wd=" },
-  { key: "google", label: "Google", icon: "logos:google-icon", url: "https://www.google.com/search?q=" },
-  { key: "bing", label: "Bing", icon: "logos:bing", url: "https://www.bing.com/search?q=" },
-  { key: "github", label: "GitHub", icon: "mdi:github", url: "https://github.com/search?q=" },
-];
-const ENGINE_STORAGE_KEY = "search-engine";
-const activeEngine = ref(localStorage.getItem(ENGINE_STORAGE_KEY) || "baidu");
-const currentEngine = computed(() => engines.find((e) => e.key === activeEngine.value) || engines[0]);
-
-function setEngine(key: string) {
-  activeEngine.value = key;
-  localStorage.setItem(ENGINE_STORAGE_KEY, key);
-}
 
 function open() {
   visible.value = true;
@@ -49,74 +36,12 @@ function close() {
   searchQuery.value = "";
 }
 
-// Search history (clear for dialog = clear + close popper)
-function removeHistoryAndRefresh(keyword: string) {
-  removeHistory(keyword);
-  // Close and reopen to refresh the suggestion list
-  autocompleteRef.value?.close();
-  nextTick(() => {
-    autocompleteRef.value?.focus();
-  });
-}
-
-// Sort by match priority: title > href > desc (from composable)
-async function fetchSuggestions(
-  queryString: string,
-  callback: (arg: any) => void,
-) {
-  if (!queryString.trim()) {
-    // Show history when empty
-    const history = getHistory();
-    if (history.length) {
-      return callback(
-        history.map((h) => ({ title: h, _isHistory: true })),
-      );
-    }
-    return callback([]);
-  }
-  const { items } = await linkModel.list(
-    { page: 1, pageSize: 8, order_by: "order" },
-    { keyword: queryString },
-  );
-  if (items.length === 0) {
-    const baiduSuggestions = await getBaiduSuggestions(queryString);
-    return callback(
-      baiduSuggestions.map((s: any) => ({ ...s, _isExternal: true })),
-    );
-  }
-  callback(sortByMatchPriority(items, queryString));
-}
-
-function handleSuggestionClick(link: any) {
-  if (link._isHistory) {
-    searchQuery.value = link.title;
-    handleEnterSearch();
-    return;
-  }
-  if (!link.href) {
-    handleExternalSearch(link.title);
-    return;
-  }
-  addHistory(searchQuery.value || link.title);
-  window.open(link.href, "_blank");
-  close();
-}
-
-function handleExternalSearch(kw: string = "") {
-  const q = kw || searchQuery.value;
-  if (!q) return;
-  addHistory(q);
-  window.open(currentEngine.value.url + encodeURIComponent(q), "_blank");
-  close();
-}
-
-// Enter: go to search results page
-function handleEnterSearch() {
-  if (!searchQuery.value.trim()) return;
-  addHistory(searchQuery.value);
-  router.push({ path: "/search", query: { q: searchQuery.value } });
-  close();
-}
+const {
+  removeHistoryAndRefresh,
+  handleSuggestionClick,
+  handleExternalSearch,
+  handleEnterSearch,
+} = useSearchActions(searchQuery, autocompleteRef, close);
 
 // Ctrl+K / Cmd+K
 function handleGlobalKeydown(e: KeyboardEvent) {
@@ -173,66 +98,15 @@ defineExpose({ open, close });
                 <m-icon
                   icon="mingcute:search-line"
                   :size="20"
-                  class="text-gray-400"
+                  class="text-gray-400 dark:text-gray-500"
                 />
               </template>
               <template #default="{ item }">
-                <!-- History item -->
-                <div
-                  v-if="item._isHistory"
-                  class="suggestion-item suggestion-history"
-                >
-                  <m-icon
-                    icon="mdi:history"
-                    :size="16"
-                    class="text-gray-400 flex-shrink-0"
-                  />
-                  <span class="suggestion-title">{{ item.title }}</span>
-                  <m-icon
-                    icon="mdi:close"
-                    :size="14"
-                    class="suggestion-remove"
-                    @mousedown.stop.prevent
-                    @click.stop.prevent="removeHistoryAndRefresh(item.title)"
-                  />
-                </div>
-                <!-- External suggestion -->
-                <div
-                  v-else-if="item._isExternal"
-                  class="suggestion-item suggestion-external"
-                >
-                  <m-icon
-                    :icon="currentEngine.icon"
-                    :size="16"
-                    class="flex-shrink-0"
-                  />
-                  <span class="suggestion-title">{{ item.title }}</span>
-                  <span class="suggestion-badge external">{{
-                    currentEngine.label
-                  }}</span>
-                </div>
-                <!-- Normal link result -->
-                <div v-else class="suggestion-item">
-                  <m-icon
-                    v-if="item.icon"
-                    :icon="item.icon"
-                    :color="item.color"
-                    :size="20"
-                    class="flex-shrink-0"
-                  />
-                  <div class="suggestion-body">
-                    <span class="suggestion-title">{{ item.title }}</span>
-                    <span v-if="item.desc" class="suggestion-desc">{{
-                      item.desc
-                    }}</span>
-                  </div>
-                  <span
-                    v-if="item.menus?.length"
-                    class="suggestion-badge menu"
-                  >
-                    {{ item.menus[0].title }}
-                  </span>
-                </div>
+                <search-suggestion-item
+                  :item="item"
+                  :current-engine="currentEngine"
+                  @remove-history="removeHistoryAndRefresh"
+                />
               </template>
               <template #suffix>
                 <div class="flex items-center gap-x-2">
@@ -240,11 +114,11 @@ defineExpose({ open, close });
                     @click="handleExternalSearch(searchQuery)"
                     :icon="currentEngine.icon"
                     :size="20"
-                    class="cursor-pointer text-gray-400 hover:text-blue-500 transition-colors"
+                    class="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors"
                     :title="`用${currentEngine.label}搜索`"
                   />
                   <span
-                    class="text-xs text-gray-400 border border-gray-300 rounded px-1.5 py-0.5 select-none"
+                    class="text-xs text-gray-400 dark:text-gray-500 border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 select-none"
                   >ESC</span>
                 </div>
               </template>
@@ -317,7 +191,6 @@ defineExpose({ open, close });
   }
 }
 
-// Footer: engine selector + tips
 .search-footer {
   display: flex;
   align-items: center;
@@ -381,79 +254,6 @@ defineExpose({ open, close });
   border: 1px solid var(--nav-border, rgba(0, 0, 0, 0.08));
   border-radius: 4px;
   line-height: 1.5;
-}
-
-// Suggestion items
-.suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 4px;
-  min-height: 36px;
-}
-
-.suggestion-history {
-  .suggestion-title {
-    color: var(--nav-text-secondary, #6b7280);
-  }
-
-  .suggestion-remove {
-    margin-left: auto;
-    opacity: 0;
-    cursor: pointer;
-    color: var(--nav-text-secondary, #999);
-    transition: opacity 0.15s;
-
-    &:hover {
-      color: #ef4444;
-    }
-  }
-
-  &:hover .suggestion-remove {
-    opacity: 1;
-  }
-}
-
-.suggestion-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.suggestion-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 14px;
-}
-
-.suggestion-desc {
-  font-size: 12px;
-  color: var(--nav-text-secondary, #999);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.suggestion-badge {
-  flex-shrink: 0;
-  margin-left: auto;
-  font-size: 11px;
-  padding: 1px 8px;
-  border-radius: 4px;
-  line-height: 1.5;
-
-  &.menu {
-    background: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.1));
-    color: var(--el-color-primary, #409eff);
-  }
-
-  &.external {
-    background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
-  }
 }
 
 // Animation

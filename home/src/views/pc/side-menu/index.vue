@@ -90,7 +90,7 @@ function scrollToBookmarks(groupId?: string) {
     :collapse-transition="false"
     :collapse="appStore.isCollapse"
     unique-opened
-    class="divide-y divide-gray-100"
+    class="divide-y divide-gray-100 dark:divide-gray-700"
   >
     <!-- 加载骨架 -->
     <template v-if="loading">
@@ -117,7 +117,7 @@ function scrollToBookmarks(groupId?: string) {
             <m-icon :icon="group.icon" :color="group.color" :size="18" class="pr-1" />
             <span class="text-sm">{{ group.name }}</span>
           </div>
-          <span class="text-xs text-gray-400 ml-1">{{ bookmarkStore.groupCounts[group.id] || 0 }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">{{ bookmarkStore.groupCounts[group.id] || 0 }}</span>
         </div>
       </el-menu-item>
     </el-sub-menu>

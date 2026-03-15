@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
-import { computed, PropType, ref, watch } from "vue";
-import { ElMessage } from "element-plus";
+import { defineAsyncComponent, PropType, ref } from "vue";
 import { MenuSchemaTree } from "@/api/menu/types";
-import { LinkSchemaList } from "@/api/links/types";
-import { VueDraggable } from "vue-draggable-plus";
-import { useUserStore } from "@/store/user";
+const VueDraggable = defineAsyncComponent(() =>
+  import("vue-draggable-plus").then((m) => m.VueDraggable)
+);
 import { isMobile } from "@/utils/window";
-import links from "@/api/links";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
 import EmptyState from "@/components/EmptyState.vue";
-
-const userStore = useUserStore();
+import { useLinkDrag } from "@/composables/useLinkDrag";
+import { LinkSchemaList } from "@/api/links/types";
 
 const props = defineProps({
   menu: {
@@ -20,48 +18,17 @@ const props = defineProps({
   },
 });
 
-const isAdmin = computed(() => userStore.isAdminAuthorized);
-const editMode = ref(false);
-const isDragActive = computed(() => isAdmin.value && (!isMobile.value || editMode.value));
-const linkList = ref<LinkSchemaList[]>([]);
+const {
+  isAdmin,
+  editMode,
+  isDragActive,
+  linkList,
+  orderSaving,
+  handleLinkDragStart,
+  handleLinkDragEnd,
+} = useLinkDrag(() => props.menu?.links);
+
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
-const orderSaving = ref(false);
-const dragSnapshot = ref<LinkSchemaList[]>([]);
-
-watch(
-  () => props.menu?.links,
-  (val) => {
-    linkList.value = val ? [...val] : [];
-  },
-  { immediate: true },
-);
-
-async function handleLinkDragEnd() {
-  if (orderSaving.value) return;
-  const updates = linkList.value
-    .filter((item) => item.id)
-    .map((item, index) => ({
-      id: item.id!,
-      order: index,
-    }));
-  if (updates.length === 0) return;
-  orderSaving.value = true;
-  try {
-    await links.batchUpdate(updates);
-    ElMessage.success("链接排序已保存");
-  } catch (e) {
-    linkList.value = dragSnapshot.value.map((item) => ({ ...item }));
-    ElMessage.error("链接排序保存失败，已恢复原顺序");
-    console.error("链接排序保存失败", e);
-  } finally {
-    orderSaving.value = false;
-    dragSnapshot.value = [];
-  }
-}
-
-function handleLinkDragStart() {
-  dragSnapshot.value = linkList.value.map((item) => ({ ...item }));
-}
 
 function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {
   if (!isAdmin.value) return;

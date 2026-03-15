@@ -51,8 +51,20 @@ function show(event: MouseEvent, item: LinkSchemaList) {
   event.preventDefault();
   event.stopPropagation();
   currentItem.value = item;
-  menuStyle.left = event.clientX + "px";
-  menuStyle.top = event.clientY + "px";
+
+  // 边界检测：防止菜单溢出视口
+  const menuWidth = 140;
+  const menuHeight = 80;
+  let x = event.clientX;
+  let y = event.clientY;
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 4;
+  }
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 4;
+  }
+  menuStyle.left = x + "px";
+  menuStyle.top = y + "px";
   menuVisible.value = true;
 
   const hide = () => {
@@ -286,7 +298,7 @@ defineExpose({ show });
   transition: background-color 0.15s;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--el-fill-color-light, rgba(0, 0, 0, 0.04));
   }
 
   &--danger {

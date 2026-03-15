@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import ItemDesc from "./ItemDesc.vue";
 import MIcon from "@/components/MIcon.vue";
-import { computed, nextTick, onBeforeUnmount, PropType, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, PropType, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { MenuSchemaTree } from "@/api/menu/types";
 import { LinkSchemaList } from "@/api/links/types";
-import { VueDraggable } from "vue-draggable-plus";
-import { useUserStore } from "@/store/user";
+const VueDraggable = defineAsyncComponent(() =>
+  import("vue-draggable-plus").then((m) => m.VueDraggable)
+);
 import { isMobile } from "@/utils/window";
 import { useMenuStore } from "@/store/menu";
-import links from "@/api/links";
 import menuApi from "@/api/menu";
 import LinkContextMenu from "@/components/link-context-menu/index.vue";
 import MenuContextMenu from "@/components/menu-context-menu/index.vue";
 import EmptyState from "@/components/EmptyState.vue";
+import { useLinkDrag } from "@/composables/useLinkDrag";
 
-const userStore = useUserStore();
 const menuStore = useMenuStore();
 const route = useRoute();
 const router = useRouter();
@@ -27,17 +27,10 @@ const props = defineProps({
   },
 });
 
-const isAdmin = computed(() => userStore.isAdminAuthorized);
-const editMode = ref(false);
-const isDragActive = computed(
-  () => isAdmin.value && (!isMobile.value || editMode.value),
-);
 const contextMenuRef = ref<InstanceType<typeof LinkContextMenu>>();
 const menuContextMenuRef = ref<InstanceType<typeof MenuContextMenu>>();
 const tabPillsWrapperRef = ref<HTMLElement>();
-const orderSaving = ref(false);
 const tabOrderSaving = ref(false);
-const dragSnapshot = ref<LinkSchemaList[]>([]);
 
 type TabItem = {
   key: string;
@@ -166,6 +159,17 @@ const activeMenu = computed(() => {
   return tab?.menu;
 });
 
+// Shared link drag composable
+const {
+  isAdmin,
+  editMode,
+  isDragActive,
+  linkList,
+  orderSaving,
+  handleLinkDragStart,
+  handleLinkDragEnd,
+} = useLinkDrag(() => activeMenu.value?.links);
+
 // activeTab 变化时，滚动 tab pill 到可见区域（移动端）+ 同步侧边栏高亮
 watch(activeTab, (key) => {
   scrollActiveTabIntoView();
@@ -189,9 +193,6 @@ function handleTabClick(tab: TabItem) {
   router.replace({ path: "/list", query });
 }
 
-// Draggable link list for admin mode
-const linkList = ref<LinkSchemaList[]>([]);
-
 // Tab 拖拽排序相关
 const tabDragSnapshot = ref<TabItem[]>([]);
 
@@ -201,7 +202,6 @@ function handleTabDragStart() {
 
 async function handleTabDragEnd() {
   if (tabOrderSaving.value) return;
-  // 只对子分类 tab 保存排序（父分类 tab 不参与排序）
   const childTabs = tabList.value.filter((t) => !t.isParent);
   const updates = childTabs
     .filter((t) => t.menu.id)
@@ -213,7 +213,6 @@ async function handleTabDragEnd() {
   tabOrderSaving.value = true;
   try {
     await menuApi.batchUpdate(updates);
-    // 同步更新 menuTree 中 children 的顺序
     if (props.menu?.children) {
       const orderMap = new Map(updates.map((u) => [u.id, u.order]));
       props.menu.children.sort(
@@ -229,41 +228,6 @@ async function handleTabDragEnd() {
     tabOrderSaving.value = false;
     tabDragSnapshot.value = [];
   }
-}
-
-watch(
-  () => activeMenu.value?.links,
-  (val) => {
-    linkList.value = val ? [...val] : [];
-  },
-  { immediate: true },
-);
-
-async function handleLinkDragEnd() {
-  if (orderSaving.value) return;
-  const updates = linkList.value
-    .filter((item) => item.id)
-    .map((item, index) => ({
-      id: item.id!,
-      order: index,
-    }));
-  if (updates.length === 0) return;
-  orderSaving.value = true;
-  try {
-    await links.batchUpdate(updates);
-    ElMessage.success("链接排序已保存");
-  } catch (e) {
-    linkList.value = dragSnapshot.value.map((item) => ({ ...item }));
-    ElMessage.error("链接排序保存失败，已恢复原顺序");
-    console.error("链接排序保存失败", e);
-  } finally {
-    orderSaving.value = false;
-    dragSnapshot.value = [];
-  }
-}
-
-function handleLinkDragStart() {
-  dragSnapshot.value = linkList.value.map((item) => ({ ...item }));
 }
 
 function handleItemContextMenu(event: MouseEvent, item: LinkSchemaList) {

@@ -112,6 +112,24 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'system_backup',
+        path: '/system/backup',
+        component: 'view.system_backup',
+        meta: {
+          title: 'system_backup',
+          i18nKey: 'route.system_backup'
+        }
+      },
+      {
+        name: 'system_cors',
+        path: '/system/cors',
+        component: 'view.system_cors',
+        meta: {
+          title: 'system_cors',
+          i18nKey: 'route.system_cors'
+        }
+      },
+      {
         name: 'system_site',
         path: '/system/site',
         component: 'view.system_site',

@@ -33,6 +33,7 @@ function createProxyItem(item: App.Service.ServiceConfigItem, enableLog: boolean
   proxy[item.proxyPattern] = {
     target: item.baseURL,
     changeOrigin: true,
+    ws: true,
     configure: (_proxy, options) => {
       _proxy.on('proxyReq', (_proxyReq, req, _res) => {
         if (!enableLog) return;

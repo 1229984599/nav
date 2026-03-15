@@ -11,6 +11,6 @@ class Site(AppModel):
     footer = fields.TextField(null=True, description='底部版权信息等')
     yiyan = fields.BooleanField(default=False, description='是否开启每日一句')
     weather = fields.BooleanField(default=False, description='是否开启天气')
-    weather_key = fields.CharField(64, null=True, default='99ecd36cb84c4f3992227befc9c09c74', description='和风天气key')
+    weather_key = fields.CharField(64, null=True, default=None, description='和风天气key')
     copyright = fields.CharField(64, null=True, description='备案号')
     cdn_img_token = fields.CharField(64, null=True, description='图床cdn token')

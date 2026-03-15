@@ -6,7 +6,7 @@ const yiyan = ref("");
 const props = defineProps({
   color: {
     type: String,
-    default: "rgb(82 82 91 /1)",
+    default: "var(--nav-text-secondary)",
   },
 });
 async function refresh() {

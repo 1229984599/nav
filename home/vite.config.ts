@@ -5,6 +5,7 @@ import path from "path";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import { compression } from "vite-plugin-compression2";
 
 // https://vitejs.dev/config/
 export default (configEnv: ConfigEnv): UserConfigExport => {
@@ -46,6 +47,7 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
       Components({
         resolvers: [ElementPlusResolver()],
       }),
+      compression({ algorithm: "gzip", threshold: 1024 }),
     ],
     build: {
       rollupOptions: {

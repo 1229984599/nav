@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -76,44 +77,47 @@ async def handle_menu_import_json(payload: MenuImportRequest):
 
     async def _run_import():
         try:
-            created = 0
-            skipped = 0
             total = len(payload.items)
 
-            # 第一遍：创建所有菜单（不设置parent）
-            for i, item in enumerate(payload.items):
-                if not item.title:
-                    skipped += 1
-                    continue
-                exists = await Menu.filter(title=item.title).first()
-                if exists:
-                    skipped += 1
-                    continue
-                await Menu.create(
-                    title=item.title,
-                    icon=item.icon,
-                    color=item.color,
-                    order=item.order,
-                    is_vip=item.is_vip,
-                    status=item.status,
-                )
-                created += 1
+            # 预加载所有已有菜单标题
+            existing_titles = set(await Menu.all().values_list("title", flat=True))
 
-                if (i + 1) % 5 == 0 or (i + 1) == total:
-                    await send_task_progress(task_id, {
-                        "current": i + 1,
-                        "total": total,
-                        "created": created,
-                        "skipped": skipped,
-                        "message": f"正在创建菜单（{i + 1}/{total}）...",
-                    })
+            # 第一遍：批量创建所有菜单（不设置parent）
+            menus_to_create = []
+            skipped = 0
+            for item in payload.items:
+                if not item.title or item.title in existing_titles:
+                    skipped += 1
+                else:
+                    menus_to_create.append(Menu(
+                        title=item.title,
+                        icon=item.icon,
+                        color=item.color,
+                        order=item.order,
+                        is_vip=item.is_vip,
+                        status=item.status,
+                    ))
+                    existing_titles.add(item.title)
 
-            # 第二遍：设置父级关系
+            created = len(menus_to_create)
+            if menus_to_create:
+                await Menu.bulk_create(menus_to_create)
+
+            await send_task_progress(task_id, {
+                "current": total,
+                "total": total,
+                "created": created,
+                "skipped": skipped,
+                "message": f"菜单创建完成，正在设置父级关系...",
+            })
+
+            # 第二遍：设置父级关系 — 批量查询构建 map
+            menu_map = {m.title: m for m in await Menu.all()}
             for item in payload.items:
                 if not item.parent_title:
                     continue
-                menu = await Menu.filter(title=item.title).first()
-                parent = await Menu.filter(title=item.parent_title).first()
+                menu = menu_map.get(item.title)
+                parent = menu_map.get(item.parent_title)
                 if menu and parent:
                     menu.parent_id = parent.id
                     await menu.save()
@@ -371,46 +375,49 @@ async def handle_menu_import(file: UploadFile = File(...)):
 
     async def _run_import():
         try:
-            created = 0
-            skipped = 0
             total = len(items)
 
-            # 第一遍：创建所有菜单（不设置parent）
-            for i, item in enumerate(items):
+            # 预加载所有已有菜单标题
+            existing_titles = set(await Menu.all().values_list("title", flat=True))
+
+            # 第一遍：批量创建所有菜单（不设置parent）
+            menus_to_create = []
+            skipped = 0
+            for item in items:
                 title = item.get("title")
-                if not title:
+                if not title or title in existing_titles:
                     skipped += 1
-                    continue
-                exists = await Menu.filter(title=title).first()
-                if exists:
-                    skipped += 1
-                    continue
-                await Menu.create(
-                    title=title,
-                    icon=item.get("icon", "ic:round-menu"),
-                    color=item.get("color"),
-                    order=item.get("order", 0),
-                    is_vip=item.get("is_vip", False),
-                    status=item.get("status", True),
-                )
-                created += 1
+                else:
+                    menus_to_create.append(Menu(
+                        title=title,
+                        icon=item.get("icon", "ic:round-menu"),
+                        color=item.get("color"),
+                        order=item.get("order", 0),
+                        is_vip=item.get("is_vip", False),
+                        status=item.get("status", True),
+                    ))
+                    existing_titles.add(title)
 
-                if (i + 1) % 5 == 0 or (i + 1) == total:
-                    await send_task_progress(task_id, {
-                        "current": i + 1,
-                        "total": total,
-                        "created": created,
-                        "skipped": skipped,
-                        "message": f"正在创建菜单（{i + 1}/{total}）...",
-                    })
+            created = len(menus_to_create)
+            if menus_to_create:
+                await Menu.bulk_create(menus_to_create)
 
-            # 第二遍：设置父级关系
+            await send_task_progress(task_id, {
+                "current": total,
+                "total": total,
+                "created": created,
+                "skipped": skipped,
+                "message": f"菜单创建完成，正在设置父级关系...",
+            })
+
+            # 第二遍：设置父级关系 — 批量查询构建 map
+            menu_map = {m.title: m for m in await Menu.all()}
             for item in items:
                 parent_title = item.get("parent_title")
                 if not parent_title:
                     continue
-                menu = await Menu.filter(title=item.get("title")).first()
-                parent = await Menu.filter(title=parent_title).first()
+                menu = menu_map.get(item.get("title"))
+                parent = menu_map.get(parent_title)
                 if menu and parent:
                     menu.parent_id = parent.id
                     await menu.save()

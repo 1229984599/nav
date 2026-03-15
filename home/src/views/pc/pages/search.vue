@@ -14,7 +14,12 @@ const { searchHistory, clearHistory, removeHistory, sortByMatchPriority } = useS
 
 const keyword = computed(() => (route.query.q as string) || "");
 const loading = ref(false);
+const loadingMore = ref(false);
 const results = ref<LinkSchemaList[]>([]);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalCount = ref(0);
+const PAGE_SIZE = 20;
 
 function removeHistoryItem(kw: string) {
   removeHistory(kw);
@@ -37,7 +42,7 @@ const groupedResults = computed(() => {
   return groups;
 });
 
-const totalCount = computed(() => results.value.length);
+const hasMore = computed(() => currentPage.value < totalPages.value);
 
 // Highlight keyword
 function escapeHtml(str: string): string {
@@ -59,23 +64,42 @@ function highlightText(text: string): string {
   );
 }
 
-async function doSearch(q: string) {
+async function doSearch(q: string, page = 1) {
   if (!q.trim()) {
     results.value = [];
+    totalCount.value = 0;
+    totalPages.value = 1;
+    currentPage.value = 1;
     return;
   }
-  loading.value = true;
+  const isFirstPage = page === 1;
+  if (isFirstPage) loading.value = true;
+  else loadingMore.value = true;
   try {
-    const { items } = await linkModel.list(
-      { page: 1, pageSize: 50, order_by: "order" },
+    const res = await linkModel.list(
+      { page, pageSize: PAGE_SIZE, order_by: "order" },
       { keyword: q },
     );
-    results.value = sortByMatchPriority(items, q);
+    const sorted = sortByMatchPriority(res.items, q);
+    if (isFirstPage) {
+      results.value = sorted;
+    } else {
+      results.value = [...results.value, ...sorted];
+    }
+    currentPage.value = page;
+    totalPages.value = res.pages || 1;
+    totalCount.value = res.total;
   } catch {
-    results.value = [];
+    if (isFirstPage) results.value = [];
   } finally {
     loading.value = false;
+    loadingMore.value = false;
   }
+}
+
+function loadMore() {
+  if (loadingMore.value || !hasMore.value) return;
+  doSearch(keyword.value, currentPage.value + 1);
 }
 
 watch(keyword, (val) => doSearch(val), { immediate: true });
@@ -86,7 +110,7 @@ watch(keyword, (val) => doSearch(val), { immediate: true });
     <!-- Search header -->
     <div class="search-header" v-if="keyword">
       <div class="search-header-left">
-        <m-icon icon="mingcute:search-line" :size="24" class="text-gray-400" />
+        <m-icon icon="mingcute:search-line" :size="24" class="text-gray-400 dark:text-gray-500" />
         <h2 class="search-header-title">
           <span class="search-keyword">{{ keyword }}</span>
         </h2>
@@ -101,7 +125,7 @@ watch(keyword, (val) => doSearch(val), { immediate: true });
       <div v-if="searchHistory.length > 0" class="history-section">
         <div class="history-header">
           <div class="history-header-left">
-            <m-icon icon="mdi:history" :size="18" class="text-gray-400" />
+            <m-icon icon="mdi:history" :size="18" class="text-gray-400 dark:text-gray-500" />
             <h3>搜索历史</h3>
           </div>
           <button class="history-clear-btn" @click="clearHistory">
@@ -195,6 +219,14 @@ watch(keyword, (val) => doSearch(val), { immediate: true });
             </div>
           </a>
         </div>
+      </div>
+
+      <!-- Load more -->
+      <div v-if="hasMore" class="load-more-wrapper">
+        <button class="load-more-btn" :disabled="loadingMore" @click="loadMore">
+          <template v-if="loadingMore">加载中...</template>
+          <template v-else>加载更多</template>
+        </button>
       </div>
     </div>
   </div>
@@ -447,5 +479,31 @@ watch(keyword, (val) => doSearch(val), { immediate: true });
   color: var(--el-color-primary);
   padding: 0 2px;
   border-radius: 2px;
+}
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 16px;
+}
+
+.load-more-btn {
+  padding: 8px 32px;
+  font-size: 14px;
+  color: var(--el-color-primary, #409eff);
+  background: var(--nav-card-bg, #fff);
+  border: 1px solid var(--el-color-primary-light-5, rgba(64, 158, 255, 0.4));
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.08));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 </style>

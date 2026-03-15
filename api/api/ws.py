@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from loguru import logger
 
@@ -9,6 +11,9 @@ from settings import settings
 ws_router = APIRouter()
 
 _jwt = JsonWebToken(algorithms=["HS256"])
+
+# WebSocket 最大空闲时间（秒），超时无消息则断开
+_WS_IDLE_TIMEOUT = 300
 
 
 async def _authenticate_ws(token: str) -> User | None:
@@ -49,9 +54,14 @@ async def ws_task_status(websocket: WebSocket, task_id: str, token: str = Query(
 
         # Keep connection alive; background task sends result via complete_task/fail_task
         while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
+            try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=_WS_IDLE_TIMEOUT)
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except asyncio.TimeoutError:
+                logger.info(f"WS idle timeout for task {task_id}")
+                await websocket.close(code=4008, reason="Idle timeout")
+                break
     except WebSocketDisconnect:
         logger.info(f"WS disconnected for task {task_id}")
     finally:

@@ -12,7 +12,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BookmarkCompactView: typeof import('./src/components/local-menu/BookmarkCompactView.vue')['default']
+    BookmarkGridView: typeof import('./src/components/local-menu/BookmarkGridView.vue')['default']
     BookmarkGroupDialog: typeof import('./src/components/local-menu/BookmarkGroupDialog.vue')['default']
+    BookmarkListView: typeof import('./src/components/local-menu/BookmarkListView.vue')['default']
     BookmarkSection: typeof import('./src/components/local-menu/BookmarkSection.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
@@ -39,7 +42,6 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
-    ElTag: typeof import('element-plus/es')['ElTag']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     EmptyState: typeof import('./src/components/EmptyState.vue')['default']
@@ -59,6 +61,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchDialog: typeof import('./src/components/m-search/SearchDialog.vue')['default']
+    SearchSuggestionItem: typeof import('./src/components/m-search/SearchSuggestionItem.vue')['default']
     SkeletonCard: typeof import('./src/components/SkeletonCard.vue')['default']
     Weather: typeof import('./src/components/weather/index.vue')['default']
     WeatherItem: typeof import('./src/components/weather/weather-item.vue')['default']
@@ -70,7 +73,10 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const BookmarkCompactView: typeof import('./src/components/local-menu/BookmarkCompactView.vue')['default']
+  const BookmarkGridView: typeof import('./src/components/local-menu/BookmarkGridView.vue')['default']
   const BookmarkGroupDialog: typeof import('./src/components/local-menu/BookmarkGroupDialog.vue')['default']
+  const BookmarkListView: typeof import('./src/components/local-menu/BookmarkListView.vue')['default']
   const BookmarkSection: typeof import('./src/components/local-menu/BookmarkSection.vue')['default']
   const ElAside: typeof import('element-plus/es')['ElAside']
   const ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
@@ -97,7 +103,6 @@ declare global {
   const ElSwitch: typeof import('element-plus/es')['ElSwitch']
   const ElTabPane: typeof import('element-plus/es')['ElTabPane']
   const ElTabs: typeof import('element-plus/es')['ElTabs']
-  const ElTag: typeof import('element-plus/es')['ElTag']
   const ElTooltip: typeof import('element-plus/es')['ElTooltip']
   const ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
   const EmptyState: typeof import('./src/components/EmptyState.vue')['default']
@@ -117,6 +122,7 @@ declare global {
   const RouterLink: typeof import('vue-router')['RouterLink']
   const RouterView: typeof import('vue-router')['RouterView']
   const SearchDialog: typeof import('./src/components/m-search/SearchDialog.vue')['default']
+  const SearchSuggestionItem: typeof import('./src/components/m-search/SearchSuggestionItem.vue')['default']
   const SkeletonCard: typeof import('./src/components/SkeletonCard.vue')['default']
   const Weather: typeof import('./src/components/weather/index.vue')['default']
   const WeatherItem: typeof import('./src/components/weather/weather-item.vue')['default']

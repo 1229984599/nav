@@ -160,7 +160,7 @@ onMounted(() => {
       min-width: 2em;
       padding: 3px;
       font-size: 10px;
-      background-color: #1f2d3d;
+      background-color: var(--nav-text, #1f2d3d);
       color: white;
       text-align: center;
       vertical-align: middle;

@@ -246,7 +246,7 @@ defineExpose({ show });
   transition: background-color 0.15s;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--el-fill-color-light, rgba(0, 0, 0, 0.04));
   }
 
   &--danger {

@@ -51,6 +51,7 @@ function handleScrollTop() {
             class="block max-w-[90px] text-sm whitespace-nowrap overflow-hidden text-ellipsis"
             :href="friend.href"
             target="_blank"
+            :title="friend.title"
             >{{ friend.title }}</a
           >
         </li>
@@ -74,7 +75,7 @@ function handleScrollTop() {
       <div
         style="color: var(--nav-text-secondary)"
         class="text-sm"
-        v-html="siteStore.siteInfo?.footer"
+        v-text="siteStore.siteInfo?.footer"
       ></div>
     </footer>
     <div

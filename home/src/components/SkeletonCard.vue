@@ -57,7 +57,7 @@ withDefaults(
 </template>
 
 <style lang="scss" scoped>
-$sk-bg: #e9ecef;
+$sk-bg: var(--el-fill-color, #e9ecef);
 $sk-radius: 4px;
 
 /* 卡片骨架 */

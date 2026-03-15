@@ -330,7 +330,7 @@ class CdnImg:
         logger.error('登录失败')
         return
 
-    async def get_img_list(self, page: 1, page_size: 20):
+    async def get_img_list(self, page: int = 1, page_size: int = 20):
         resp = await self.session.post('images', data={
             'page': page,
             'rows': page_size

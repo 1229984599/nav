@@ -51,7 +51,7 @@ export default defineConfig(configEnv => {
           manualChunks: {
             'vendor-vue': ['vue', 'vue-router', 'pinia'],
             'vendor-naive': ['naive-ui'],
-            'vendor-echarts': ['echarts'],
+            'vendor-echarts': ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/features', 'echarts/renderers'],
             'vendor-iconify': ['@iconify/vue'],
           }
         }

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import MIcon from "@/components/MIcon.vue";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, ref, watch } from "vue";
 import { isMobile } from "@/utils/window";
-import { VueDraggable } from "vue-draggable-plus";
+const VueDraggable = defineAsyncComponent(() =>
+  import("vue-draggable-plus").then((m) => m.VueDraggable)
+);
 import MHotItem from "./HotItem.vue";
 
 defineOptions({
@@ -288,11 +290,11 @@ const editSelectedPlatforms = computed(() =>
   cursor: pointer;
   padding: 2px;
   border-radius: 4px;
-  color: #c0c4cc;
+  color: var(--nav-text-secondary);
   z-index: 1;
   transition: color 0.2s;
   &:hover {
-    color: #409eff;
+    color: var(--el-color-primary, #409eff);
   }
 }
 
@@ -302,7 +304,7 @@ const editSelectedPlatforms = computed(() =>
 .settings-label {
   font-size: 13px;
   font-weight: 600;
-  color: #606266;
+  color: var(--nav-text-secondary);
   margin-bottom: 8px;
 }
 
@@ -312,17 +314,17 @@ const editSelectedPlatforms = computed(() =>
   gap: 6px;
   min-height: 32px;
   padding: 6px;
-  border: 1px dashed #dcdfe6;
+  border: 1px dashed var(--el-border-color, #dcdfe6);
   border-radius: 6px;
-  background: #fafafa;
+  background: var(--el-fill-color-lighter, #fafafa);
 }
 .selected-tag {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--el-color-primary-light-9, #ecf5ff);
+  color: var(--el-color-primary, #409eff);
   border-radius: 4px;
   font-size: 12px;
   cursor: grab;
@@ -331,11 +333,11 @@ const editSelectedPlatforms = computed(() =>
     cursor: grabbing;
   }
   .drag-icon {
-    color: #a0cfff;
+    color: var(--el-color-primary-light-5, #a0cfff);
   }
   .remove-icon {
     cursor: pointer;
-    color: #a0cfff;
+    color: var(--el-color-primary-light-5, #a0cfff);
     transition: color 0.15s;
     &:hover {
       color: #f56c6c;
@@ -344,7 +346,7 @@ const editSelectedPlatforms = computed(() =>
 }
 
 .empty-tip {
-  color: #c0c4cc;
+  color: var(--nav-text-secondary);
   font-size: 12px;
   text-align: center;
   padding: 8px;
@@ -357,20 +359,20 @@ const editSelectedPlatforms = computed(() =>
 }
 .platform-item {
   padding: 5px 10px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--el-border-color, #dcdfe6);
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s;
-  color: #606266;
+  color: var(--nav-text);
   &:hover {
-    border-color: #409eff;
-    color: #409eff;
+    border-color: var(--el-color-primary);
+    color: var(--el-color-primary);
   }
   &.active {
-    background: #409eff;
-    border-color: #409eff;
+    background: var(--el-color-primary);
+    border-color: var(--el-color-primary);
     color: white;
   }
 }

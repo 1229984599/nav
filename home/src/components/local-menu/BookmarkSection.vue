@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { VueDraggable } from "vue-draggable-plus";
 import { ElMessage } from "element-plus";
 import MIcon from "@/components/MIcon.vue";
 import MLocalAddLink from "@/components/add-link/local.vue";
 import BookmarkGroupDialog from "./BookmarkGroupDialog.vue";
+import BookmarkGridView from "./BookmarkGridView.vue";
+import BookmarkCompactView from "./BookmarkCompactView.vue";
+import BookmarkListView from "./BookmarkListView.vue";
 import { useBookmarkStore } from "@/store/bookmark";
 import { DEFAULT_GROUP_ID } from "@/types/bookmark";
 import type { LocalLink, BookmarkGroup } from "@/types/bookmark";
@@ -220,143 +222,62 @@ function getGroupName(groupId: string): string {
 
     <!-- ===================== 视图区 ===================== -->
 
-    <!-- Grid 视图 -->
-    <VueDraggable
+    <bookmark-grid-view
       v-if="bookmarkStore.viewMode === 'grid'"
-      v-model="bookmarkStore.links"
-      class="bookmark-grid"
-      :class="mobile
-        ? 'grid-cols-2 lg:grid-cols-3'
-        : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'"
-      :disabled="!isDraggable"
-      :animation="200"
-      ghost-class="drag-ghost"
-      @end="onDragEnd"
-    >
-      <template v-for="link in displayLinks" :key="link.id">
-        <div
-          class="card-wrap"
-          @contextmenu="showContextMenu($event, link)"
-          @touchstart.passive="mobile && onTouchStart($event, link)"
-          @touchend.passive="onTouchEnd()"
-          @touchmove.passive="onTouchMove()"
-        >
-          <a
-            class="bk-card"
-            :href="link.href"
-            :target="link.is_self ? '_self' : '_blank'"
-            @click="handleLinkClick(link)"
-          >
-            <div class="card-accent" :style="{ backgroundColor: link.color || '#c0c4cc' }" />
-            <div class="card-icon">
-              <m-icon :icon="link.icon" :color="link.color" :size="38" />
-            </div>
-            <div class="card-body">
-              <span class="card-title">{{ link.title }}</span>
-              <p class="card-desc">{{ link.desc || link.href }}</p>
-            </div>
-            <span v-if="link.clickCount > 0" class="card-visits" :title="`访问 ${link.clickCount} 次`">
-              {{ link.clickCount }}
-            </span>
-          </a>
-          <div class="card-bar">
-            <span class="bar-group" :title="getGroupNames(link.groupIds)">
-              <m-icon icon="mdi:folder-outline" :size="12" />
-              {{ getGroupNames(link.groupIds) }}
-            </span>
-            <div class="bar-actions">
-              <span class="bar-btn" title="编辑" @click.stop.prevent="handleEditLink(link)">
-                <m-icon icon="mdi:pencil-outline" :size="14" />
-              </span>
-              <span class="bar-btn bar-btn-danger" title="删除" @click.stop.prevent="ctxLink = link; ctxDelete()">
-                <m-icon icon="mdi:trash-can-outline" :size="14" />
-              </span>
-            </div>
-          </div>
-        </div>
-      </template>
-    </VueDraggable>
+      :links="displayLinks"
+      :all-links="bookmarkStore.links"
+      :is-draggable="isDraggable"
+      :mobile="mobile"
+      :get-group-names="getGroupNames"
+      @update:all-links="bookmarkStore.links = $event"
+      @click="handleLinkClick"
+      @edit="handleEditLink"
+      @delete="(link) => { ctxLink = link; ctxDelete(); }"
+      @contextmenu="showContextMenu"
+      @drag-end="onDragEnd"
+      @touchstart="onTouchStart"
+      @touchend="onTouchEnd"
+      @touchmove="onTouchMove"
+    />
 
-    <!-- Compact 视图 -->
-    <VueDraggable
+    <bookmark-compact-view
       v-else-if="bookmarkStore.viewMode === 'compact'"
-      v-model="bookmarkStore.links"
-      class="bookmark-compact"
-      :class="mobile
-        ? 'grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
-        : 'grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-11'"
-      :disabled="!isDraggable"
-      :animation="200"
-      ghost-class="drag-ghost"
-      @end="onDragEnd"
-    >
-      <template v-for="link in displayLinks" :key="link.id">
-        <a
-          class="compact-item"
-          :href="link.href"
-          :target="link.is_self ? '_self' : '_blank'"
-          @click="handleLinkClick(link)"
-          @contextmenu="showContextMenu($event, link)"
-          @touchstart.passive="mobile && onTouchStart($event, link)"
-          @touchend.passive="onTouchEnd()"
-          @touchmove.passive="onTouchMove()"
-        >
-          <div class="compact-icon">
-            <m-icon :icon="link.icon" :color="link.color" :size="32" />
-          </div>
-          <span class="compact-title">{{ link.title }}</span>
-          <span class="compact-group">{{ getGroupNames(link.groupIds) }}</span>
-        </a>
-      </template>
-    </VueDraggable>
+      :links="displayLinks"
+      :all-links="bookmarkStore.links"
+      :is-draggable="isDraggable"
+      :mobile="mobile"
+      :get-group-names="getGroupNames"
+      @update:all-links="bookmarkStore.links = $event"
+      @click="handleLinkClick"
+      @contextmenu="showContextMenu"
+      @drag-end="onDragEnd"
+      @touchstart="onTouchStart"
+      @touchend="onTouchEnd"
+      @touchmove="onTouchMove"
+    />
 
-    <!-- List 视图 -->
-    <VueDraggable
+    <bookmark-list-view
       v-else
-      v-model="bookmarkStore.links"
-      class="bookmark-list"
-      :disabled="!isDraggable"
-      :animation="200"
-      ghost-class="drag-ghost"
-      @end="onDragEnd"
-    >
-      <template v-for="link in displayLinks" :key="link.id">
-        <div
-          class="list-row"
-          @contextmenu="showContextMenu($event, link)"
-          @touchstart.passive="mobile && onTouchStart($event, link)"
-          @touchend.passive="onTouchEnd()"
-          @touchmove.passive="onTouchMove()"
-        >
-          <a
-            class="list-link"
-            :href="link.href"
-            :target="link.is_self ? '_self' : '_blank'"
-            @click="handleLinkClick(link)"
-          >
-            <m-icon :icon="link.icon" :color="link.color" :size="24" class="flex-shrink-0" />
-            <span class="list-title">{{ link.title }}</span>
-            <template v-for="gid in link.groupIds" :key="gid">
-              <span class="list-group-tag">{{ getGroupName(gid) }}</span>
-            </template>
-            <span class="list-url">{{ link.href }}</span>
-          </a>
-          <div class="list-meta">
-            <span v-if="link.clickCount > 0" class="list-visits">{{ link.clickCount }} 次</span>
-            <span class="list-action" title="编辑" @click.stop="handleEditLink(link)">
-              <m-icon icon="mdi:pencil-outline" :size="15" />
-            </span>
-            <span class="list-action list-action-danger" title="删除" @click.stop="ctxLink = link; ctxDelete()">
-              <m-icon icon="mdi:trash-can-outline" :size="15" />
-            </span>
-          </div>
-        </div>
-      </template>
-    </VueDraggable>
+      :links="displayLinks"
+      :all-links="bookmarkStore.links"
+      :is-draggable="isDraggable"
+      :mobile="mobile"
+      :get-group-names="getGroupNames"
+      :get-group-name="getGroupName"
+      @update:all-links="bookmarkStore.links = $event"
+      @click="handleLinkClick"
+      @edit="handleEditLink"
+      @delete="(link) => { ctxLink = link; ctxDelete(); }"
+      @contextmenu="showContextMenu"
+      @drag-end="onDragEnd"
+      @touchstart="onTouchStart"
+      @touchend="onTouchEnd"
+      @touchmove="onTouchMove"
+    />
 
     <!-- 空状态 -->
     <div v-if="displayLinks.length === 0" class="bookmark-empty">
-      <m-icon icon="mdi:bookmark-plus-outline" :size="48" color="#dcdfe6" />
+      <m-icon icon="mdi:bookmark-plus-outline" :size="48" class="empty-bk-icon" />
       <p>暂无书签</p>
       <el-button type="primary" size="small" @click="handleAddLink">添加第一个书签</el-button>
     </div>
@@ -529,307 +450,6 @@ function getGroupName(groupId: string): string {
   flex-wrap: wrap;
 }
 
-// ---- Drag Ghost ----
-.drag-ghost {
-  opacity: 0.4;
-}
-
-// ========== Grid View ==========
-.bookmark-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.card-wrap {
-  position: relative;
-  border-radius: 10px;
-  background-color: var(--nav-card-bg);
-  overflow: hidden;
-  transition: box-shadow 0.25s, transform 0.25s;
-
-  &:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
-    transform: translateY(-2px);
-
-    .bar-actions { opacity: 1; }
-    .card-accent { width: 5px; }
-  }
-}
-
-.bk-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 14px 10px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  position: relative;
-
-  &:hover { color: var(--el-color-primary); }
-
-  .card-accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 0 4px 4px 0;
-    transition: width 0.25s;
-  }
-
-  .card-icon { flex-shrink: 0; }
-
-  .card-body {
-    flex: 1;
-    overflow: hidden;
-    padding-left: 2px;
-  }
-
-  .card-title {
-    display: block;
-    font-size: 0.92rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-desc {
-    margin: 3px 0 0;
-    font-size: 0.72rem;
-    color: var(--nav-text-secondary);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    word-break: break-all;
-    min-height: 28px;
-    line-height: 1.3;
-  }
-
-  .card-visits {
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    font-size: 10px;
-    color: var(--nav-text-secondary);
-    background: var(--el-fill-color-lighter);
-    border-radius: 8px;
-    padding: 1px 6px;
-    line-height: 1.4;
-  }
-}
-
-.card-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 28px;
-  padding: 0 10px;
-  border-top: 1px solid var(--nav-border);
-  font-size: 11px;
-  color: var(--nav-text-secondary);
-
-  .bar-group {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 120px;
-  }
-
-  .bar-actions {
-    display: flex;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity 0.18s;
-  }
-
-  .bar-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--nav-text-secondary);
-
-    &:hover {
-      background: var(--el-color-primary-light-9);
-      color: var(--el-color-primary);
-    }
-
-    &.bar-btn-danger:hover {
-      background: var(--el-color-danger-light-9);
-      color: var(--el-color-danger);
-    }
-  }
-}
-
-// ========== Compact View ==========
-.bookmark-compact {
-  display: grid;
-  gap: 8px 6px;
-}
-
-.compact-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  padding: 10px 6px 8px;
-  border-radius: 10px;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: var(--nav-card-bg);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transform: translateY(-1px);
-  }
-
-  .compact-icon {
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: var(--el-fill-color-lighter);
-    transition: background 0.2s;
-  }
-
-  &:hover .compact-icon {
-    background: var(--el-color-primary-light-9);
-  }
-
-  .compact-title {
-    font-size: 12px;
-    max-width: 72px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
-  }
-
-  .compact-group {
-    font-size: 10px;
-    color: var(--nav-text-secondary);
-    max-width: 72px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
-    line-height: 1;
-  }
-}
-
-// ========== List View ==========
-.bookmark-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.list-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background-color 0.15s;
-
-  &:hover {
-    background-color: var(--nav-card-bg);
-    .list-action { opacity: 1; }
-  }
-}
-
-.list-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-
-  &:hover { color: var(--el-color-primary); }
-
-  .list-title {
-    font-size: 0.88rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 220px;
-  }
-
-  .list-group-tag {
-    font-size: 11px;
-    color: var(--el-color-primary);
-    background: var(--el-color-primary-light-9);
-    border-radius: 4px;
-    padding: 1px 6px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    line-height: 1.4;
-  }
-
-  .list-url {
-    font-size: 0.72rem;
-    color: var(--nav-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-  }
-}
-
-.list-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  margin-left: 8px;
-
-  .list-visits {
-    font-size: 0.72rem;
-    color: var(--nav-text-secondary);
-  }
-
-  .list-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    cursor: pointer;
-    opacity: 0;
-    transition: all 0.15s;
-    color: var(--nav-text-secondary);
-
-    &:hover {
-      background: var(--el-color-primary-light-9);
-      color: var(--el-color-primary);
-    }
-
-    &.list-action-danger:hover {
-      background: var(--el-color-danger-light-9);
-      color: var(--el-color-danger);
-    }
-  }
-}
-
 // ---- Empty State ----
 .bookmark-empty {
   display: flex;
@@ -840,6 +460,10 @@ function getGroupName(groupId: string): string {
   gap: 10px;
   color: var(--nav-text-secondary);
   font-size: 13px;
+
+  .empty-bk-icon {
+    color: var(--el-border-color-light, #dcdfe6);
+  }
 }
 
 // ---- Mobile ----
@@ -852,25 +476,7 @@ function getGroupName(groupId: string): string {
   .toolbar-right {
     justify-content: center;
   }
-  .bk-card {
-    padding: 10px 10px 8px;
-    .card-title { font-size: 0.85rem; }
-  }
 
-  // 移动端：操作按钮始终可见（无 hover）
-  .bar-actions {
-    opacity: 1 !important;
-  }
-  .list-action {
-    opacity: 1 !important;
-  }
-
-  // 移动端卡片间距更紧凑
-  .bookmark-grid {
-    gap: 10px;
-  }
-
-  // 移动端分组标签横向滚动
   .bookmark-group-tabs {
     margin-bottom: 10px;
     -webkit-overflow-scrolling: touch;
@@ -890,7 +496,7 @@ function getGroupName(groupId: string): string {
   z-index: 9999;
   min-width: 160px;
   padding: 6px 0;
-  background: #fff;
+  background: var(--nav-card-bg, #fff);
   border-radius: 8px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }

@@ -1,8 +1,13 @@
+import secrets
 from typing import Optional, Dict
 from pathlib import Path
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# 未配置 SECRET_KEY 时自动生成随机密钥（每次重启会变，生产环境务必在 .env 中配置固定值）
+_DEFAULT_SECRET_KEY = secrets.token_urlsafe(32)
 
 
 class APISettings(BaseSettings):
@@ -32,11 +37,17 @@ class APISettings(BaseSettings):
     # 生成token的加密算法
     ALGORITHM: str = "HS256"
 
-    # 生产环境保管好 SECRET_KEY（无默认值，必须通过环境变量或 .env 配置）
-    SECRET_KEY: str = "development key"
+    # 生产环境保管好 SECRET_KEY（未配置时使用随机密钥，重启后旧 token 失效）
+    SECRET_KEY: str = _DEFAULT_SECRET_KEY
 
     # CORS 允许的来源列表
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:9527"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:9527",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:9527",
+        "http://192.168.1.4:3000"
+    ]
 
     # 项目根路径
     BASE_PATH: Path = Path(__file__).resolve().parent

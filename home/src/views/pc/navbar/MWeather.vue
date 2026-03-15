@@ -1,33 +1,42 @@
 <script lang="js" setup>
+import { onMounted } from "vue";
 import { useSiteStore } from "@/store/site";
 
 const siteStore = useSiteStore();
-window.WIDGET = {
-  CONFIG: {
-    modules: "01234",
-    background: "5",
-    tmpColor: "000000",
-    tmpSize: "16",
-    cityColor: "FF0000",
-    citySize: "16",
-    aqiColor: "FF9900",
-    top: 0,
-    aqiSize: "16",
-    weatherIconSize: "24",
-    alertIconSize: "18",
-    padding: "10px 10px 10px 10px",
-    shadow: "0",
-    language: "auto",
-    fixed: "false",
-    vertical: "top",
-    horizontal: "left",
-    key: siteStore.siteInfo.weather_key,
-  },
-};
-const script = document.createElement("script");
-script.src =
-  "https://widget.qweather.net/simple/static/js/he-simple-common.js?v=2.0";
-document.body.appendChild(script);
+
+let _injected = false;
+
+onMounted(() => {
+  if (_injected) return;
+  _injected = true;
+
+  window.WIDGET = {
+    CONFIG: {
+      modules: "01234",
+      background: "5",
+      tmpColor: "000000",
+      tmpSize: "16",
+      cityColor: "FF0000",
+      citySize: "16",
+      aqiColor: "FF9900",
+      top: 0,
+      aqiSize: "16",
+      weatherIconSize: "24",
+      alertIconSize: "18",
+      padding: "10px 10px 10px 10px",
+      shadow: "0",
+      language: "auto",
+      fixed: "false",
+      vertical: "top",
+      horizontal: "left",
+      key: siteStore.siteInfo?.weather_key || "",
+    },
+  };
+  const script = document.createElement("script");
+  script.src =
+    "https://widget.qweather.net/simple/static/js/he-simple-common.js?v=2.0";
+  document.body.appendChild(script);
+});
 </script>
 
 <template>

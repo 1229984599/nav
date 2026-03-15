@@ -220,4 +220,37 @@ declare namespace Api {
       cdn_img_token?: string;
     }
   }
+
+  /** CORS origin management */
+  namespace CorsOrigin {
+    interface CorsItem {
+      id: number;
+      origin: string;
+      desc?: string;
+      order?: number;
+      status: boolean;
+      create_time?: string;
+      update_time?: string;
+    }
+
+    interface CorsCreate {
+      origin: string;
+      desc?: string;
+      order?: number;
+      status?: boolean;
+    }
+
+    interface CorsFilter {
+      origin?: string;
+      status?: boolean | null;
+    }
+
+    interface PageResult {
+      items: CorsItem[];
+      total: number;
+      page: number;
+      size: number;
+      pages: number;
+    }
+  }
 }

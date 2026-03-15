@@ -70,4 +70,7 @@ async def is_login(credentials: JwtAuthorizationCredentials = Security(access_se
         username = credentials['username']
     except TypeError:
         return False
-    return await User.get_or_none(username=username)
+    user = await User.get_or_none(username=username)
+    if user and not user.status:
+        return False
+    return user

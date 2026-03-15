@@ -31,32 +31,40 @@ export const useUserStore = defineStore("user", {
       // Sync token to admin app for SSO
       this.syncTokenToAdmin();
     },
-    async getUserinfo() {
-      const userInfo = await getUserinfoApi();
+    async getUserinfo(options?: { silent?: boolean }) {
+      const userInfo = await getUserinfoApi(options);
       this.userInfo = userInfo;
       this.sessionVerified = !!userInfo?.id;
     },
-    /** Sync token to admin app's localStorage format (SOY_ prefix) */
+    /** Sync token to admin app's localStorage format (SOY_ prefix, JSON.stringify wrapped) */
     syncTokenToAdmin() {
       if (this.token?.access_token) {
-        localStorage.setItem(SOY_TOKEN_KEY, this.token.access_token);
+        localStorage.setItem(SOY_TOKEN_KEY, JSON.stringify(this.token.access_token));
       }
       if (this.token?.refresh_token) {
-        localStorage.setItem(SOY_REFRESH_TOKEN_KEY, this.token.refresh_token);
+        localStorage.setItem(SOY_REFRESH_TOKEN_KEY, JSON.stringify(this.token.refresh_token));
       }
     },
     /** Try to read token from admin app's localStorage if home has no valid token */
     syncFromAdmin() {
       if (this.hasValidToken) return;
-      const adminToken = localStorage.getItem(SOY_TOKEN_KEY);
-      if (adminToken) {
-        // Admin doesn't store expires, use a 24h future date
+      const raw = localStorage.getItem(SOY_TOKEN_KEY);
+      if (!raw) return;
+      // Admin uses JSON.stringify when storing, so unwrap it
+      let adminToken: string;
+      try {
+        adminToken = JSON.parse(raw);
+      } catch {
+        adminToken = raw; // fallback: raw string (legacy format)
+      }
+      if (adminToken && typeof adminToken === 'string') {
+        let refreshToken = '';
+        const rawRefresh = localStorage.getItem(SOY_REFRESH_TOKEN_KEY);
+        if (rawRefresh) {
+          try { refreshToken = JSON.parse(rawRefresh); } catch { refreshToken = rawRefresh; }
+        }
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        this.token = {
-          access_token: adminToken,
-          refresh_token: localStorage.getItem(SOY_REFRESH_TOKEN_KEY) || "",
-          expires,
-        };
+        this.token = { access_token: adminToken, refresh_token: refreshToken, expires };
       }
     },
     async verifyAdminSession() {
@@ -76,7 +84,7 @@ export const useUserStore = defineStore("user", {
       }
       this.sessionVerifyPromise = (async () => {
         try {
-          await this.getUserinfo();
+          await this.getUserinfo({ silent: true });
           return this.isAdminAuthorized;
         } catch {
           this.resetToken();

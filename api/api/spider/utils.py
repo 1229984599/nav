@@ -10,9 +10,12 @@ from models import Site
 # @ignore_async_errors
 async def get_yiyan():
     url = "https://v1.hitokoto.cn/"
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-    return response.json()
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=5)) as client:
+            response = await client.get(url)
+        return response.json()
+    except Exception:
+        return {"hitokoto": "", "from": ""}
 
 
 class BaseSpider:
@@ -76,12 +79,15 @@ class WeatherSpider(BaseSpider):
         """
         if not self.key:
             site_info = await Site.first()
-            if not site_info.weather_key:
+            if not site_info or not site_info.weather_key:
                 raise HTTPException(status_code=400, detail='请先在站点设置中配置天气key')
             self.key = site_info.weather_key
-        city_name = await self._get_city_info(location)
-        weather_data = await self._get_weather_data(location)
-        future_weather = await self._get_future_weather(location)
+        # 并发请求三个接口
+        city_name, weather_data, future_weather = await asyncio.gather(
+            self._get_city_info(location),
+            self._get_weather_data(location),
+            self._get_future_weather(location),
+        )
         return {
             'city': city_name,
             'weather': weather_data,

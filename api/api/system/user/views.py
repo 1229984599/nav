@@ -5,9 +5,12 @@ from fastapi_pagination.ext.tortoise import paginate
 from auth import auth, schemas
 from common.errors import not_found
 from common.response import BaseApiOut
+from common.validation import parse_order_by
 from models import User
 
 user_router = APIRouter()
+
+_USER_ORDER_FIELDS = {"id", "username", "nickname", "status", "is_super", "order", "create_time", "update_time"}
 
 
 @user_router.post("/list", response_model=BaseApiOut[Page[schemas.UserList]], dependencies=[Depends(auth.get_current_super_user)])
@@ -19,7 +22,7 @@ async def handle_user_list(filters: schemas.UserFilter, params: Params = Depends
     if filter_data.get("username"):
         query = query.filter(username__icontains=filter_data["username"])
     if order_by:
-        query = query.order_by(*order_by.split(","))
+        query = query.order_by(*parse_order_by(order_by, _USER_ORDER_FIELDS, resource="用户"))
     data = await paginate(query, params, True)
     return BaseApiOut(data=data)
 

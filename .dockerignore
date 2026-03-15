@@ -29,3 +29,4 @@ Dockerfile
 
 # Misc
 *.md
+.ace-tool

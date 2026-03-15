@@ -172,3 +172,10 @@ onMounted(siteStore.getSiteInfo);
   }
 }
 </style>
+
+<style lang="scss">
+html.dark .login-card {
+  background: rgba(34, 34, 68, 0.92);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+</style>

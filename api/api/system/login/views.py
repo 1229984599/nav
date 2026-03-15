@@ -67,6 +67,11 @@ async def handle_register(form_data: schemas.RegisterSchema, _: User = Depends(a
 
 @login_router.post("/refresh", name="Refresh", response_model=BaseApiOut[schemas.Token])
 async def refresh(credentials: JwtAuthorizationCredentials = Security(auth.refresh_security)):
+    username = credentials.subject.get("username")
+    if username:
+        user = await User.get_or_none(username=username)
+        if not user or not user.status:
+            return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户已禁用或不存在")
     access_token = auth.access_security.create_access_token(subject=credentials.subject)
     refresh_token = auth.refresh_security.create_refresh_token(subject=credentials.subject)
     return BaseApiOut(
@@ -82,6 +87,11 @@ async def refresh(credentials: JwtAuthorizationCredentials = Security(auth.refre
 
 @login_router.post("/refreshToken", name="RefreshToken")
 async def refresh_token(credentials: JwtAuthorizationCredentials = Security(auth.refresh_security)):
+    username = credentials.subject.get("username")
+    if username:
+        user = await User.get_or_none(username=username)
+        if not user or not user.status:
+            return BaseApiOut(code=HttpStatus.HTTP_419_USER_EXCEPT, message="用户已禁用或不存在")
     access_token = auth.access_security.create_access_token(subject=credentials.subject)
     new_refresh_token = auth.refresh_security.create_refresh_token(subject=credentials.subject)
     return BaseApiOut(
@@ -165,6 +175,18 @@ async def get_user_routes(user: User = Depends(auth.get_current_user)):
                     "path": "/system/site",
                     "component": "view.system_site",
                     "meta": {"title": "站点设置", "icon": "dashicons:admin-site", "order": 2},
+                },
+                {
+                    "name": "system_cors",
+                    "path": "/system/cors",
+                    "component": "view.system_cors",
+                    "meta": {"title": "跨域管理", "icon": "mdi:shield-link-variant", "order": 3},
+                },
+                {
+                    "name": "system_backup",
+                    "path": "/system/backup",
+                    "component": "view.system_backup",
+                    "meta": {"title": "备份管理", "icon": "mdi:backup-restore", "order": 4},
                 },
             ],
         },

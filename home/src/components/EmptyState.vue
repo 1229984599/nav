@@ -24,7 +24,7 @@ defineEmits<{
 
 <template>
   <div class="empty-state">
-    <m-icon :icon="icon" :size="size" color="#dcdfe6" />
+    <m-icon :icon="icon" :size="size" class="empty-icon" />
     <p>{{ text }}</p>
     <el-button v-if="actionText" type="primary" size="small" @click="$emit('action')">
       {{ actionText }}
@@ -42,5 +42,9 @@ defineEmits<{
   gap: 10px;
   color: var(--nav-text-secondary);
   font-size: 13px;
+
+  .empty-icon {
+    color: var(--el-border-color-light, #dcdfe6);
+  }
 }
 </style>

@@ -5,3 +5,4 @@ export * from './nav-menu';
 export * from './friend';
 export * from './system-user';
 export * from './site';
+export * from './system-cors';

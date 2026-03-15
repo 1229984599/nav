@@ -11,9 +11,10 @@ export function loginApi(data: LoginRequestData) {
 }
 
 // 获取个人信息
-export function getUserinfoApi() {
+export function getUserinfoApi(options?: { silent?: boolean }) {
   return request<UserRead>({
     url: "system/login/me",
     method: "get",
+    silent: options?.silent,
   });
 }
