@@ -67,19 +67,15 @@ function scrollToBookmarks(groupId?: string) {
   } else {
     bookmarkStore.setActiveGroup(null);
   }
-  router.push({ path: "/list", query: { cat: "本地书签" }, replace: true });
-  const el = document.getElementById("本地书签");
-  if (el) {
-    const container = document.querySelector(".right-container");
-    if (container) {
-      const containerHeight = container.clientHeight;
-      const scrollTarget = el.offsetTop - containerHeight / 2 + 60;
-      container.scroll({
-        top: Math.max(0, scrollTarget),
-        behavior: "smooth",
-      });
-    }
-  }
+  router.push({
+    path: "/list",
+    query: {
+      cat: "本地书签",
+      _scroll: "1",
+      _t: Date.now().toString(),
+    },
+    replace: true,
+  });
 }
 </script>
 
@@ -90,7 +86,7 @@ function scrollToBookmarks(groupId?: string) {
     :collapse-transition="false"
     :collapse="appStore.isCollapse"
     unique-opened
-    class="divide-y divide-gray-100 dark:divide-gray-700"
+    class="side-menu-tree divide-y divide-gray-100 dark:divide-gray-700"
   >
     <!-- 加载骨架 -->
     <template v-if="loading">
@@ -128,7 +124,18 @@ function scrollToBookmarks(groupId?: string) {
   </el-menu>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@import "@/styles/variables.module";
+
+.side-menu-tree {
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - #{$navHeaderHeight});
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: none;
+}
+
 :deep(.el-menu-item.is-active) {
   background-color: var(--el-color-primary-light-9, rgba(64, 158, 255, 0.1));
   border-radius: 6px;

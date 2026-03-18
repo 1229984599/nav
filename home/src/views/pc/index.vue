@@ -105,13 +105,10 @@ provide("scrollProgress", scrollProgress);
     overflow: hidden;
     flex-shrink: 0;
 
-    ul {
-      height: calc(100% - #{$navHeaderHeight});
-      border-right: none;
-    }
-
     .menu-side {
       position: relative;
+      display: flex;
+      flex-direction: column;
       height: 100%;
       width: v-bind(menuWidth);
       min-width: v-bind(menuWidth);

@@ -44,15 +44,17 @@ function activateSubFromRoute() {
   }
 }
 
-// 监听路由 query 变化（cat + sub + _t），处理滚动和 tab 切换
+// 监听路由 query 变化，仅对左侧菜单来源触发滚动
 watch(
-  () => ({ cat: routes.query?.cat, sub: routes.query?.sub, _t: routes.query?._t }),
-  ({ cat }) => {
+  () => ({ cat: routes.query?.cat, sub: routes.query?.sub, _t: routes.query?._t, _scroll: routes.query?._scroll }),
+  ({ cat, _scroll }) => {
     const catStr = typeof cat === "string" ? cat : "";
     useTitle(`${siteStore.siteInfo.title} - ${catStr || "首页"}`);
     if (cat) {
       activateSubFromRoute();
-      scrollToCategory(cat);
+      if (_scroll === "1") {
+        scrollToCategory(cat);
+      }
     }
   },
 );
@@ -63,7 +65,9 @@ watch(
   (len) => {
     if (len > 0 && routes.query?.cat) {
       activateSubFromRoute();
-      scrollToCategory(routes.query.cat);
+      if (routes.query?._scroll === "1") {
+        scrollToCategory(routes.query.cat);
+      }
     }
   },
 );

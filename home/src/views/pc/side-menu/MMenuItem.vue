@@ -21,6 +21,7 @@ function gotoList(item: MenuSchemaTree) {
     path: "/list",
     query: {
       cat: item.title,
+      _scroll: "1",
       _t: Date.now().toString(),
     },
     replace: true,
@@ -39,6 +40,7 @@ function gotoChild(parent: MenuSchemaTree, child: MenuSchemaTree) {
     query: {
       cat: parent.title,
       sub: child.title,
+      _scroll: "1",
       _t: Date.now().toString(),
     },
     replace: true,

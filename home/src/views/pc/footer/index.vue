@@ -117,9 +117,9 @@ function handleScrollTop() {
           />
         </div>
       </el-tooltip>
-      <el-tooltip content="mini书签" placement="left">
-        <router-link :to="{ name: 'Mobile' }">
-          <m-icon class="tool-item" icon="mingcute:wechat-miniprogram-fill" />
+      <el-tooltip content="导航首页" placement="left">
+        <router-link :to="{ name: 'List' }">
+          <m-icon class="tool-item" icon="mingcute:home-4-line" />
         </router-link>
       </el-tooltip>
 

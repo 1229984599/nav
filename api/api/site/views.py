@@ -177,8 +177,10 @@ async def handle_backup():
             menus_data = []
             for m in menus:
                 menus_data.append({
+                    "id": m.id,
                     "title": m.title, "icon": m.icon, "color": m.color,
                     "order": m.order, "is_vip": m.is_vip, "status": m.status,
+                    "parent_id": m.parent_id,
                     "parent_title": m.parent.title if m.parent else None,
                 })
 
@@ -366,21 +368,40 @@ async def handle_restore(filename: str = "", file: UploadFile | None = File(None
                         "message": f"正在恢复菜单数据（共 {len(backup['menus'])} 条）..."
                     })
                     await Menu.all().delete()
-                    # Save parent_title before popping (fix: pop removes the key for second pass)
-                    parent_titles = {}
-                    for item in backup["menus"]:
-                        parent_titles[item.get("title")] = item.pop("parent_title", None)
-                        await Menu.create(**item)
-                    # Second pass: set parent relationships — 批量查询构建 map
-                    menu_map = {m.title: m for m in await Menu.all()}
-                    for title, parent_title in parent_titles.items():
-                        if not parent_title:
-                            continue
-                        menu = menu_map.get(title)
-                        parent = menu_map.get(parent_title)
-                        if menu and parent:
-                            menu.parent_id = parent.id
-                            await menu.save()
+                    id_map: dict[int, int] = {}
+                    title_map: dict[str, int] = {}
+                    pending_parent: list[tuple[int, int | None, str | None]] = []
+
+                    for raw in backup["menus"]:
+                        item = dict(raw or {})
+                        old_id = item.get("id")
+                        old_parent_id = item.get("parent_id")
+                        parent_title = item.get("parent_title")
+
+                        payload = {
+                            "title": item.get("title"),
+                            "icon": item.get("icon"),
+                            "color": item.get("color"),
+                            "order": item.get("order", 0),
+                            "is_vip": item.get("is_vip", False),
+                            "status": item.get("status", True),
+                        }
+                        menu = await Menu.create(**payload)
+
+                        if isinstance(old_id, int):
+                            id_map[old_id] = menu.id
+                        if menu.title:
+                            title_map[menu.title] = menu.id
+                        pending_parent.append((menu.id, old_parent_id, parent_title))
+
+                    for menu_id, old_parent_id, parent_title in pending_parent:
+                        new_parent_id = None
+                        if isinstance(old_parent_id, int):
+                            new_parent_id = id_map.get(old_parent_id)
+                        if not new_parent_id and parent_title:
+                            new_parent_id = title_map.get(parent_title)
+                        if new_parent_id and new_parent_id != menu_id:
+                            await Menu.filter(id=menu_id).update(parent_id=new_parent_id)
 
                 # Restore links
                 if backup.get("links"):

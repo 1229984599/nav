@@ -27,32 +27,18 @@ const router: Router = createRouter({
       redirect: "/list",
     },
   ],
-  scrollBehavior(to, from, savedPosition) {
-    if (to.hash) {
-      return {
-        el: to.hash,
-        top: 0,
-        behavior: "smooth",
-      };
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
     }
+    return false;
   },
 });
 
-// Auto-redirect mobile devices on initial load
-const pcPaths = new Set(["/", "/list", "/search"]);
-let isFirstNavigation = true;
-
 router.beforeEach((to, _from, next) => {
-  if (!isFirstNavigation) return next();
-  isFirstNavigation = false;
-
-  const isMobileDevice = window.innerWidth < 768;
-
-  if (isMobileDevice && pcPaths.has(to.path)) {
-    return next({ name: "Mobile" });
-  }
-  if (!isMobileDevice && to.path === "/mobile") {
-    return next({ path: "/list" });
+  // Frontend always stays on the PC view now.
+  if (to.path === "/mobile") {
+    return next({ path: "/list", replace: true });
   }
   next();
 });
